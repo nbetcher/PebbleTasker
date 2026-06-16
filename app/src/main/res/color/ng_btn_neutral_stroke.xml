@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Ghost button: quiet until touched, then it lights primary. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="false" android:color="@color/ng_border" />
-    <item android:state_pressed="true" android:color="?attr/colorPrimary" />
-    <item android:state_focused="true" android:alpha="0.60" android:color="?attr/colorPrimary" />
-    <item android:color="@color/ng_outline" />
-</selector>

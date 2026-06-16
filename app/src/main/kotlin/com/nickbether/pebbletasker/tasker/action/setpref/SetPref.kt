@@ -19,9 +19,10 @@ import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * A6 — Set Watch Preference (FINAL DESIGN §2.3, normal/sensitive tier).
- * Sends `watch.setPref` with pref_key + pref_value. (Bridge handler currently TODO; returns
- * UNSUPPORTED_COMMAND until wired — surfaced as %pb_ok=false.)
+ * A6 — Set Watch Preference (FINAL DESIGN §2.3, sensitive tier).
+ * Sends `watch.setPref` with pref_key + pref_value. The bridge resolves the key via WatchPref.from()
+ * and decodes the value with that pref's own codec (booleans accept true/false/on/off/1/0). DND
+ * toggles use pref_key="dndManuallyEnabled".
  */
 
 @TaskerInputRoot

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="false" android:color="@color/ng_input" />
-    <item android:state_checked="true" android:alpha="0.28" android:color="?attr/colorSecondary" />
-    <item android:state_selected="true" android:alpha="0.28" android:color="?attr/colorSecondary" />
-    <item android:color="@color/ng_surface_higher" />
-</selector>

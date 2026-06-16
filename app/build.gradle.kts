@@ -93,7 +93,12 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
 
-    // --- Material 1.12.0: required by the copied Neon Grid theme (Material3 widgets/attrs) ---
+    // --- Neon Grid theme (composite build): provides Theme.NeonGrid + all ng_* resources AND the
+    //     no-code auto-glow (its androidx.startup provider merges in and attaches the focus/error
+    //     glow to every TextInputLayout). Replaces the formerly copied theme resources. ---
+    implementation("com.nickbether.neongrid:theme")
+
+    // --- Material 1.12.0: also pulled transitively by :theme (api); kept explicit for the version pin ---
     implementation("com.google.android.material:material:1.12.0")
 
     // --- Tasker plugin library 0.4.10 (Maven Central, Kotlin). Library manifest already

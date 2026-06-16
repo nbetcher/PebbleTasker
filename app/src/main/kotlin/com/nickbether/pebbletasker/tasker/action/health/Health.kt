@@ -93,7 +93,7 @@ class HealthHelper(config: TaskerPluginConfig<HealthInput>) :
 
 class HealthActivity :
     SerialOnlyActionActivity<HealthInput, HealthOutput, HealthRunner, HealthHelper>() {
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_health_title
     override val descRes = R.string.act_health_desc
     override fun getNewHelper(config: TaskerPluginConfig<HealthInput>) = HealthHelper(config)

@@ -112,7 +112,7 @@ class SendNotifHelper(config: TaskerPluginConfig<SendNotifInput>) :
 class SendNotifActivity :
     ActionConfigActivity<SendNotifInput, SendNotifOutput, SendNotifRunner, SendNotifHelper, ActivityActionSendNotifBinding>() {
 
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
 
     override fun inflateBinding(inflater: LayoutInflater): ActivityActionSendNotifBinding =
         ActivityActionSendNotifBinding.inflate(inflater)

@@ -119,7 +119,7 @@ class AppMessageHelper(config: TaskerPluginConfig<AppMessageInput>) :
 class AppMessageActivity :
     ActionConfigActivity<AppMessageInput, AppMessageOutput, AppMessageRunner, AppMessageHelper, ActivityActionAppmessageBinding>() {
 
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
 
     override fun inflateBinding(inflater: LayoutInflater): ActivityActionAppmessageBinding =
         ActivityActionAppmessageBinding.inflate(inflater)

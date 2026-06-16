@@ -75,7 +75,7 @@ class DisconnectHelper(config: TaskerPluginConfig<DisconnectInput>) :
 
 class DisconnectActivity :
     SerialOnlyActionActivity<DisconnectInput, DisconnectOutput, DisconnectRunner, DisconnectHelper>() {
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_disconnect_title
     override val descRes = R.string.act_disconnect_desc
     override fun getNewHelper(config: TaskerPluginConfig<DisconnectInput>) = DisconnectHelper(config)

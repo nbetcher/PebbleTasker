@@ -75,7 +75,7 @@ class ConnectHelper(config: TaskerPluginConfig<ConnectInput>) :
 
 class ConnectActivity :
     SerialOnlyActionActivity<ConnectInput, ConnectOutput, ConnectRunner, ConnectHelper>() {
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_connect_title
     override val descRes = R.string.act_connect_desc
     override fun getNewHelper(config: TaskerPluginConfig<ConnectInput>) = ConnectHelper(config)

@@ -87,7 +87,7 @@ class SetPrefHelper(config: TaskerPluginConfig<SetPrefInput>) :
 
 class SetPrefActivity :
     GenericFieldsActionActivity<SetPrefInput, SetPrefOutput, SetPrefRunner, SetPrefHelper>() {
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_set_pref_title
     override val descRes = R.string.act_set_pref_desc
     override val fields = listOf(

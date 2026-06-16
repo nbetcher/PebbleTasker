@@ -80,7 +80,7 @@ class FwCheckHelper(config: TaskerPluginConfig<FwCheckInput>) :
 
 class FwCheckActivity :
     SerialOnlyActionActivity<FwCheckInput, FwCheckOutput, FwCheckRunner, FwCheckHelper>() {
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_fw_check_title
     override val descRes = R.string.act_fw_check_desc
     override fun getNewHelper(config: TaskerPluginConfig<FwCheckInput>) = FwCheckHelper(config)

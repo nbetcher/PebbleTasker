@@ -84,7 +84,7 @@ class MuteAppHelper(config: TaskerPluginConfig<MuteAppInput>) :
 
 class MuteAppActivity :
     GenericFieldsActionActivity<MuteAppInput, MuteAppOutput, MuteAppRunner, MuteAppHelper>() {
-    override val isSensitive = true
+    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_mute_title
     override val descRes = R.string.act_mute_desc
     override val fields = listOf(

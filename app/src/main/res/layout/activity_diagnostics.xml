@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DiagnosticsActivity — connection state, handshake details, live capabilities/grants, recent
+  cached events (last-per-type), and a getState self-test (FINAL DESIGN §1 ui/DiagnosticsActivity,
+  "KEY BLOCKERS" — must show the ACTUAL returned capability list and tolerate appVersion="unknown").
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:scrollbarStyle="outsideOverlay">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/diag_title"
+            android:textAppearance="@style/TextAppearance.NeonGrid.HeadlineSmall"
+            android:textColor="?attr/colorPrimary" />
+
+        <!-- Connection -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:text="@string/diag_section_connection"
+                    android:textColor="@color/ng_text" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/status_chip"
+                    style="@style/Widget.NeonGrid.Chip.Status.Neutral"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/main_status_idle"
+                    app:ensureMinTouchTargetSize="false" />
+
+                <TextView
+                    android:id="@+id/status_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_secondary" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Handshake -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:text="@string/diag_section_handshake"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:id="@+id/handshake_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="monospace"
+                    android:lineSpacingExtra="2dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_secondary"
+                    android:textIsSelectable="true" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Capabilities + grants -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:text="@string/diag_section_capabilities"
+                    android:textColor="@color/ng_text" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/caps_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:chipSpacingVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/caps_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/diag_caps_empty"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_dim"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/grants_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="monospace"
+                    android:lineSpacingExtra="2dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_secondary"
+                    android:textIsSelectable="true" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Recent events -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:text="@string/diag_section_events"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:id="@+id/events_highwater"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="monospace"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.LabelSmall"
+                    android:textColor="@color/ng_text_dim" />
+
+                <LinearLayout
+                    android:id="@+id/events_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/events_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/diag_events_empty"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_dim"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Self-test -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:text="@string/diag_section_selftest"
+                    android:textColor="@color/ng_text" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_selftest"
+                    style="@style/Widget.NeonGrid.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/diag_btn_selftest" />
+
+                <TextView
+                    android:id="@+id/selftest_result"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="monospace"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_secondary" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_refresh"
+            style="@style/Widget.NeonGrid.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/action_refresh" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_copy"
+            style="@style/Widget.NeonGrid.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/diag_btn_copy" />
+
+    </LinearLayout>
+</ScrollView>

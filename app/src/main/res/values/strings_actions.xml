@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pebble Tasker — ACTION plugin strings (FINAL DESIGN §2.3 / §7).
+
+  Contains:
+    • lbl_*        : field + output-variable labels (referenced by @TaskerInputField /
+                     @TaskerOutputVariable labelResIdName, and as TextInputLayout hints).
+    • act_*        : per-action titles / descriptions / config UI strings.
+    • hint_*       : helper hints under fields.
+
+  Field INPUT KEYS (the @TaskerInputField("…") names) are frozen and live in code, not here;
+  these strings are display-only and may be reworded freely.
+-->
+<resources>
+
+    <!-- ════════════ shared field + output labels (lbl_*) ════════════ -->
+    <string name="lbl_serial">Watch serial (blank = active)</string>
+    <string name="lbl_name">Watch name</string>
+    <string name="lbl_nickname">Nickname</string>
+    <string name="lbl_model">Model</string>
+    <string name="lbl_fw">Firmware</string>
+    <string name="lbl_battery">Battery %</string>
+    <string name="lbl_address">Bluetooth address</string>
+    <string name="lbl_connected">Connected</string>
+    <string name="lbl_running_app">Running app</string>
+    <string name="lbl_watchface">Watchface</string>
+    <string name="lbl_uuid">App / watchface UUID</string>
+    <string name="lbl_title">Title</string>
+    <string name="lbl_body">Body</string>
+    <string name="lbl_subtitle">Subtitle</string>
+    <string name="lbl_icon">Icon</string>
+    <string name="lbl_vibe">Vibration</string>
+    <string name="lbl_actions_json">Actions (JSON array)</string>
+    <string name="lbl_button">Button</string>
+    <string name="lbl_press">Press type</string>
+    <string name="lbl_pref_key">Preference key</string>
+    <string name="lbl_pref_value">Preference value</string>
+    <string name="lbl_dict_json">AppMessage dict (JSON)</string>
+    <string name="lbl_pin_json">Pin (JSON)</string>
+    <string name="lbl_pin_uuid">Pin UUID</string>
+    <string name="lbl_out_path">Output file path</string>
+    <string name="lbl_pkg">App package</string>
+    <string name="lbl_duration">Duration (minutes)</string>
+    <string name="lbl_enable">Enable</string>
+    <string name="lbl_transport">Transport</string>
+    <string name="lbl_cookie">Ping cookie</string>
+
+    <!-- output-only labels -->
+    <string name="lbl_out_json">Result JSON</string>
+    <string name="lbl_out_ok">Succeeded</string>
+    <string name="lbl_out_err">Error code</string>
+    <string name="lbl_out_errmsg">Error message</string>
+    <string name="lbl_out_item_id">Notification item ID</string>
+    <string name="lbl_out_delivered">Delivered</string>
+    <string name="lbl_out_file">Screenshot file</string>
+    <string name="lbl_out_rtt">Round-trip (ms)</string>
+    <string name="lbl_out_steps">Steps today</string>
+    <string name="lbl_out_hr">Latest heart rate</string>
+    <string name="lbl_out_sleep">Sleep (min)</string>
+    <string name="lbl_out_resting_hr">Resting HR</string>
+    <string name="lbl_out_hr_zones">HR zones (JSON)</string>
+    <string name="lbl_out_fw_available">Update available</string>
+    <string name="lbl_out_fw_version">Firmware version</string>
+    <string name="lbl_out_dev_enabled">Dev connection enabled</string>
+    <string name="lbl_out_pin_uuid">Pin UUID</string>
+    <string name="lbl_out_acked">Acknowledged</string>
+
+    <!-- ════════════ shared hints ════════════ -->
+    <string name="hint_serial_blank_active">Leave blank to target the active watch. Accepts a %variable.</string>
+    <string name="hint_uuid_required">Required. The app/watchface UUID, e.g. 8f3c8735-… Accepts a %variable.</string>
+    <string name="hint_json_value">Accepts a %variable that resolves to JSON.</string>
+
+    <!-- ════════════ browse-picker (WatchBrowsePicker) ════════════ -->
+    <string name="act_browse_watches">Browse connected watches</string>
+    <string name="act_picker_choose_watch">Choose a watch</string>
+    <string name="act_picker_no_watches">No watches are connected right now.</string>
+    <string name="act_picker_unavailable_title">Can\'t list watches</string>
+    <string name="act_picker_unavailable_body">%1$s\n\nYou can still type a serial or a %%variable.</string>
+
+    <!-- ════════════ A1 Get Watch Info ════════════ -->
+    <string name="act_get_info_title">Get Watch Info</string>
+    <string name="act_get_info_desc">Reads identity and headline state of a paired Pebble and returns it to Tasker.</string>
+
+    <!-- ════════════ A2 Send Watch Notification ════════════ -->
+    <string name="act_send_notif_title">Send Watch Notification</string>
+    <string name="act_send_notif_desc">Pushes a notification to the watch. Custom actions you add come back as a Notification Action event when pressed.</string>
+    <string name="act_send_notif_actions_hint">JSON array of {id,label,type}. Pressing an action on the watch re-emits it as a Notification Action event.</string>
+
+    <!-- ════════════ A3 Launch App ════════════ -->
+    <string name="act_launch_app_title">Launch Watch App</string>
+    <string name="act_launch_app_desc">Launches the app/watchface with the given UUID on the watch.</string>
+
+    <!-- ════════════ A4 Set Watchface ════════════ -->
+    <string name="act_set_watchface_title">Set Watchface</string>
+    <string name="act_set_watchface_desc">Switches the active watchface to the given UUID.</string>
+
+    <!-- ════════════ A5 Set Quick Launch ════════════ -->
+    <string name="act_quick_launch_title">Set Quick Launch Button</string>
+    <string name="act_quick_launch_desc">Binds a quick-launch button press to an app UUID.</string>
+
+    <!-- ════════════ A6 Set Watch Pref ════════════ -->
+    <string name="act_set_pref_title">Set Watch Preference</string>
+    <string name="act_set_pref_desc">Writes a watch preference key to a value.</string>
+
+    <!-- ════════════ A7 Send AppMessage ════════════ -->
+    <string name="act_appmessage_title">Send AppMessage</string>
+    <string name="act_appmessage_desc">Sends an AppMessage dictionary to a watch app by UUID.</string>
+
+    <!-- ════════════ A8 Insert Timeline Pin ════════════ -->
+    <string name="act_pin_insert_title">Insert Timeline Pin</string>
+    <string name="act_pin_insert_desc">Inserts or replaces a timeline pin from a JSON definition.</string>
+
+    <!-- ════════════ A9 Delete Timeline Pin ════════════ -->
+    <string name="act_pin_delete_title">Delete Timeline Pin</string>
+    <string name="act_pin_delete_desc">Deletes a timeline pin by UUID.</string>
+
+    <!-- ════════════ A10 Take Screenshot ════════════ -->
+    <string name="act_screenshot_title">Take Screenshot</string>
+    <string name="act_screenshot_desc">Captures the watch screen and returns the saved file path.</string>
+
+    <!-- ════════════ A11 Send Ping ════════════ -->
+    <string name="act_ping_title">Send Ping</string>
+    <string name="act_ping_desc">Pings the watch and returns the round-trip time.</string>
+
+    <!-- ════════════ A12 Get Health Snapshot ════════════ -->
+    <string name="act_health_title">Get Health Snapshot</string>
+    <string name="act_health_desc">Reads the latest health metrics (steps, heart rate, sleep) from the watch.</string>
+
+    <!-- ════════════ A13 Mute App ════════════ -->
+    <string name="act_mute_title">Mute App Notifications</string>
+    <string name="act_mute_desc">Mutes notifications from an app for a duration.</string>
+
+    <!-- ════════════ A14 Connect ════════════ -->
+    <string name="act_connect_title">Connect Watch</string>
+    <string name="act_connect_desc">Requests a connection to the watch.</string>
+
+    <!-- ════════════ A15 Disconnect ════════════ -->
+    <string name="act_disconnect_title">Disconnect Watch</string>
+    <string name="act_disconnect_desc">Disconnects the watch. This is a sensitive action.</string>
+
+    <!-- ════════════ A16 Check Firmware Update ════════════ -->
+    <string name="act_fw_check_title">Check Firmware Update</string>
+    <string name="act_fw_check_desc">Checks whether a firmware update is available.</string>
+
+    <!-- ════════════ A17 Toggle Dev Connection ════════════ -->
+    <string name="act_dev_toggle_title">Toggle Developer Connection</string>
+    <string name="act_dev_toggle_desc">Enables or disables the developer connection. DANGEROUS: requires the developer-commands toggle to be ON in the Pebble app.</string>
+    <string name="act_dev_toggle_warn">Dangerous action — only runs if the Pebble app\'s developer-commands toggle is enabled.</string>
+
+    <!-- ════════════ segmented / toggle choices (display only) ════════════ -->
+    <string name="opt_vibe_none">None</string>
+    <string name="opt_vibe_short">Short</string>
+    <string name="opt_vibe_long">Long</string>
+    <string name="opt_vibe_double">Double</string>
+    <string name="opt_button_up">Up</string>
+    <string name="opt_button_down">Down</string>
+    <string name="opt_press_short">Short</string>
+    <string name="opt_press_long">Long</string>
+    <string name="opt_enable_on">On</string>
+    <string name="opt_enable_off">Off</string>
+    <string name="opt_enable_toggle">Toggle</string>
+
+</resources>

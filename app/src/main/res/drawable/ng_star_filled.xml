@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lit star with a strong neon-yellow glow: a radial halo behind the solid star core. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="17dp"
+                android:startColor="#B3FFDD00"
+                android:centerColor="#40FFDD00"
+                android:endColor="#00FFDD00" />
+            <size android:width="34dp" android:height="34dp" />
+        </shape>
+    </item>
+    <item
+        android:width="22dp"
+        android:height="22dp"
+        android:gravity="center"
+        android:drawable="@drawable/ng_star_core" />
+</layer-list>

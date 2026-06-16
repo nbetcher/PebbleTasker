@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Neon Grid — widget styles.
+
+  Every interactive widget derives its fill / stroke / label from the theme's color ROLES via
+  theme-attribute color state lists (ng_fill_*, ng_stroke_*, ng_label_* in res/color/). Override
+  colorPrimary / colorSecondary / colorTertiary / ngAccent (see attrs.xml) in a theme that extends
+  Theme.NeonGrid and the entire system recolors — translucent fills and glowing strokes included.
+
+  Role usage — each widget mapped to Material 3's default color role:
+    primary   (cyan)    → buttons, switch, checkbox, radio, text fields, slider, seek bar, FAB,
+                          tabs, linear + circular progress, snackbar/dialog actions, borders, titles
+    secondary (green)   → tonal button, filter chips, segmented buttons, spinner, navigation
+    tertiary  (fuchsia) → the Tertiary button variant
+    accent    (orange)  → the Accent button variant
+    error     (red)     → danger button, field errors, badge
+  Status pills (success/info/warning/danger) and the rating stars keep fixed semantic hues.
+  Spacing is a healthy medium: 48dp targets, 20dp button padding.
+-->
+<resources>
+
+    <!-- =====================================================================
+         BUTTONS  — the signature look: translucent neon fill, glowing stroke, neon label.
+         Default = primary; variants just swap which role the state lists read.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Button" parent="Widget.Material3.Button">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+        <item name="backgroundTint">@color/ng_fill_primary</item>
+        <item name="strokeColor">@color/ng_stroke_primary</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/ng_label_primary</item>
+        <item name="iconTint">@color/ng_label_primary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingLeft">20dp</item>
+        <item name="android:paddingRight">20dp</item>
+        <item name="iconPadding">8dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Button.Secondary">
+        <item name="backgroundTint">@color/ng_fill_secondary</item>
+        <item name="strokeColor">@color/ng_stroke_secondary</item>
+        <item name="android:textColor">@color/ng_label_secondary</item>
+        <item name="iconTint">@color/ng_label_secondary</item>
+        <item name="rippleColor">@color/ng_fill_secondary</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Button.Tertiary">
+        <item name="backgroundTint">@color/ng_fill_tertiary</item>
+        <item name="strokeColor">@color/ng_stroke_tertiary</item>
+        <item name="android:textColor">@color/ng_label_tertiary</item>
+        <item name="iconTint">@color/ng_label_tertiary</item>
+        <item name="rippleColor">@color/ng_fill_tertiary</item>
+    </style>
+
+    <!-- Accent (the 4th, distinct from the primary/secondary/tertiary trio). -->
+    <style name="Widget.NeonGrid.Button.Accent">
+        <item name="backgroundTint">@color/ng_fill_accent</item>
+        <item name="strokeColor">@color/ng_stroke_accent</item>
+        <item name="android:textColor">@color/ng_label_accent</item>
+        <item name="iconTint">@color/ng_label_accent</item>
+        <item name="rippleColor">@color/ng_fill_accent</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Button.Danger">
+        <item name="backgroundTint">@color/ng_fill_error</item>
+        <item name="strokeColor">@color/ng_stroke_error</item>
+        <item name="android:textColor">@color/ng_label_error</item>
+        <item name="iconTint">@color/ng_label_error</item>
+        <item name="rippleColor">@color/ng_fill_error</item>
+    </style>
+
+    <!-- Ghost: quiet outline that lights primary on touch. -->
+    <style name="Widget.NeonGrid.Button.Ghost">
+        <item name="backgroundTint">@color/ng_transparent</item>
+        <item name="strokeColor">@color/ng_btn_neutral_stroke</item>
+        <item name="android:textColor">@color/ng_btn_neutral_text</item>
+        <item name="iconTint">@color/ng_btn_neutral_text</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+    </style>
+
+    <!-- Compact button (table-row actions). -->
+    <style name="Widget.NeonGrid.Button.Small">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelMedium</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:insetTop">2dp</item>
+        <item name="android:insetBottom">2dp</item>
+    </style>
+
+    <!-- Truly outlined (no fill) variant. -->
+    <style name="Widget.NeonGrid.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+        <item name="strokeColor">@color/ng_stroke_primary</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/ng_label_primary</item>
+        <item name="iconTint">@color/ng_label_primary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+        <item name="android:textColor">@color/ng_label_primary</item>
+        <item name="iconTint">@color/ng_label_primary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+        <item name="backgroundTint">@color/ng_surface_higher</item>
+        <item name="android:textColor">@color/ng_label_secondary</item>
+        <item name="iconTint">@color/ng_label_secondary</item>
+        <item name="rippleColor">@color/ng_fill_secondary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Button.Icon" parent="Widget.Material3.Button.IconButton">
+        <item name="iconTint">@color/ng_label_primary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+    </style>
+
+    <!-- =====================================================================
+         FAB  — solid primary beacon with a colored glow (Material 3 FAB = primary).
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="tint">@color/ng_on_neon</item>
+        <item name="rippleColor">@color/ng_ripple_light</item>
+        <item name="elevation">6dp</item>
+        <item name="android:outlineSpotShadowColor">?attr/colorPrimary</item>
+        <item name="android:outlineAmbientShadowColor">?attr/colorPrimary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.NeonGrid.Large</item>
+    </style>
+
+    <style name="Widget.NeonGrid.ExtendedFloatingActionButton" parent="Widget.Material3.ExtendedFloatingActionButton.Icon.Primary">
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="iconTint">@color/ng_on_neon</item>
+        <item name="android:textColor">@color/ng_on_neon</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+        <item name="rippleColor">@color/ng_ripple_light</item>
+        <item name="elevation">6dp</item>
+        <item name="android:outlineSpotShadowColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- =====================================================================
+         CARD / PANEL  — dark surface, dim-primary stroke, primary glow halo.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.CardView" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardBackgroundColor">@color/ng_surface</item>
+        <item name="strokeColor">@color/ng_stroke_primary</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+        <item name="contentPadding">16dp</item>
+        <item name="android:outlineSpotShadowColor">?attr/colorPrimary</item>
+        <item name="android:outlineAmbientShadowColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- =====================================================================
+         TEXT FIELDS  — outlined, primary on focus, mono input, red errors.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.NeonGrid.TextInput</item>
+        <item name="boxStrokeColor">@color/ng_textfield_stroke</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxStrokeErrorColor">?attr/colorError</item>
+        <item name="boxBackgroundColor">@color/ng_input</item>
+        <item name="hintTextColor">?attr/colorPrimary</item>
+        <item name="android:textColorHint">@color/ng_textfield_hint</item>
+        <item name="errorTextColor">?attr/colorError</item>
+        <item name="errorIconTint">?attr/colorError</item>
+        <item name="endIconTint">@color/ng_text_dim</item>
+        <item name="startIconTint">@color/ng_text_dim</item>
+        <item name="helperTextTextColor">@color/ng_text_dim</item>
+        <item name="counterTextColor">@color/ng_text_dim</item>
+        <item name="cursorColor">?attr/colorPrimary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.NeonGrid.Small</item>
+    </style>
+
+    <style name="Widget.NeonGrid.EditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.BodyLarge</item>
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:fontFamily">monospace</item>
+    </style>
+
+    <!-- Overlay scoped to the field subtree. colorPrimary/colorError are intentionally NOT set
+         here so they fall through to the host theme — keeping fields customizable. -->
+    <style name="ThemeOverlay.NeonGrid.TextInput" parent="">
+        <item name="colorOnSurface">@color/ng_text</item>
+        <item name="editTextStyle">@style/Widget.NeonGrid.EditText</item>
+    </style>
+
+    <!-- =====================================================================
+         SELECTION CONTROLS  — switch / checkbox / radio all read the primary role.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">@color/ng_switch_thumb</item>
+        <item name="trackTint">@color/ng_switch_track</item>
+        <item name="trackDecorationTint">@color/ng_switch_track_decoration</item>
+        <item name="android:textColor">@color/ng_control_label</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.Control</item>
+    </style>
+
+    <!-- Custom neon compound-button drawables (translucent fill + glowing stroke + bright mark),
+         buttonTint disabled so the drawables' own theme-attr colors render. -->
+    <style name="Widget.NeonGrid.CheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="buttonCompat">@drawable/ng_checkbox_button_spaced</item>
+        <item name="android:button">@drawable/ng_checkbox_button_spaced</item>
+        <item name="buttonTint">@null</item>
+        <item name="android:textColor">@color/ng_control_label</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.Control</item>
+    </style>
+
+    <style name="Widget.NeonGrid.RadioButton" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="buttonCompat">@drawable/ng_radio_button_spaced</item>
+        <item name="android:button">@drawable/ng_radio_button_spaced</item>
+        <item name="buttonTint">@null</item>
+        <item name="android:textColor">@color/ng_control_label</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.Control</item>
+    </style>
+
+    <!-- =====================================================================
+         SLIDER  — primary track, glowing primary halo (Material 3 Slider = primary).
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Slider" parent="Widget.Material3.Slider">
+        <item name="trackColorActive">?attr/colorPrimary</item>
+        <item name="trackColorInactive">@color/ng_surface_higher</item>
+        <item name="thumbColor">?attr/colorPrimary</item>
+        <item name="haloColor">@color/ng_fill_primary</item>
+        <item name="tickColorActive">@color/ng_on_neon</item>
+        <item name="tickColorInactive">@color/ng_text_dim</item>
+        <item name="trackHeight">4dp</item>
+    </style>
+
+    <!-- =====================================================================
+         CHIPS  — filter chips read secondary (M3 selected chip = secondaryContainer); status
+         pills keep fixed semantic hues.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/ng_chip_bg</item>
+        <item name="chipStrokeColor">@color/ng_chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="android:textColor">@color/ng_chip_text</item>
+        <item name="chipIconTint">@color/ng_chip_text</item>
+        <item name="checkedIconTint">?attr/colorSecondary</item>
+        <item name="rippleColor">@color/ng_fill_secondary</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelMedium</item>
+        <item name="chipMinHeight">32dp</item>
+    </style>
+
+    <!-- Status pills (not checkable) — semantic colors, the source's .badge set. -->
+    <style name="Widget.NeonGrid.Chip.Status" parent="Widget.Material3.Chip.Suggestion">
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipMinHeight">26dp</item>
+        <item name="ensureMinTouchTargetSize">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelSmall</item>
+        <item name="chipCornerRadius">13dp</item>
+        <item name="chipStartPadding">10dp</item>
+        <item name="chipEndPadding">10dp</item>
+    </style>
+    <style name="Widget.NeonGrid.Chip.Status.Success">
+        <item name="chipBackgroundColor">@color/ng_green_10</item>
+        <item name="chipStrokeColor">@color/ng_stroke_green</item>
+        <item name="android:textColor">@color/ng_green</item>
+    </style>
+    <style name="Widget.NeonGrid.Chip.Status.Info">
+        <item name="chipBackgroundColor">@color/ng_cyan_10</item>
+        <item name="chipStrokeColor">@color/ng_stroke_cyan</item>
+        <item name="android:textColor">@color/ng_cyan</item>
+    </style>
+    <style name="Widget.NeonGrid.Chip.Status.Warning">
+        <item name="chipBackgroundColor">@color/ng_yellow_18</item>
+        <item name="chipStrokeColor">@color/ng_stroke_yellow</item>
+        <item name="android:textColor">@color/ng_yellow</item>
+    </style>
+    <style name="Widget.NeonGrid.Chip.Status.Danger">
+        <item name="chipBackgroundColor">@color/ng_red_10</item>
+        <item name="chipStrokeColor">@color/ng_stroke_red</item>
+        <item name="android:textColor">@color/ng_red</item>
+    </style>
+    <style name="Widget.NeonGrid.Chip.Status.Neutral">
+        <item name="chipBackgroundColor">@color/ng_surface_higher</item>
+        <item name="chipStrokeColor">@color/ng_outline</item>
+        <item name="android:textColor">@color/ng_text_secondary</item>
+    </style>
+
+    <!-- =====================================================================
+         SEGMENTED BUTTONS  — MaterialButtonToggleGroup children.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Button.Segmented" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelMedium</item>
+        <item name="backgroundTint">@color/ng_segmented_bg</item>
+        <item name="strokeColor">@color/ng_stroke_secondary</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/ng_segmented_text</item>
+        <item name="iconTint">@color/ng_segmented_text</item>
+        <item name="rippleColor">@color/ng_fill_secondary</item>
+        <item name="android:minHeight">44dp</item>
+    </style>
+
+    <!-- =====================================================================
+         APP BAR / TOOLBAR / BOTTOM APP BAR
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.AppBarLayout" parent="Widget.Material3.AppBarLayout">
+        <item name="android:background">@color/ng_abyss</item>
+        <item name="liftOnScroll">true</item>
+    </style>
+
+    <style name="Widget.NeonGrid.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="titleTextColor">@color/ng_text</item>
+        <item name="subtitleTextColor">@color/ng_text_secondary</item>
+        <item name="titleTextAppearance">@style/TextAppearance.NeonGrid.TitleLarge</item>
+        <item name="subtitleTextAppearance">@style/TextAppearance.NeonGrid.BodySmall</item>
+        <item name="titleCentered">false</item>
+        <item name="navigationIconTint">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.NeonGrid.BottomAppBar" parent="Widget.Material3.BottomAppBar">
+        <item name="backgroundTint">@color/ng_abyss</item>
+        <item name="fabAlignmentMode">end</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.NeonGrid.CollapsingToolbar" parent="Widget.Material3.CollapsingToolbar.Large">
+        <item name="contentScrim">@color/ng_abyss</item>
+        <item name="collapsedTitleTextColor">@color/ng_text</item>
+        <item name="expandedTitleTextColor">?attr/colorPrimary</item>
+        <item name="collapsedTitleTextAppearance">@style/TextAppearance.NeonGrid.TitleLarge</item>
+        <item name="expandedTitleTextAppearance">@style/TextAppearance.NeonGrid.HeadlineMedium</item>
+    </style>
+
+    <!-- =====================================================================
+         NAVIGATION  — bottom nav, rail, drawer (M3 active indicator = secondaryContainer).
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.NavigationActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/ng_fill_secondary</item>
+        <item name="marginHorizontal">8dp</item>
+    </style>
+
+    <style name="Widget.NeonGrid.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@color/ng_abyss</item>
+        <item name="itemTextColor">@color/ng_nav_item</item>
+        <item name="itemIconTint">@color/ng_nav_item</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.NeonGrid.NavigationActiveIndicator</item>
+        <item name="itemRippleColor">@color/ng_fill_secondary</item>
+        <item name="itemTextAppearanceActiveBoldEnabled">true</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.NeonGrid.NavigationRail" parent="Widget.Material3.NavigationRailView">
+        <item name="android:background">@color/ng_abyss</item>
+        <item name="itemTextColor">@color/ng_nav_item</item>
+        <item name="itemIconTint">@color/ng_nav_item</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.NeonGrid.NavigationActiveIndicator</item>
+        <item name="itemRippleColor">@color/ng_fill_secondary</item>
+    </style>
+
+    <style name="Widget.NeonGrid.NavigationView" parent="Widget.Material3.NavigationView">
+        <item name="android:background">@color/ng_surface</item>
+        <item name="itemTextColor">@color/ng_nav_item</item>
+        <item name="itemIconTint">@color/ng_nav_item</item>
+        <item name="itemTextAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+        <item name="itemRippleColor">@color/ng_fill_secondary</item>
+    </style>
+
+    <!-- =====================================================================
+         TABS  — primary underline indicator (Material 3 tabs = primary).
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="android:background">@color/ng_abyss</item>
+        <item name="tabIndicatorColor">?attr/colorPrimary</item>
+        <item name="tabIndicatorHeight">2dp</item>
+        <item name="tabIndicatorFullWidth">false</item>
+        <item name="tabTextColor">@color/ng_tab_text</item>
+        <item name="tabSelectedTextColor">?attr/colorPrimary</item>
+        <item name="tabRippleColor">@color/ng_fill_primary</item>
+        <item name="tabTextAppearance">@style/TextAppearance.NeonGrid.LabelMedium</item>
+    </style>
+
+    <!-- =====================================================================
+         SNACKBAR  — dark surface, primary action.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/ng_surface_higher</item>
+        <item name="android:layout_margin">14dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.NeonGrid.Small</item>
+    </style>
+    <style name="Widget.NeonGrid.Snackbar.TextView" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.BodyMedium</item>
+    </style>
+    <style name="Widget.NeonGrid.Snackbar.Button" parent="Widget.Material3.Button.TextButton.Snackbar">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+    </style>
+
+    <!-- =====================================================================
+         PROGRESS  — circular + linear primary (Material 3 progress = primary).
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.CircularProgress" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">@color/ng_surface_higher</item>
+        <item name="trackThickness">3dp</item>
+        <item name="indicatorSize">36dp</item>
+    </style>
+    <style name="Widget.NeonGrid.LinearProgress" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">@color/ng_surface_higher</item>
+        <item name="trackThickness">4dp</item>
+        <item name="trackCornerRadius">2dp</item>
+    </style>
+
+    <!-- =====================================================================
+         SEEKBAR / RATINGBAR  — platform widgets, tinted to the roles.
+         ===================================================================== -->
+    <!-- SeekBar = primary, like Slider (Material colorControlActivated). AppCompat tints SeekBar from
+         colorControlActivated, so recolor via the overlay below (apply it with android:theme on the
+         SeekBar) — view/style tints alone lose to colorControlActivated. -->
+    <style name="Widget.NeonGrid.SeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressBackgroundTint">@color/ng_surface_higher</item>
+    </style>
+    <style name="ThemeOverlay.NeonGrid.SeekBar" parent="">
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+    </style>
+    <!-- Interactive RatingBar tints the platform star (RatingBar only tiles BitmapDrawables, not
+         vectors). For a crisp neon display rating, lay out @drawable/ng_star_filled / ng_star_empty
+         as a row of ImageViews instead. -->
+    <style name="Widget.NeonGrid.RatingBar" parent="Widget.AppCompat.RatingBar">
+        <item name="android:progressTint">@color/ng_yellow</item>
+        <item name="android:secondaryProgressTint">@color/ng_outline</item>
+        <item name="android:progressBackgroundTint">@color/ng_surface_higher</item>
+    </style>
+
+    <!-- =====================================================================
+         MENUS / SPINNER / EXPOSED DROPDOWN
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.PopupMenu" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/ng_popup_background</item>
+        <item name="android:textColor">@color/ng_text</item>
+    </style>
+    <style name="Widget.NeonGrid.ListPopupWindow" parent="Widget.Material3.PopupMenu.ListPopupWindow">
+        <item name="android:popupBackground">@drawable/ng_popup_background</item>
+    </style>
+    <!-- Custom AA box (no jagged underline/bitmap caret); secondary role per the widget color map. -->
+    <style name="Widget.NeonGrid.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:background">@drawable/ng_spinner_background</item>
+        <item name="android:popupBackground">@drawable/ng_popup_background</item>
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">36dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:popupElevation">8dp</item>
+    </style>
+    <style name="Widget.NeonGrid.ExposedDropdownMenu" parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.NeonGrid.TextInput</item>
+        <item name="boxStrokeColor">@color/ng_textfield_stroke</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxBackgroundColor">@color/ng_input</item>
+        <item name="hintTextColor">?attr/colorPrimary</item>
+        <item name="android:textColorHint">@color/ng_textfield_hint</item>
+        <item name="endIconTint">@color/ng_textfield_hint</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.NeonGrid.Small</item>
+    </style>
+    <style name="Widget.NeonGrid.AutoCompleteTextView" parent="Widget.Material3.AutoCompleteTextView.OutlinedBox">
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.BodyLarge</item>
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:popupBackground">@drawable/ng_popup_background</item>
+        <item name="android:dropDownSelector">@color/ng_fill_primary</item>
+    </style>
+
+    <!-- =====================================================================
+         TOOLTIP
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Tooltip" parent="Widget.Material3.Tooltip">
+        <item name="backgroundTint">@color/ng_surface_higher</item>
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelSmall</item>
+    </style>
+
+    <!-- =====================================================================
+         DIALOG
+         ===================================================================== -->
+    <style name="ThemeOverlay.NeonGrid.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/ng_surface_higher</item>
+        <item name="colorOnSurface">@color/ng_text</item>
+        <item name="colorOnSurfaceVariant">@color/ng_text_secondary</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/Widget.NeonGrid.Dialog.Title</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.NeonGrid.Dialog.Button.Positive</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.NeonGrid.Dialog.Button.Neutral</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.NeonGrid.Dialog.Button.Neutral</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.NeonGrid.Large</item>
+    </style>
+    <style name="Widget.NeonGrid.Dialog.Title" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.TitleLarge</item>
+    </style>
+    <style name="Widget.NeonGrid.Dialog.Button.Positive" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+    </style>
+    <style name="Widget.NeonGrid.Dialog.Button.Neutral" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/ng_text_secondary</item>
+        <item name="rippleColor">@color/ng_fill_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.NeonGrid.LabelLarge</item>
+    </style>
+
+    <!-- =====================================================================
+         BOTTOM SHEET / SIDE SHEET
+         ===================================================================== -->
+    <style name="ThemeOverlay.NeonGrid.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.NeonGrid.BottomSheet</item>
+    </style>
+    <style name="Widget.NeonGrid.BottomSheet" parent="Widget.Material3.BottomSheet">
+        <item name="backgroundTint">@color/ng_surface</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.NeonGrid.Large</item>
+    </style>
+
+    <!-- =====================================================================
+         DATE / TIME PICKERS  — inherit roles, with our surfaces.
+         ===================================================================== -->
+    <style name="ThemeOverlay.NeonGrid.TimePicker" parent="ThemeOverlay.Material3.MaterialTimePicker">
+        <item name="colorSurface">@color/ng_surface_higher</item>
+        <item name="colorSurfaceContainerHighest">@color/ng_surface_high</item>
+        <item name="colorOnSurface">@color/ng_text</item>
+    </style>
+    <style name="ThemeOverlay.NeonGrid.DatePicker" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="colorSurface">@color/ng_surface_higher</item>
+        <item name="colorOnSurface">@color/ng_text</item>
+    </style>
+
+    <!-- =====================================================================
+         SEARCH  — Material3 SearchBar + SearchView.
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.SearchBar" parent="Widget.Material3.SearchBar">
+        <item name="backgroundTint">@color/ng_surface_high</item>
+        <item name="strokeColor">@color/ng_stroke_primary</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:textColorHint">@color/ng_text_dim</item>
+        <item name="elevation">0dp</item>
+    </style>
+    <style name="Widget.NeonGrid.SearchView" parent="Widget.Material3.SearchView">
+        <item name="backgroundTint">@color/ng_surface</item>
+        <item name="android:textColor">@color/ng_text</item>
+        <item name="android:textColorHint">@color/ng_text_dim</item>
+    </style>
+
+    <!-- =====================================================================
+         BADGE  — error count overlay (Material 3 badge = error).
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Badge" parent="Widget.Material3.Badge">
+        <item name="backgroundColor">?attr/colorError</item>
+        <item name="badgeTextColor">@color/ng_on_neon</item>
+    </style>
+
+    <!-- =====================================================================
+         DIVIDER
+         ===================================================================== -->
+    <style name="Widget.NeonGrid.Divider" parent="Widget.Material3.MaterialDivider">
+        <item name="dividerColor">@color/ng_border</item>
+        <item name="dividerThickness">1dp</item>
+    </style>
+
+</resources>

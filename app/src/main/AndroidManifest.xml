@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Android 11+ package visibility: makes coredevices.coreapp's BridgeService resolvable
+         so bindService() can reach it (FINAL DESIGN §3.1). -->
+    <queries>
+        <package android:name="coredevices.coreapp" />
+    </queries>
+
+    <!-- The taskerpluginlibrary runner services run as foreground specialUse services
+         (declared in the library's merged manifest). FOREGROUND_SERVICE permissions are also
+         contributed by the library merge, but are declared here explicitly so the app builds the
+         same regardless of merge order. REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is used by the
+         onboarding flow (util/BatteryOpt.kt) so push delivery survives Doze. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- IMPORTANT: never set android:sharedUserId — the bridge's consent requires a
+         single-package uid (CallerVerifier:43). Setting it breaks consent. (FINAL DESIGN §0 FIX D2) -->
+    <application
+        android:name=".PebbleTaskerApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NeonGrid"
+        tools:targetApi="31">
+
+        <!-- ════════════════════════════════════════════════════════════════════════════
+             LIBRARY PATCHES (FINAL DESIGN §0 FIX C12 / §8)
+             taskerpluginlibrary 0.4.10's merged manifest ALREADY declares (verified against the
+             library's own src/main/AndroidManifest.xml), on its runner services:
+               • IntentServiceAction:    foregroundServiceType="specialUse"
+                                         <meta-data name="canBind" value="true"/>  (lets Tasker BIND
+                                           the runner under the Android 12+ FGS-from-background rule)
+                                         <property PROPERTY_SPECIAL_USE_FGS_SUBTYPE
+                                                   value="@string/explanation_for_special_use_action"/>
+                                         intent-filter FIRE_SETTING
+               • IntentServiceCondition: foregroundServiceType="specialUse"
+                                         <property PROPERTY_SPECIAL_USE_FGS_SUBTYPE
+                                                   value="@string/explanation_for_special_use_condition"/>
+                                         intent-filter QUERY_CONDITION
+               • BroadcastReceiverAction    (FIRE_SETTING)
+               • BroadcastReceiverCondition (QUERY_CONDITION)
+             So PLAN.md "patch (a)/(b)" are satisfied by the merge. The ONLY mandatory app-side step is
+             supplying the two justification strings (present in res/values/strings.xml):
+               @string/explanation_for_special_use_action
+               @string/explanation_for_special_use_condition
+             DO NOT hand-declare a <service tools:node="merge"> override unless a post-merge check
+             (app/build/intermediates/merged_manifests/.../AndroidManifest.xml) shows specialUse/canBind
+             missing — it risks fighting the merge.
+             ════════════════════════════════════════════════════════════════════════════ -->
+
+        <!-- ── App UI ─────────────────────────────────────────────────────────────────── -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".ui.OnboardingActivity" android:exported="false" />
+        <activity android:name=".ui.DiagnosticsActivity" android:exported="false" />
+        <activity android:name=".ui.ConsentGuidanceActivity" android:exported="false" />
+
+        <!-- ════════════════════════════════════════════════════════════════════════════
+             EVENT plugins (15) — FINAL DESIGN §2.1. Tasker event config activities.
+             intent-filter action: net.dinglisch.android.tasker.ACTION_EDIT_EVENT.
+             Each is exported (Tasker launches it) + Theme.NeonGrid. Push fan-out (BridgeListener ->
+             EventCache -> EventRouter.requestQuery) is wired at runtime by EventRouting.registerAll()
+             (called from PebbleTaskerApp.onCreate). Class names verified against the created sources.
+             ════════════════════════════════════════════════════════════════════════════ -->
+        <activity
+            android:name=".tasker.event.connected.ConnectedActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Watch Connected"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.disconnected.DisconnectedActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Watch Disconnected"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.connfailed.ConnFailedActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Connection Failed"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.battery.BatteryActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Battery Level"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.notifsent.NotifSentActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Notification Sent"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.notifaction.NotifActionActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Notification Action"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.appchanged.AppChangedActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Watch App Changed"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.appmsg.AppMessageActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble AppMessage Received"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.timeline.TimelineActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Timeline Action"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.music.MusicActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Music Command"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.call.CallActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Call Event"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.firmware.FirmwareActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Firmware Update"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.health.HealthActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Health Updated"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.devconn.DevConnActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Dev Connection"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.bridgeerror.BridgeErrorActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Bridge / Watch Error"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <!-- ════════════════════════════════════════════════════════════════════════════
+             STATE plugins (6) — FINAL DESIGN §2.2. Tasker condition config activities.
+             intent-filter action: com.twofortyfouram.locale.intent.action.EDIT_CONDITION.
+             Each is exported (Tasker launches it) + Theme.NeonGrid. Change-push fan-out is wired at
+             runtime by StateRegistrations.registerAll() (EventRouter -> requestQuery).
+             NOTE: StateRegistrations.registerAll() is NOT yet called from PebbleTaskerApp.onCreate
+             (see "Unresolved" report) — states still evaluate on Tasker's own polling without it.
+             ════════════════════════════════════════════════════════════════════════════ -->
+        <activity
+            android:name=".tasker.state.connected.S1WatchConnectedActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Watch Connected"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_CONDITION" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.state.dnd.S2DndActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Quiet Time / DND"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_CONDITION" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.state.devconn.S3DevConnectionActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Dev Connection On"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_CONDITION" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.state.watchface.S4WatchfaceActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Active Watchface Is"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_CONDITION" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.state.firmware.S5FirmwareUpdatingActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Firmware Updating"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_CONDITION" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.state.bluetooth.S6BluetoothActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Bluetooth On"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_CONDITION" />
+            </intent-filter>
+        </activity>
+
+        <!-- ════════════════════════════════════════════════════════════════════════════
+             ACTION plugins (17 user actions) — FINAL DESIGN §2.3. Tasker setting config activities.
+             intent-filter action: com.twofortyfouram.locale.intent.action.EDIT_SETTING.
+             Each is exported (Tasker launches it) + Theme.NeonGrid. Sensitive ones apply FLAG_SECURE
+             in code (ActionConfigActivity.isSensitive). All are NEEDS-EXECUTE: they call
+             BridgeClient.execute, gated behind the bridge's commands.core capability (so they fail
+             cleanly with %pb_ok=false / UNSUPPORTED_COMMAND until the bridge advertises it).
+             ════════════════════════════════════════════════════════════════════════════ -->
+        <activity android:name=".tasker.action.getinfo.GetInfoActivity"
+            android:exported="true" android:label="Pebble: Get Watch Info"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.sendnotif.SendNotifActivity"
+            android:exported="true" android:label="Pebble: Send Watch Notification"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.launchapp.LaunchAppActivity"
+            android:exported="true" android:label="Pebble: Launch Watch App"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.setwatchface.SetWatchfaceActivity"
+            android:exported="true" android:label="Pebble: Set Watchface"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.quicklaunch.QuickLaunchActivity"
+            android:exported="true" android:label="Pebble: Set Quick Launch Button"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.setpref.SetPrefActivity"
+            android:exported="true" android:label="Pebble: Set Watch Preference"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.appmessage.AppMessageActivity"
+            android:exported="true" android:label="Pebble: Send AppMessage"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.insertpin.InsertPinActivity"
+            android:exported="true" android:label="Pebble: Insert Timeline Pin"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.deletepin.DeletePinActivity"
+            android:exported="true" android:label="Pebble: Delete Timeline Pin"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.screenshot.ScreenshotActivity"
+            android:exported="true" android:label="Pebble: Take Screenshot"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.ping.PingActivity"
+            android:exported="true" android:label="Pebble: Send Ping"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.health.HealthActivity"
+            android:exported="true" android:label="Pebble: Get Health Snapshot"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.muteapp.MuteAppActivity"
+            android:exported="true" android:label="Pebble: Mute App Notifications"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.connect.ConnectActivity"
+            android:exported="true" android:label="Pebble: Connect Watch"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.disconnect.DisconnectActivity"
+            android:exported="true" android:label="Pebble: Disconnect Watch"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.fwcheck.FwCheckActivity"
+            android:exported="true" android:label="Pebble: Check Firmware Update"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.devtoggle.DevToggleActivity"
+            android:exported="true" android:label="Pebble: Toggle Developer Connection"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+
+        <!-- ── Untrusted wake hint: bind + getEventsSince + seq-gap check (FINAL DESIGN §3.8) ── -->
+        <receiver
+            android:name=".bridge.WakeReceiver"
+            android:exported="false" />
+
+        <!-- Library FIRE_SETTING / QUERY_CONDITION receivers + IntentServiceAction /
+             IntentServiceCondition (both with specialUse FGS + the action service's canBind meta-data)
+             come from the taskerpluginlibrary manifest merge — do NOT hand-declare them here. -->
+
+    </application>
+
+</manifest>

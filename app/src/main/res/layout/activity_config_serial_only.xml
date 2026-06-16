@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shared config layout for serial-only event plugins (E1 Connected, E2 Disconnected, and any other
+  event whose only filter is an optional watch serial). Neon-Grid themed.
+  Title/description text is set in code (pbTitle / pbDesc) so one layout serves several plugins.
+  The serial field is a Material TextInputEditText so %var substitution + the variable picker attach;
+  the browse button writes the chosen serial INTO the editable field.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/pbTitle"
+            style="@style/TextAppearance.NeonGrid.HeadlineSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:ignore="HardcodedText"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:text="Pebble event" />
+
+        <TextView
+            android:id="@+id/pbDesc"
+            style="@style/TextAppearance.NeonGrid.BodySmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/pb_serial_filter_desc" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/pbLayoutSerial"
+                    style="@style/Widget.NeonGrid.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/pb_evt_lbl_serial">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pbEditSerial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/pbBtnPickWatch"
+                    style="@style/Widget.NeonGrid.Button.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pb_evt_pick_watch" />
+
+                <TextView
+                    android:id="@+id/pbOutputs"
+                    style="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/pb_outputs_hint" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

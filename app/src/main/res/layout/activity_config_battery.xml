@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  E4 — Pebble Battery Level config (Neon-Grid themed, FINAL DESIGN §2.1).
+  Variable fields are Material TextInputEditText so Tasker %var substitution attaches and
+  VariableFieldBinder adds the picker end-icon. The direction toggle mirrors into pbEditDirection.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            style="@style/TextAppearance.NeonGrid.HeadlineSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/pb_evt_battery_title" />
+
+        <TextView
+            style="@style/TextAppearance.NeonGrid.BodySmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/pb_evt_battery_desc" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Serial field + watch browse button (browse writes into the editable field) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/pbLayoutSerial"
+                    style="@style/Widget.NeonGrid.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/pb_evt_lbl_serial"
+                    app:startIconDrawable="@drawable/ic_insert_variable"
+                    app:startIconContentDescription="@string/pb_evt_pick_watch">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pbEditSerial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:imeOptions="actionNext"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/pbBtnPickWatch"
+                    style="@style/Widget.NeonGrid.Button.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pb_evt_pick_watch" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/pbLayoutThreshold"
+                    style="@style/Widget.NeonGrid.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/pb_lbl_threshold">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pbEditThreshold"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    style="@style/TextAppearance.NeonGrid.LabelMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/pb_lbl_direction" />
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/pbToggleDirection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/pbBtnBelow"
+                        style="@style/Widget.NeonGrid.Button.Segmented"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pb_dir_below" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/pbBtnAbove"
+                        style="@style/Widget.NeonGrid.Button.Segmented"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pb_dir_above" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <!-- Editable source-of-truth for direction (stays focusable so a %var survives). -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/pbLayoutDirection"
+                    style="@style/Widget.NeonGrid.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/pb_lbl_direction_value">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pbEditDirection"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    style="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/pb_outputs_hint" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

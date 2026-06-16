@@ -1,0 +1,3 @@
+# Package: com.nickbether.pebbletasker.tasker.action
+# 18 action plugins (a1..a18), each = Input/Output/Runner/Helper/Activity. Intent: EDIT_SETTING. All NEEDS-EXECUTE.
+# (scaffold placeholder — implementers add Kotlin sources here, then delete this file)

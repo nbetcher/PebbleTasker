@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The checkbox box + a fixed gap before the label (compound-button text starts at the button
+     drawable's intrinsic width, so the inset on the right becomes the box-to-text spacing). -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ng_checkbox_button"
+    android:insetRight="10dp" />

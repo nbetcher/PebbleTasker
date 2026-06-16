@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Neon label/icon color derived from the theme's primary color. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="@color/ng_text_disabled" />
+    <item android:color="?attr/colorPrimary" />
+</selector>

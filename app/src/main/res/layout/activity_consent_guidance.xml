@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ConsentGuidanceActivity — single mode-driven card explaining the current trust/consent blocker and
+  offering the matching action (FINAL DESIGN §3.5). The Activity swaps heading/body/buttons per mode
+  and updates reactively from BridgeClient.status.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:scrollbarStyle="outsideOverlay">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/consent_title"
+            android:textAppearance="@style/TextAppearance.NeonGrid.HeadlineSmall"
+            android:textColor="?attr/colorPrimary" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/status_chip"
+            style="@style/Widget.NeonGrid.Chip.Status.Neutral"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/main_status_idle"
+            app:ensureMinTouchTargetSize="false" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/guidance_heading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:id="@+id/guidance_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <!-- Cert digest (visible only in CERT_MISMATCH mode) -->
+                <TextView
+                    android:id="@+id/cert_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/consent_cert_current_label"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.LabelMedium"
+                    android:textColor="@color/ng_text_dim"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/cert_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="monospace"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_yellow"
+                    android:textIsSelectable="true"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Primary contextual action: open Pebble / re-trust / retry -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/action_open_pebble_app" />
+
+        <!-- Re-trust (danger) — shown only in CERT_MISMATCH mode -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_retrust"
+            style="@style/Widget.NeonGrid.Button.Danger"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/consent_btn_retrust"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_retry"
+            style="@style/Widget.NeonGrid.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/action_retry" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_close"
+            style="@style/Widget.NeonGrid.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/action_close" />
+
+    </LinearLayout>
+</ScrollView>

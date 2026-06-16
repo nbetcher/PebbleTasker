@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Checked box: translucent primary fill + glowing primary stroke + primary check. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ng_fill_primary" />
+            <stroke android:width="2dp" android:color="?attr/colorPrimary" />
+            <corners android:radius="6dp" />
+            <size android:width="22dp" android:height="22dp" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/ng_ic_check"
+        android:gravity="center" />
+</layer-list>

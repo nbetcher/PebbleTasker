@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected radio: translucent primary fill + glowing primary ring + primary dot. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/ng_fill_primary" />
+            <stroke android:width="2dp" android:color="?attr/colorPrimary" />
+            <size android:width="22dp" android:height="22dp" />
+        </shape>
+    </item>
+    <item
+        android:width="9dp"
+        android:height="9dp"
+        android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+</layer-list>

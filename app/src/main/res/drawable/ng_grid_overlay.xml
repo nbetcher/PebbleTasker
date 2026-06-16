@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The grid. A faint neon lattice — set as the background/foreground of a root view to light up
+  the substrate. Purely decorative; no scanlines (by design).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+    <path
+        android:strokeColor="#14FF2DAA"
+        android:strokeWidth="1"
+        android:pathData="M40,0V640 M80,0V640 M120,0V640 M160,0V640 M200,0V640 M240,0V640 M280,0V640 M320,0V640 M0,40H360 M0,80H360 M0,120H360 M0,160H360 M0,200H360 M0,240H360 M0,280H360 M0,320H360 M0,360H360 M0,400H360 M0,440H360 M0,480H360 M0,520H360 M0,560H360 M0,600H360" />
+</vector>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pebble Tasker</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         MANDATORY library justification strings (FINAL DESIGN §0 FIX C12 / §7 / §8).
+         The taskerpluginlibrary 0.4.10 runner services declare a specialUse FGS property
+         that references these. They are the ONLY app-side requirement for the FGS patch —
+         without them the merged manifest references dangle. Keep them descriptive: Google
+         Play reviews specialUse justifications.
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="explanation_for_special_use_action">Runs a Tasker action that sends a command to your paired Pebble watch (via the Pebble app\'s automation bridge) and returns the result to Tasker. The foreground service exists only for the brief duration of the bound Tasker action.</string>
+    <string name="explanation_for_special_use_condition">Evaluates a Tasker event or state condition about your paired Pebble watch (connection, battery, notifications, etc.) when Tasker requests it. The foreground service exists only while Tasker is bound to evaluate the condition.</string>
+
+    <!-- ── Variable-field picker (FINAL DESIGN §4.3) ── -->
+    <string name="insert_variable">Insert Tasker variable</string>
+    <string name="pick_variable">Pick a variable</string>
+    <!-- Default hint for the reusable view_tasker_var_field.xml; hosts override per field. -->
+    <string name="pb_var_field_hint">Value or %variable</string>
+
+    <!-- Field labels (lbl_*) and other UI strings are added by feature-plugin implementers. -->
+</resources>

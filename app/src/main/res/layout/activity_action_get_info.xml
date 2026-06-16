@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pebble Tasker — "Get Watch Info" action config (FINAL DESIGN §2.3).
+  Single variable-bearing field (serial). The TextInputLayout end icon is wired to the Tasker
+  variable picker by PebbleConfigActivity; the start icon is wired to the watch browse-picker by
+  ActionConfigActivity.wireWatchBrowse(). The serial field stays a plain TextInputEditText so a
+  %var survives substitution.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/act_get_info_title"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="@string/act_get_info_desc"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutSerial"
+                    style="@style/Widget.NeonGrid.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/lbl_serial">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editSerial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/hint_serial_blank_active"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.LabelSmall"
+                    android:textColor="@color/ng_text_dim" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Neon Grid customization surface. Override these in your own theme (which extends Theme.NeonGrid)
+  to recolor the entire system from one place — every fill, stroke, label, border and title derives
+  from them via theme-attribute color state lists.
+
+  The trio uses Material's standard roles (override colorPrimary / colorSecondary / colorTertiary).
+  ngAccent is a 4th brand accent Material doesn't define a slot for.
+-->
+<resources>
+    <attr name="ngAccent" format="color" />
+</resources>

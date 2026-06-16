@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings for the 15 event plugins (FINAL DESIGN §2.1). Titles match the Tasker plugin names; labels
+  are reused across plugins via stable pb_lbl_* names (also used by @field:TaskerInputField
+  labelResIdName so Tasker shows a human label for each input key).
+-->
+<resources>
+
+    <!-- ── shared field labels (pb_lbl_*) ── -->
+    <string name="pb_evt_lbl_serial">Watch serial (blank = any)</string>
+    <string name="pb_lbl_threshold">Battery threshold %</string>
+    <string name="pb_lbl_direction">Direction</string>
+    <string name="pb_lbl_direction_value">Direction (below / above)</string>
+    <string name="pb_lbl_reason">Reason contains (blank = any)</string>
+    <string name="pb_lbl_pkg">App package (blank = any)</string>
+    <string name="pb_lbl_app_name">App name contains (blank = any)</string>
+    <string name="pb_lbl_text_contains">Text contains (blank = any)</string>
+    <string name="pb_lbl_action">Action (blank = any)</string>
+    <string name="pb_lbl_action_id">Action ID (blank = any)</string>
+    <string name="pb_evt_lbl_uuid">App UUID</string>
+    <string name="pb_lbl_app_type">App type (blank = any)</string>
+    <string name="pb_lbl_key">Dict key (blank = any)</string>
+    <string name="pb_lbl_pin_uuid">Pin UUID (blank = any)</string>
+    <string name="pb_lbl_music_action">Music action (blank = any)</string>
+    <string name="pb_lbl_call_state">Call state (blank = any)</string>
+    <string name="pb_evt_lbl_fw_status">Firmware status (blank = any)</string>
+    <string name="pb_evt_lbl_dev_enabled">Dev enabled (true / false / blank = any)</string>
+    <string name="pb_evt_lbl_transport">Transport (blank = any)</string>
+    <string name="pb_lbl_error_type">Error type (error / gap / blank = any)</string>
+    <string name="pb_lbl_unused">(no options)</string>
+
+    <!-- ── shared config-UI strings ── -->
+    <string name="pb_evt_pick_watch">Pick a connected watch…</string>
+    <string name="pb_serial_filter_desc">Leave the serial blank to match any paired watch, or enter a serial / %variable. Use the picker to fill it from a connected watch.</string>
+    <string name="pb_outputs_hint">All outputs are available to your task as %pb_… variables, plus one structured %pb_json (read sub-fields as %pb_json.field in Tasker 5.12+).</string>
+    <string name="pb_dir_below">Below</string>
+    <string name="pb_dir_above">Above</string>
+
+    <!-- ── E1 Watch Connected ── -->
+    <string name="pb_evt_connected_title">Pebble Watch Connected</string>
+    <string name="pb_evt_connected_desc">Fires when a Pebble watch connects. Optionally limit to one serial.</string>
+
+    <!-- ── E2 Watch Disconnected ── -->
+    <string name="pb_evt_disconnected_title">Pebble Watch Disconnected</string>
+    <string name="pb_evt_disconnected_desc">Fires when a Pebble watch disconnects. On disconnect only serial/name/address are known.</string>
+
+    <!-- ── E3 Connection Failed ── -->
+    <string name="pb_evt_connfailed_title">Pebble Connection Failed</string>
+    <string name="pb_evt_connfailed_desc">Fires when a watch connection attempt fails, carrying the failure reason.</string>
+
+    <!-- ── E4 Battery Level ── -->
+    <string name="pb_evt_battery_title">Pebble Battery Level</string>
+    <string name="pb_evt_battery_desc">Fires when the watch battery crosses a threshold in the chosen direction.</string>
+
+    <!-- ── E5 Notification Sent ── -->
+    <string name="pb_evt_notifsent_title">Pebble Notification Sent</string>
+    <string name="pb_evt_notifsent_desc">Fires when a notification is delivered to the watch. Title/text are redacted unless the Pebble app allows content.</string>
+
+    <!-- ── E6 Notification Action ── -->
+    <string name="pb_evt_notifaction_title">Pebble Notification Action</string>
+    <string name="pb_evt_notifaction_desc">Fires when a notification action (dismiss / open / reply) is taken on the watch.</string>
+
+    <!-- ── E7 Watch App Changed ── -->
+    <string name="pb_evt_appchanged_title">Pebble Watch App Changed</string>
+    <string name="pb_evt_appchanged_desc">Fires when the foreground app or watchface on the watch changes.</string>
+
+    <!-- ── E8 AppMessage Received ── -->
+    <string name="pb_evt_appmsg_title">Pebble AppMessage Received</string>
+    <string name="pb_evt_appmsg_desc">Fires when the chosen watch app sends an AppMessage. A UUID is required so the bridge knows which app to relay.</string>
+
+    <!-- ── E9 Timeline Action ── -->
+    <string name="pb_evt_timeline_title">Pebble Timeline Action</string>
+    <string name="pb_evt_timeline_desc">Fires when a timeline pin action is invoked on the watch.</string>
+
+    <!-- ── E10 Music Command ── -->
+    <string name="pb_evt_music_title">Pebble Music Command</string>
+    <string name="pb_evt_music_desc">Fires when the watch sends a media control command (play / pause / next / prev / volume).</string>
+
+    <!-- ── E11 Call Event ── -->
+    <string name="pb_evt_call_title">Pebble Call Event</string>
+    <string name="pb_evt_call_desc">Fires on a phone-call state change relayed to or handled on the watch.</string>
+
+    <!-- ── E12 Firmware Update ── -->
+    <string name="pb_evt_firmware_title">Pebble Firmware Update</string>
+    <string name="pb_evt_firmware_desc">Fires on a firmware update lifecycle change (available / downloading / installing / complete / failed).</string>
+
+    <!-- ── E13 Health Updated ── -->
+    <string name="pb_evt_health_title">Pebble Health Updated</string>
+    <string name="pb_evt_health_desc">Fires whenever watch health metrics (steps, heart rate) refresh.</string>
+
+    <!-- ── E14 Dev Connection ── -->
+    <string name="pb_evt_devconn_title">Pebble Dev Connection</string>
+    <string name="pb_evt_devconn_desc">Fires when the developer connection state (enabled / transport) changes.</string>
+
+    <!-- ── E15 Bridge / Watch Error ── -->
+    <string name="pb_evt_bridgeerror_title">Pebble Bridge / Watch Error</string>
+    <string name="pb_evt_bridgeerror_desc">Fires on a bridge error or a detected event gap (after a bridge restart or dropped events).</string>
+
+</resources>

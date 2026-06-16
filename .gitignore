@@ -1,0 +1,16 @@
+# Gradle / Android build artifacts
+.gradle/
+build/
+app/build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+captures/
+
+# Signing (debug keystore is generated locally; release keys never committed)
+*.jks
+*.keystore
+!debug.keystore

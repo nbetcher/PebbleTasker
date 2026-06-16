@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings for the 6 STATE plugins (FINAL DESIGN §2.2). Namespaced pb_* / pb_lbl_* so they never
+  collide with the action plugins' lbl_* labels or the app-UI strings. The pb_lbl_* values are the
+  human labels Tasker shows for each input field and each %pb_* output variable in its picker.
+-->
+<resources>
+
+    <!-- ── Shared section / state chrome ── -->
+    <string name="pb_state_label">PEBBLE · STATE</string>
+    <string name="pb_section_watch">Watch</string>
+    <string name="pb_section_watchface">Watchface</string>
+    <string name="pb_chip_needs_bridge">Needs newer Pebble app</string>
+
+    <!-- ── Watch-browse picker (WatchBrowse) ── -->
+    <string name="pb_browse_watches">Browse connected watches</string>
+    <string name="pb_pick_watch">Pick a watch</string>
+    <string name="pb_no_watches">No connected watch found — enter a serial or %variable.</string>
+
+    <!-- ── Input-field hints ── -->
+    <string name="pb_hint_serial_any">Leave blank to match any watch. Accepts a %variable.</string>
+    <string name="pb_hint_uuid_any">Leave blank to match any active watchface. Accepts a %variable.</string>
+
+    <!-- ── Input-field labels (also used as TextInputLayout hints) ── -->
+    <string name="pb_lbl_serial">Watch serial</string>
+    <string name="pb_lbl_uuid">Watchface UUID</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         OUTPUT VARIABLE LABELS — shown next to each %pb_* in Tasker's variable picker.
+         Frozen alongside PbVars; reused across plugins where the semantic is identical.
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_lbl_json">Structured JSON (read %pb_json.field)</string>
+    <string name="pb_lbl_connected">Connected (true/false)</string>
+    <string name="pb_lbl_connected_count">Connected watch count</string>
+    <string name="pb_lbl_name">Watch name</string>
+    <string name="pb_lbl_nickname">Watch nickname</string>
+    <string name="pb_lbl_model">Watch model</string>
+    <string name="pb_lbl_fw">Firmware version</string>
+    <string name="pb_lbl_battery">Battery level</string>
+    <string name="pb_lbl_address">Bluetooth address</string>
+    <string name="pb_lbl_dnd">Quiet Time / DND on</string>
+    <string name="pb_lbl_dev_enabled">Dev connection on</string>
+    <string name="pb_lbl_transport">Dev transport</string>
+    <string name="pb_lbl_watchface_uuid">Active watchface UUID</string>
+    <string name="pb_lbl_watchface_name">Active watchface name</string>
+    <string name="pb_lbl_fw_progress">Firmware update progress</string>
+    <string name="pb_lbl_fw_status">Firmware update status</string>
+    <string name="pb_lbl_bt_enabled">Bluetooth on</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         S1 — Watch Connected (READY)
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_state_connected_title">Watch Connected</string>
+    <string name="pb_state_connected_help">Active while a Pebble watch is connected. Leave the serial blank to match any watch.</string>
+    <string name="pb_outputs_connected">Outputs: %pb_connected, %pb_connected_count, %pb_serial, %pb_name, %pb_nickname, %pb_model, %pb_fw, %pb_battery, %pb_address, and %pb_json (read %pb_json.serial, %pb_json.battery, etc.).</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         S2 — DND / Quiet Time (capability-gated: state.extended)
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_state_dnd_title">Quiet Time / DND</string>
+    <string name="pb_state_dnd_help">Active while the watch\'s Quiet Time (Do Not Disturb) is on. Reports Unknown on older Pebble app versions that don\'t expose this yet.</string>
+    <string name="pb_outputs_dnd">Outputs: %pb_dnd, %pb_serial, and %pb_json (read %pb_json.dnd).</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         S3 — Dev Connection On (capability-gated: dev.state)
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_state_devconn_title">Dev Connection On</string>
+    <string name="pb_state_devconn_help">Active while a developer / PebbleKit connection to the watch is open. Reports Unknown until the Pebble app reports dev-connection state.</string>
+    <string name="pb_outputs_devconn">Outputs: %pb_dev_enabled, %pb_transport, and %pb_json (read %pb_json.dev_enabled).</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         S4 — Active Watchface Is (capability-gated: state.extended)
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_state_watchface_title">Active Watchface Is</string>
+    <string name="pb_state_watchface_help">Active when the watch\'s current watchface matches the UUID. Leave blank to match any active watchface. Reports Unknown until the Pebble app exposes the active watchface.</string>
+    <string name="pb_outputs_watchface">Outputs: %pb_watchface_uuid, %pb_watchface_name, and %pb_json (read %pb_json.watchface_uuid).</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         S5 — Firmware Updating (capability-gated: fw.status)
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_state_firmware_title">Firmware Updating</string>
+    <string name="pb_state_firmware_help">Active while a firmware update is in progress on the watch. Leave the serial blank to match any watch. Reports Unknown until the Pebble app reports firmware status.</string>
+    <string name="pb_outputs_firmware">Outputs: %pb_fw_progress, %pb_fw_status, %pb_serial, and %pb_json (read %pb_json.fw_progress).</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════
+         S6 — Bluetooth On (capability-gated: bt.state)
+         ════════════════════════════════════════════════════════════════════════════ -->
+    <string name="pb_state_bluetooth_title">Bluetooth On</string>
+    <string name="pb_state_bluetooth_help">Active while Bluetooth is on, as observed by the Pebble app. Reports Unknown until the Pebble app reports Bluetooth state.</string>
+    <string name="pb_outputs_bluetooth">Outputs: %pb_bt_enabled and %pb_json (read %pb_json.bt_enabled).</string>
+
+</resources>

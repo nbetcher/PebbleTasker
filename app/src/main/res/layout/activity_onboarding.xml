@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OnboardingActivity — master-switch-first setup (FINAL DESIGN §0 FIX D1, §1).
+  Four numbered cards: master switch, approve plugin, battery exemption, verify.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:scrollbarStyle="outsideOverlay">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/onboarding_title"
+            android:textAppearance="@style/TextAppearance.NeonGrid.HeadlineMedium"
+            android:textColor="?attr/colorPrimary" />
+
+        <!-- Step 1: master switch -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/onboarding_step1_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/onboarding_step1_body"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_open_pebble"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/onboarding_step1_open" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Step 2: approve plugin -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/onboarding_step2_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/onboarding_step2_body"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Step 3: battery exemption -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/onboarding_step3_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/onboarding_step3_body"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_battery"
+                    style="@style/Widget.NeonGrid.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/onboarding_btn_battery_request" />
+
+                <TextView
+                    android:id="@+id/battery_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.LabelMedium"
+                    android:textColor="@color/ng_green"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Step 4: verify -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/onboarding_step4_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/onboarding_step4_body"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/onboarding_verify_label"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.LabelMedium"
+                    android:textColor="@color/ng_text_dim" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/status_chip"
+                    style="@style/Widget.NeonGrid.Chip.Status.Neutral"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/main_status_idle"
+                    app:ensureMinTouchTargetSize="false" />
+
+                <TextView
+                    android:id="@+id/status_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_recheck"
+                    style="@style/Widget.NeonGrid.Button.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/onboarding_btn_recheck" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_finish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/onboarding_btn_finish" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_diagnostics"
+            style="@style/Widget.NeonGrid.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/onboarding_btn_diagnostics" />
+
+    </LinearLayout>
+</ScrollView>

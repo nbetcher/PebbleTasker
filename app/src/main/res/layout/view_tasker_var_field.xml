@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Reusable Neon-Grid-themed variable-bearing field (FINAL DESIGN §4.3).
+
+  This is a <merge> so it can be <include>d directly into a config activity's LinearLayout, or
+  inflated standalone. The hosting layout supplies the label via app:hintEnabled / android:hint on
+  the TextInputLayout, or by setting layout.hint in code.
+
+  CRITICAL:
+    - Uses Widget.NeonGrid.TextInputLayout (OutlinedBox). DO NOT switch to the ExposedDropdownMenu
+      variant on a variable field — its chevron collides with the variable end-icon (one slot only).
+    - The editable view is a Material TextInputEditText (a real EditText subclass) so Tasker's
+      VARIABLE_REPLACE_KEYS substitution attaches. Never replace it with a custom view.
+    - The variable picker end-icon is attached in code by VariableFieldBinder (END_ICON_CUSTOM,
+      tinted colorPrimary). Browse-pickers go on the startIcon / an adjacent button, not here.
+
+  The host gives each instance a unique id for its EditText (e.g. via a copy of this layout per
+  field, or by finding the TextInputEditText and assigning input). For multi-field activities,
+  prefer authoring each field inline using Widget.NeonGrid.TextInputLayout + TextInputEditText and
+  calling VariableFieldBinder.attachAll(root, suggestions) once.
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/pb_var_field_layout"
+        style="@style/Widget.NeonGrid.TextInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/pb_var_field_hint">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/pb_var_field_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</merge>

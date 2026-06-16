@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MainActivity — launcher home. Neon-Grid-themed status + plugin overview + navigation.
+  All widgets are bare Material widgets auto-styled by Theme.NeonGrid (see themes.xml default
+  widget styles); only Status chip + section cards take explicit Neon styles.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:scrollbarStyle="outsideOverlay">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_title"
+            android:textAppearance="@style/TextAppearance.NeonGrid.HeadlineMedium"
+            android:textColor="?attr/colorPrimary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/main_subtitle"
+            android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+            android:textColor="@color/ng_text_secondary" />
+
+        <!-- Status card -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_status_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/status_chip"
+                    style="@style/Widget.NeonGrid.Chip.Status.Neutral"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/main_status_idle"
+                    app:ensureMinTouchTargetSize="false" />
+
+                <TextView
+                    android:id="@+id/status_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+                <!-- Primary action: contextual fix/setup. Shown only when action is needed. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_primary_action"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/main_btn_setup"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_open_pebble"
+                    style="@style/Widget.NeonGrid.Button.Ghost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/main_btn_open_pebble"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Plugins overview card -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_plugins_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/main_plugins_body"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Availability card -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_caps_heading"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                    android:textColor="@color/ng_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/main_caps_body"
+                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
+                    android:textColor="@color/ng_text_secondary" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Navigation -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_setup"
+            style="@style/Widget.NeonGrid.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/main_btn_setup" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_diagnostics"
+            style="@style/Widget.NeonGrid.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/main_btn_diagnostics" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="@string/main_footer"
+            android:textAppearance="@style/TextAppearance.NeonGrid.LabelSmall"
+            android:textColor="@color/ng_text_dim" />
+
+    </LinearLayout>
+</ScrollView>

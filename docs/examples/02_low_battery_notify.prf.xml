@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  Pebble x Tasker plugin (com.nickbether.pebbletasker) - EXAMPLE PROFILE 02
+  "Pebble Battery Low -> Notify"
+
+  WHAT IT DOES
+    Event context  : Pebble Battery Level, direction = below, threshold = 20
+                     (plugin EVENT)
+    Task           : Notify  ->  "Watch battery low: %pb_battery%"
+
+  HOW TO USE
+    See README.md. After import, OPEN the "Pebble Battery Level" event and
+    re-select / re-save its config so Tasker binds the installed plugin
+    version and finalizes the <Bundle> keys (serial / threshold / direction).
+
+  NOTES ON THIS XML
+    * Generic plugin code is <code>1000</code>; the concrete plugin is
+      resolved from arg1 (package) + arg2 (config activity FQCN below):
+      .tasker.event.battery.BatteryActivity
+    * Inputs configured here: SERIAL (empty = any), THRESHOLD = 20,
+      DIRECTION = below.
+    * Outputs exported by this event: %pb_battery (integer percent),
+      %pb_serial, and the structured %pb_json.
+  ============================================================================
+-->
+<TaskerData sr="" dvi="1" tv="6.6">
+	<Profile sr="prof101" ve="2">
+		<cdate>1718000000000</cdate>
+		<clp>true</clp>
+		<edate>1718000000000</edate>
+		<id>101</id>
+		<mid0>201</mid0>
+		<nme>Pebble Battery Low</nme>
+		<!-- Plugin EVENT (ACTION_EDIT_EVENT) -->
+		<Event sr="con0" ve="2">
+			<code>1000</code>
+			<pri>0</pri>
+			<Bundle sr="arg0">
+				<Vals sr="val">
+					<com.twofortyfouram.locale.intent.extra.BLURB>Battery below 20% (any watch)</com.twofortyfouram.locale.intent.extra.BLURB>
+					<com.twofortyfouram.locale.intent.extra.BLURB-type>java.lang.String</com.twofortyfouram.locale.intent.extra.BLURB-type>
+					<!-- Illustrative plugin config keys (finalized on re-edit) -->
+					<net.dinglisch.android.tasker.extras.SERIAL></net.dinglisch.android.tasker.extras.SERIAL>
+					<net.dinglisch.android.tasker.extras.SERIAL-type>java.lang.String</net.dinglisch.android.tasker.extras.SERIAL-type>
+					<net.dinglisch.android.tasker.extras.THRESHOLD>20</net.dinglisch.android.tasker.extras.THRESHOLD>
+					<net.dinglisch.android.tasker.extras.THRESHOLD-type>java.lang.Integer</net.dinglisch.android.tasker.extras.THRESHOLD-type>
+					<net.dinglisch.android.tasker.extras.DIRECTION>below</net.dinglisch.android.tasker.extras.DIRECTION>
+					<net.dinglisch.android.tasker.extras.DIRECTION-type>java.lang.String</net.dinglisch.android.tasker.extras.DIRECTION-type>
+					<net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>net.dinglisch.android.tasker.extras.SERIAL net.dinglisch.android.tasker.extras.THRESHOLD </net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>
+					<net.dinglisch.android.tasker.subbundled>true</net.dinglisch.android.tasker.subbundled>
+				</Vals>
+			</Bundle>
+			<Str sr="arg1" ve="3">com.nickbether.pebbletasker</Str>
+			<Str sr="arg2" ve="3">com.nickbether.pebbletasker.tasker.event.battery.BatteryActivity</Str>
+		</Event>
+	</Profile>
+
+	<Task sr="task201">
+		<cdate>1718000000000</cdate>
+		<edate>1718000000000</edate>
+		<id>201</id>
+		<nme>Notify Battery Low</nme>
+		<pri>100</pri>
+		<!-- Notify. code 523. arg0=title, arg1=text -->
+		<Action sr="act0" ve="7">
+			<code>523</code>
+			<Str sr="arg0" ve="3">Pebble battery low</Str>
+			<Str sr="arg1" ve="3">Watch battery low: %pb_battery% (serial %pb_serial)</Str>
+			<Img sr="arg2" ve="2">
+				<nme>hl_device_access_battery</nme>
+			</Img>
+			<Int sr="arg3" val="0"/>
+			<Int sr="arg4" val="0"/>
+			<Int sr="arg5" val="4"/>
+		</Action>
+	</Task>
+</TaskerData>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  Pebble x Tasker plugin (com.nickbether.pebbletasker) - EXAMPLE PROFILE 04
+  "Pebble Connected -> Keep Screen On"
+
+  WHAT IT DOES
+    State context  : Pebble Watch Connected  (plugin STATE)
+    Enter Task     : Keep the phone display awake while the watch is
+                     connected (Display Timeout bumped + Keep Device Awake).
+    Exit  Task     : Restore normal behaviour when the watch disconnects.
+
+  WHY A STATE (not an event)
+    A STATE context is active for as long as it is true, so Tasker runs the
+    Enter task when the watch connects and the Exit task when it disconnects.
+    That is exactly the "while connected, keep awake" shape.
+
+  HOW TO USE
+    See README.md. After import, OPEN the "Pebble Watch Connected" state and
+    re-select / re-save it so Tasker binds the installed plugin version and
+    finalizes the <Bundle> keys. A plugin STATE's config activity is
+    launched via com.twofortyfouram.locale.intent.action.EDIT_CONDITION.
+
+  NOTES ON THIS XML
+    * Generic plugin code is <code>1000</code>; concrete plugin resolves
+      from arg1 (package) + arg2 (config activity FQCN):
+      .tasker.state.connected.S1WatchConnectedActivity
+    * "Keep Device Awake" is not a single Tasker action code; in exports it
+      is the task-level <stayawake> flag plus (optionally) a Display Timeout
+      action. Both are shown here.
+    * Outputs of this state: %pb_connected (true/false), %pb_serial, %pb_json.
+    * <mid0> = Enter task, <mid1> = Exit task.
+  ============================================================================
+-->
+<TaskerData sr="" dvi="1" tv="6.6">
+	<Profile sr="prof103" ve="2">
+		<cdate>1718000000000</cdate>
+		<clp>true</clp>
+		<edate>1718000000000</edate>
+		<id>103</id>
+		<mid0>203</mid0>
+		<mid1>204</mid1>
+		<nme>Pebble Connected - Keep Screen On</nme>
+		<!-- Plugin STATE context (EDIT_CONDITION). -->
+		<State sr="con0" ve="2">
+			<code>1000</code>
+			<Bundle sr="arg0">
+				<Vals sr="val">
+					<com.twofortyfouram.locale.intent.extra.BLURB>Any Pebble watch connected</com.twofortyfouram.locale.intent.extra.BLURB>
+					<com.twofortyfouram.locale.intent.extra.BLURB-type>java.lang.String</com.twofortyfouram.locale.intent.extra.BLURB-type>
+					<!-- Illustrative plugin config keys (finalized on re-edit).
+					     SERIAL empty = any watch. -->
+					<net.dinglisch.android.tasker.extras.SERIAL></net.dinglisch.android.tasker.extras.SERIAL>
+					<net.dinglisch.android.tasker.extras.SERIAL-type>java.lang.String</net.dinglisch.android.tasker.extras.SERIAL-type>
+					<net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>net.dinglisch.android.tasker.extras.SERIAL </net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>
+					<net.dinglisch.android.tasker.subbundled>true</net.dinglisch.android.tasker.subbundled>
+				</Vals>
+			</Bundle>
+			<Str sr="arg1" ve="3">com.nickbether.pebbletasker</Str>
+			<Str sr="arg2" ve="3">com.nickbether.pebbletasker.tasker.state.connected.S1WatchConnectedActivity</Str>
+		</State>
+	</Profile>
+
+	<!-- ENTER task (mid0): keep the display awake while connected. -->
+	<Task sr="task203">
+		<cdate>1718000000000</cdate>
+		<edate>1718000000000</edate>
+		<id>203</id>
+		<nme>Keep Screen On (enter)</nme>
+		<pri>100</pri>
+		<!-- Task-level "Keep Device Awake". true = keep awake. -->
+		<stayawake>true</stayawake>
+		<!-- Display Timeout. code 812. arg0=hours, arg1=mins, arg2=secs.
+		     30 minutes here. -->
+		<Action sr="act0" ve="7">
+			<code>812</code>
+			<Int sr="arg0" val="0"/>
+			<Int sr="arg1" val="30"/>
+			<Int sr="arg2" val="0"/>
+		</Action>
+	</Task>
+
+	<!-- EXIT task (mid1): restore normal screen behaviour on disconnect. -->
+	<Task sr="task204">
+		<cdate>1718000000000</cdate>
+		<edate>1718000000000</edate>
+		<id>204</id>
+		<nme>Keep Screen On (exit)</nme>
+		<pri>100</pri>
+		<!-- Stop keeping the device awake. -->
+		<stayawake>false</stayawake>
+		<!-- Restore a normal Display Timeout (30 seconds). -->
+		<Action sr="act0" ve="7">
+			<code>812</code>
+			<Int sr="arg0" val="0"/>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="30"/>
+		</Action>
+	</Task>
+</TaskerData>

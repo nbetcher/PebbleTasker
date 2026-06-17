@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  Pebble x Tasker plugin (com.nickbether.pebbletasker) - EXAMPLE PROFILE 03
+  "Send Watch Notification (with action button)"
+
+  WHAT IT DOES
+    This export is a STANDALONE TASK (no Profile / no trigger). Run it
+    manually, attach it to your own profile, or call it from another task.
+
+    Action : Pebble Send Watch Notification  (plugin ACTION)
+               title       = "Build finished"
+               body        = "Tap to open the dashboard."
+               subtitle    = "CI"
+               actions_json= one-button JSON array (see below)
+
+  HOW TO USE
+    See README.md. After import, OPEN the "Pebble Send Watch Notification"
+    action and re-select / re-save it so Tasker binds the installed plugin
+    version and finalizes the <Bundle> keys.
+
+  NOTES ON THIS XML
+    * Generic plugin code is <code>1000</code>; concrete plugin resolves
+      from arg1 (package) + arg2 (config activity FQCN):
+      .tasker.action.sendnotif.SendNotifActivity
+      A plugin ACTION's config activity is launched via
+      com.twofortyfouram.locale.intent.action.EDIT_SETTING.
+    * <Int sr="arg3" val="200"/> after the package/activity strings is
+      Tasker's standard per-plugin-action timeout/continue field.
+    * actions_json is a JSON STRING value; the angle brackets / quotes are
+      XML-escaped inside the <Bundle> below. It declares one button
+      ("Open") that the watch shows; the chosen action id is surfaced via
+      the "Pebble Notification Action" event if you build a follow-up
+      profile. Outputs of this action: %pb_json (and on error %err/%errmsg).
+  ============================================================================
+-->
+<TaskerData sr="" dvi="1" tv="6.6">
+	<Task sr="task202">
+		<cdate>1718000000000</cdate>
+		<edate>1718000000000</edate>
+		<id>202</id>
+		<nme>Send Pebble Notification</nme>
+		<pri>100</pri>
+		<!-- Plugin ACTION. code 1000. Config via EDIT_SETTING. -->
+		<Action sr="act0" ve="7">
+			<code>1000</code>
+			<Bundle sr="arg0">
+				<Vals sr="val">
+					<com.twofortyfouram.locale.intent.extra.BLURB>Send "Build finished" to watch (1 action)</com.twofortyfouram.locale.intent.extra.BLURB>
+					<com.twofortyfouram.locale.intent.extra.BLURB-type>java.lang.String</com.twofortyfouram.locale.intent.extra.BLURB-type>
+					<!-- Illustrative plugin config keys (finalized on re-edit).
+					     SERIAL empty = default / active watch. -->
+					<net.dinglisch.android.tasker.extras.SERIAL></net.dinglisch.android.tasker.extras.SERIAL>
+					<net.dinglisch.android.tasker.extras.SERIAL-type>java.lang.String</net.dinglisch.android.tasker.extras.SERIAL-type>
+					<net.dinglisch.android.tasker.extras.TITLE>Build finished</net.dinglisch.android.tasker.extras.TITLE>
+					<net.dinglisch.android.tasker.extras.TITLE-type>java.lang.String</net.dinglisch.android.tasker.extras.TITLE-type>
+					<net.dinglisch.android.tasker.extras.BODY>Tap to open the dashboard.</net.dinglisch.android.tasker.extras.BODY>
+					<net.dinglisch.android.tasker.extras.BODY-type>java.lang.String</net.dinglisch.android.tasker.extras.BODY-type>
+					<net.dinglisch.android.tasker.extras.SUBTITLE>CI</net.dinglisch.android.tasker.extras.SUBTITLE>
+					<net.dinglisch.android.tasker.extras.SUBTITLE-type>java.lang.String</net.dinglisch.android.tasker.extras.SUBTITLE-type>
+					<net.dinglisch.android.tasker.extras.ICON>system://notification</net.dinglisch.android.tasker.extras.ICON>
+					<net.dinglisch.android.tasker.extras.ICON-type>java.lang.String</net.dinglisch.android.tasker.extras.ICON-type>
+					<net.dinglisch.android.tasker.extras.VIBE>short</net.dinglisch.android.tasker.extras.VIBE>
+					<net.dinglisch.android.tasker.extras.VIBE-type>java.lang.String</net.dinglisch.android.tasker.extras.VIBE-type>
+					<!-- actions_json: one-button JSON array, XML-escaped.
+					     Decoded: [{"id":"open","title":"Open","type":"generic"}] -->
+					<net.dinglisch.android.tasker.extras.ACTIONS_JSON>[{&quot;id&quot;:&quot;open&quot;,&quot;title&quot;:&quot;Open&quot;,&quot;type&quot;:&quot;generic&quot;}]</net.dinglisch.android.tasker.extras.ACTIONS_JSON>
+					<net.dinglisch.android.tasker.extras.ACTIONS_JSON-type>java.lang.String</net.dinglisch.android.tasker.extras.ACTIONS_JSON-type>
+					<net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>net.dinglisch.android.tasker.extras.SERIAL net.dinglisch.android.tasker.extras.TITLE net.dinglisch.android.tasker.extras.BODY net.dinglisch.android.tasker.extras.SUBTITLE net.dinglisch.android.tasker.extras.ACTIONS_JSON </net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>
+					<net.dinglisch.android.tasker.subbundled>true</net.dinglisch.android.tasker.subbundled>
+				</Vals>
+			</Bundle>
+			<Str sr="arg1" ve="3">com.nickbether.pebbletasker</Str>
+			<Str sr="arg2" ve="3">com.nickbether.pebbletasker.tasker.action.sendnotif.SendNotifActivity</Str>
+			<Int sr="arg3" val="200"/>
+		</Action>
+	</Task>
+</TaskerData>

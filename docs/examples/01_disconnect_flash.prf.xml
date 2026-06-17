@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  Pebble x Tasker plugin (com.nickbether.pebbletasker) - EXAMPLE PROFILE 01
+  "Pebble Disconnected -> Flash"
+
+  WHAT IT DOES
+    Event context  : Pebble Watch Disconnected  (plugin EVENT)
+    Task           : Flash a toast on the phone, then post a Notify.
+
+  HOW TO USE
+    See README.md in this folder. After import you MUST open the plugin
+    event ("Pebble Watch Disconnected") and tap the pencil / re-select the
+    config so Tasker re-binds the current installed plugin version. Tasker
+    finalizes the plugin <Bundle> keys at that moment.
+
+  NOTES ON THIS XML
+    * <code>1000</code> is Tasker's generic "Plugin" code for an Event /
+      State / Action. Tasker resolves the concrete plugin from the trailing
+      <Str sr="arg1"> (package) + <Str sr="arg2"> (config activity class).
+    * The <Bundle>/<Vals> below is a realistic snapshot. The plugin's own
+      config keys (e.g. pebble.extra.SERIAL) are illustrative - Tasker
+      rewrites/normalizes them when you re-open the config after import.
+    * Output variables exported by this event: %pb_serial, %pb_json
+      (the watch-disconnected event carries no battery %).
+  ============================================================================
+-->
+<TaskerData sr="" dvi="1" tv="6.6">
+	<Profile sr="prof100" ve="2">
+		<cdate>1718000000000</cdate>
+		<clp>true</clp>
+		<edate>1718000000000</edate>
+		<id>100</id>
+		<mid0>200</mid0>
+		<nme>Pebble Disconnected - Flash</nme>
+		<!-- Plugin EVENT context. Config activity is launched via
+		     net.dinglisch.android.tasker.ACTION_EDIT_EVENT -->
+		<Event sr="con0" ve="2">
+			<code>1000</code>
+			<pri>0</pri>
+			<Bundle sr="arg0">
+				<Vals sr="val">
+					<com.twofortyfouram.locale.intent.extra.BLURB>Any Pebble watch disconnected</com.twofortyfouram.locale.intent.extra.BLURB>
+					<com.twofortyfouram.locale.intent.extra.BLURB-type>java.lang.String</com.twofortyfouram.locale.intent.extra.BLURB-type>
+					<!-- Plugin config: empty serial = "any watch". Keys are
+					     illustrative and are re-written on first config edit. -->
+					<net.dinglisch.android.tasker.extras.SERIAL></net.dinglisch.android.tasker.extras.SERIAL>
+					<net.dinglisch.android.tasker.extras.SERIAL-type>java.lang.String</net.dinglisch.android.tasker.extras.SERIAL-type>
+					<net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>net.dinglisch.android.tasker.extras.SERIAL </net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS>
+					<net.dinglisch.android.tasker.subbundled>true</net.dinglisch.android.tasker.subbundled>
+				</Vals>
+			</Bundle>
+			<!-- arg1 = plugin package, arg2 = config activity (FQCN) -->
+			<Str sr="arg1" ve="3">com.nickbether.pebbletasker</Str>
+			<Str sr="arg2" ve="3">com.nickbether.pebbletasker.tasker.event.disconnected.WatchDisconnectedActivity</Str>
+		</Event>
+	</Profile>
+
+	<!-- Task referenced by the Profile via <mid0>200</mid0> -->
+	<Task sr="task200">
+		<cdate>1718000000000</cdate>
+		<edate>1718000000000</edate>
+		<id>200</id>
+		<nme>Flash Watch Disconnected</nme>
+		<pri>100</pri>
+		<!-- Flash (toast). code 548. arg0 = text, arg1 = long(0/1) -->
+		<Action sr="act0" ve="7">
+			<code>548</code>
+			<Str sr="arg0" ve="3">Pebble disconnected: %pb_serial</Str>
+			<Int sr="arg1" val="0"/>
+		</Action>
+		<!-- Notify. code 523. arg0=title, arg1=text, arg2=icon,
+		     arg3=number, arg4=permanent, arg5=priority -->
+		<Action sr="act1" ve="7">
+			<code>523</code>
+			<Str sr="arg0" ve="3">Pebble watch disconnected</Str>
+			<Str sr="arg1" ve="3">Serial %pb_serial lost its connection.</Str>
+			<Img sr="arg2" ve="2">
+				<nme>hl_device_access_bluetooth</nme>
+			</Img>
+			<Int sr="arg3" val="0"/>
+			<Int sr="arg4" val="0"/>
+			<Int sr="arg5" val="3"/>
+		</Action>
+	</Task>
+</TaskerData>

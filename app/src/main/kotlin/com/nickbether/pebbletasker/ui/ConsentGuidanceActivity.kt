@@ -113,7 +113,7 @@ class ConsentGuidanceActivity : AppCompatActivity() {
     private fun primaryOpensPebble() {
         binding.btnPrimary.visibility = View.VISIBLE
         binding.btnPrimary.setText(R.string.action_open_pebble_app)
-        binding.btnPrimary.setOnClickListener { openPebbleApp() }
+        binding.btnPrimary.setOnClickListener { openBridgeConsent() }
     }
 
     private fun primaryRetries() {
@@ -128,6 +128,22 @@ class ConsentGuidanceActivity : AppCompatActivity() {
             startActivity(intent)
         } else {
             Toast.makeText(this, R.string.consent_app_absent_heading, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * Deep-link straight to the Pebble app's automation consent/settings screen (exported via the
+     * REVIEW_CLIENTS action) so the user lands on the approve/toggle screen rather than the app home.
+     * Falls back to the app launcher if an older bridge can't resolve the action.
+     */
+    private fun openBridgeConsent() {
+        val consent = Intent("coredevices.coreapp.automation.REVIEW_CLIENTS")
+            .setPackage("coredevices.coreapp")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (consent.resolveActivity(packageManager) != null) {
+            startActivity(consent)
+        } else {
+            openPebbleApp()
         }
     }
 

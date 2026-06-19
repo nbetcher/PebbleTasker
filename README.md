@@ -83,7 +83,11 @@ Excluded: `layout/ng_showcase.xml`, `arrays.xml`, and all sample drawables
 6. **util/** — TimeoutScope, SecureWindow, BatteryOpt.
 7. `res/layout/*` for every config/UI activity + `view_tasker_var_field.xml`.
 
-On **today's bridge** only **E1/E2/E4 + S1** are exercisable (`CAPABILITIES=["events.core"]`,
-`contentRedacted=true`, no `execute`). Everything else is capability-gated and lights up as the
-bridge advertises new capabilities — without orphaning saved configs (the `%pb_*` names and
-input-field keys are a frozen, append-only contract).
+The bridge now advertises the full capability set — `events.core`, `events.notifications`,
+`events.health`, `commands.core`, `commands.sensitive`, `commands.dangerous`, `appmessages` — and
+serves `execute`, so the whole event catalog (E1–E15) and all command tiers are exercisable. Event
+delivery is bounded by the host app's master switch + per-category consent toggles (notification
+content is off + redacted by default); command **tier** is granted per client at approval, and the
+DANGEROUS tier additionally needs the app's "allow dangerous commands" toggle. Capability gating
+remains the forward-compat mechanism — anything the bridge doesn't advertise stays dark, without
+orphaning saved configs (the `%pb_*` names and input-field keys are a frozen, append-only contract).

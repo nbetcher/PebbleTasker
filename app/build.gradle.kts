@@ -4,6 +4,10 @@ plugins {
     kotlin("plugin.serialization")
 }
 
+// Release builds use the real signing key unless LOCAL_RELEASE_BUILD=true (then debug-signed, so a
+// human can build/verify a release variant without the keystore/env). Mirrors the fork (composeApp).
+val localReleaseBuild = project.findProperty("LOCAL_RELEASE_BUILD")?.toString()?.toBooleanStrictOrNull() ?: false
+
 android {
     namespace = "com.nickbether.pebbletasker"
     compileSdk = 36
@@ -33,6 +37,17 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        if (!localReleaseBuild) {
+            // Real release key — the SAME cert the host app is signed with, which the bridge
+            // TOFU-pins (FINAL DESIGN §3.6 / FIX D2). storeFile is the repo-root keystore.jks
+            // (gitignored via *.jks); passwords come from the RELEASE_* env (~/.pebble-signing).
+            create("release") {
+                storeFile = file("../keystore.jks")
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEYSTORE_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -51,10 +66,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Debug-signed for now so a human can build/verify a release variant in WSL
-            // without provisioning a release keystore. Swap to a real release signingConfig
-            // before publishing.
-            signingConfig = signingConfigs.getByName("debug")
+            // Real release signing (see signingConfigs above); LOCAL_RELEASE_BUILD=true falls back to
+            // debug-signing so a release variant can still be built without the keystore/env.
+            signingConfig = if (localReleaseBuild) {
+                signingConfigs.getByName("debug")
+            } else {
+                signingConfigs.getByName("release")
+            }
         }
     }
 

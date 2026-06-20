@@ -78,7 +78,21 @@ class MusicActivity :
     override val descRes = R.string.pb_evt_music_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("music_action", getString(R.string.pb_lbl_music_action)),
+        // Values are the bridge's MusicAction.name strings (media.command -> "action"); labels are
+        // friendly. "Any" (cleared field) matches every command.
+        FieldSpec(
+            "music_action",
+            getString(R.string.pb_lbl_music_action),
+            options = listOf(
+                "Play" to "Play",
+                "Pause" to "Pause",
+                "Play / pause" to "PlayPause",
+                "Next track" to "NextTrack",
+                "Previous track" to "PreviousTrack",
+                "Volume up" to "VolumeUp",
+                "Volume down" to "VolumeDown",
+            ),
+        ),
     )
 
     override fun getNewHelper(config: TaskerPluginConfig<MusicFilter>) = MusicHelper(config)

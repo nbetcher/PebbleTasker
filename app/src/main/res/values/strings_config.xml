@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the shared config-activity chrome (toolbar actions + criteria pick-lists). -->
+<resources>
+    <!-- Toolbar actions (PebbleConfigActivity / menu/config_confirm.xml). -->
+    <string name="cfg_accept">Accept</string>
+    <string name="cfg_discard">Discard</string>
+
+    <!-- Criteria pick-lists (serial + fixed-value fields). "Any" clears the field to match everything. -->
+    <string name="pb_lookup_any">Any</string>
+    <string name="pb_lookup_pick">Choose a value</string>
+</resources>

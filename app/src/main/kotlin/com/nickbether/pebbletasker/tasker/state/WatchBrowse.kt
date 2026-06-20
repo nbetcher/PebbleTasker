@@ -42,16 +42,14 @@ internal object WatchBrowse {
                     is BridgeResult.Err -> emptyList()
                 }
             }
-            if (watches.isEmpty()) {
-                layout.helperText = ctx.getString(R.string.pb_no_watches)
-                edit.requestFocus()
-                return@launch
-            }
-            val labels = watches.map { it.displayLabel() }.toTypedArray()
+            // Always offer "Any" first (clears the field -> match any watch), then the reported watches.
+            val labels = (
+                listOf(ctx.getString(R.string.pb_lookup_any)) + watches.map { it.displayLabel() }
+            ).toTypedArray()
             MaterialAlertDialogBuilder(ctx)
                 .setTitle(R.string.pb_pick_watch)
                 .setItems(labels) { _, which ->
-                    edit.setText(watches[which].serial)
+                    edit.setText(if (which == 0) "" else watches[which - 1].serial)
                     edit.setSelection(edit.text?.length ?: 0)
                 }
                 .show()

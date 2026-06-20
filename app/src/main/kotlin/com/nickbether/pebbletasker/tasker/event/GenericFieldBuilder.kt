@@ -4,8 +4,10 @@ import android.content.Context
 import android.text.InputType
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.nickbether.pebbletasker.R
 
 /**
  * Builds Neon-Grid-themed variable fields into a config activity's pbFieldsContainer at runtime, so
@@ -30,6 +32,7 @@ object GenericFieldBuilder {
         hint: CharSequence,
         numeric: Boolean = false,
         singleLine: Boolean = true,
+        options: List<Pair<String, String>>? = null,
     ): TextInputEditText {
         // Construct with the theme's default textInputStyle (mapped to Widget.NeonGrid.TextInputLayout
         // in Theme.NeonGrid), so the field is themed consistently with the XML-authored fields.
@@ -48,8 +51,39 @@ object GenericFieldBuilder {
             inputType = InputType.TYPE_CLASS_TEXT
         }
         layout.addView(edit)
+        if (options != null) {
+            // Start icon opens a pick-list of "Any" + the known values; the end icon stays the variable
+            // picker and the field remains editable, so a %variable still works (FIX #3a slot rule).
+            layout.setStartIconDrawable(R.drawable.ic_lookup_dropdown)
+            layout.setStartIconContentDescription(R.string.pb_lookup_pick)
+            layout.isStartIconVisible = true
+            layout.setStartIconOnClickListener {
+                showOptions(layout.context, options) { value ->
+                    edit.setText(value)
+                    edit.setSelection(edit.text?.length ?: 0)
+                }
+            }
+        }
         container.addView(layout)
         return edit
+    }
+
+    /**
+     * Criteria pick-list dialog: an "Any" row (clears the field -> match everything) followed by every
+     * known [options] value. [onPicked] receives the matched value to write (empty string for "Any").
+     */
+    private fun showOptions(
+        context: Context,
+        options: List<Pair<String, String>>,
+        onPicked: (String) -> Unit,
+    ) {
+        val labels = (listOf(context.getString(R.string.pb_lookup_any)) + options.map { it.first })
+            .toTypedArray()
+        MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.pb_lookup_pick)
+            .setItems(labels) { _, which -> onPicked(if (which == 0) "" else options[which - 1].second) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun dp(context: Context, value: Int): Int =

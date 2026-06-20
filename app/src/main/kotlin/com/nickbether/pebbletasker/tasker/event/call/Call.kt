@@ -103,7 +103,19 @@ class CallActivity :
     override val descRes = R.string.pb_evt_call_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("call_state", getString(R.string.pb_lbl_call_state)),
+        // Values are the bridge's Call subclass simpleNames (calls.state -> "state") plus "Ended";
+        // labels are friendly. "Any" (cleared field) matches every state.
+        FieldSpec(
+            "call_state",
+            getString(R.string.pb_lbl_call_state),
+            options = listOf(
+                "Ringing" to "RingingCall",
+                "Dialing" to "DialingCall",
+                "Active" to "ActiveCall",
+                "Holding" to "HoldingCall",
+                "Ended" to "Ended",
+            ),
+        ),
     )
 
     override fun getNewHelper(config: TaskerPluginConfig<CallFilter>) = CallHelper(config)

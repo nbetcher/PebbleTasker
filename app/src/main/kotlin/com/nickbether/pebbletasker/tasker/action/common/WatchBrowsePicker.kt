@@ -43,19 +43,18 @@ object WatchBrowsePicker {
     }
 
     private fun showList(edit: EditText, watches: List<WatchRef>, onPick: (() -> Unit)?) {
-        if (watches.isEmpty()) {
-            showUnavailable(edit.context, edit.context.getString(R.string.act_picker_no_watches))
-            return
-        }
-        val labels = watches.map { w ->
-            val nick = w.nickname?.takeIf { it.isNotBlank() }
-            val title = nick ?: w.name.ifBlank { w.serial }
-            "$title  (${w.serial})"
-        }.toTypedArray()
+        // Always offer "Any" first (clears the field -> match any watch), then the reported watches.
+        val labels = (
+            listOf(edit.context.getString(R.string.pb_lookup_any)) + watches.map { w ->
+                val nick = w.nickname?.takeIf { it.isNotBlank() }
+                val title = nick ?: w.name.ifBlank { w.serial }
+                "$title  (${w.serial})"
+            }
+        ).toTypedArray()
         MaterialAlertDialogBuilder(edit.context)
             .setTitle(R.string.act_picker_choose_watch)
             .setItems(labels) { _, which ->
-                edit.setText(watches[which].serial)
+                edit.setText(if (which == 0) "" else watches[which - 1].serial)
                 edit.setSelection(edit.text?.length ?: 0)
                 onPick?.invoke()
             }

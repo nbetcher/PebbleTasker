@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shared chrome for EVERY Pebble config activity. PebbleConfigActivity inflates this, drops the
+  subclass's own layout into @id/pbConfigContent, and applies window-inset padding to @id/pbScaffoldRoot
+  so the toolbar sits below the status bar (no immersive mode). The toolbar carries the ✓ accept / ✗
+  discard actions (menu/config_confirm.xml).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pbScaffoldRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/pbToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize" />
+
+    <FrameLayout
+        android:id="@+id/pbConfigContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

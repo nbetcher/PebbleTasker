@@ -35,6 +35,12 @@ abstract class GenericEventConfigActivity<
         val numeric: Boolean = false,
         /** When true, the watch-browse button writes the picked serial into this field. */
         val isWatchSerial: Boolean = false,
+        /**
+         * Fixed criteria values (display label -> matched value) for an enumerable filter. When set,
+         * the field gets a start-icon pick-list of "Any" + these values (e.g. media commands, call
+         * states). The field stays editable so a %variable still works.
+         */
+        val options: List<Pair<String, String>>? = null,
     )
 
     /** Title/description string resource ids. */
@@ -70,6 +76,7 @@ abstract class GenericEventConfigActivity<
                 container = binding.pbFieldsContainer,
                 hint = spec.label,
                 numeric = spec.numeric,
+                options = spec.options,
             )
             if (spec.default.isNotEmpty()) edit.setText(spec.default)
             edits[spec.key] = edit

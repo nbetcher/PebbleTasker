@@ -179,6 +179,10 @@ class BridgeClient private constructor(private val appContext: Context) {
                 val routed = cache.putBatch(registered.value.events)
                 if (routed.isNotEmpty()) listener.routedChannel.trySend(routed)
                 _status.value = ConnectionStatus.Ready(sess)
+                // Freshly (re)connected: re-query every registered condition so Tasker states/events
+                // reflect the CURRENT bridge snapshot now — even when the triggering connect/disconnect
+                // happened before this session existed (so no event would ever push them).
+                EventRouter.requestQueryAll(appContext)
             }
             is BridgeResult.Err -> {
                 // Probe failed -> registration likely dropped; surface and let backoff re-handshake.

@@ -63,4 +63,17 @@ object EventRouter {
             runCatching { activity.requestQuery(context) }
         }
     }
+
+    /**
+     * Re-query EVERY registered condition once. Called when the bridge becomes Ready so states/events
+     * reflect the CURRENT bridge snapshot immediately — crucial when the change that would normally
+     * push them (e.g. the watch connecting) happened BEFORE this session existed, so no event will ever
+     * arrive to re-query them. A requestQuery for a condition not used in any profile is a harmless no-op.
+     */
+    fun requestQueryAll(context: Context) {
+        val activities = routes.values.flatten().toHashSet()
+        for (activity in activities) {
+            runCatching { activity.requestQuery(context) }
+        }
+    }
 }

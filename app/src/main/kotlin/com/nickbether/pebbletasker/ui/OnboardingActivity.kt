@@ -1,10 +1,14 @@
 package com.nickbether.pebbletasker.ui
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +39,10 @@ class OnboardingActivity : AppCompatActivity() {
 
     private val bridge get() = BridgeClient.get(this)
 
+    /** Best-effort POST_NOTIFICATIONS request (Android 13+) so the "not connected" warning can show. */
+    private val requestNotifications =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* result ignored */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
@@ -52,6 +60,17 @@ class OnboardingActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 bridge.status.collect { renderStatus(it) }
             }
+        }
+
+        maybeRequestNotificationPermission()
+    }
+
+    /** Ask for POST_NOTIFICATIONS once on Android 13+ so the "Pebble not connected" warning can show. */
+    private fun maybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 

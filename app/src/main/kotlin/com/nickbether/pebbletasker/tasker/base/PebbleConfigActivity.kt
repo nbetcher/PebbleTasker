@@ -5,12 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.appbar.MaterialToolbar
 import com.joaomgcd.taskerpluginlibrary.SimpleResultError
@@ -19,8 +23,12 @@ import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfigHelper
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginRunner
 import com.nickbether.pebbletasker.R
+import com.nickbether.pebbletasker.bridge.BridgeClient
 import com.nickbether.pebbletasker.tasker.vars.RelevantVars
 import com.nickbether.pebbletasker.tasker.vars.VariableFieldBinder
+import com.nickbether.pebbletasker.ui.BridgeWarning
+import com.nickbether.pebbletasker.ui.ConsentGuidanceActivity
+import kotlinx.coroutines.launch
 
 /**
  * Base class for ALL Pebble plugin config activities (FINAL DESIGN §4.2, FIX C2).
@@ -112,6 +120,22 @@ abstract class PebbleConfigActivity<
                 override fun handleOnBackPressed() = acceptConfig()
             },
         )
+
+        // Warn (and link to setup) whenever the plugin is configured while NOT bridged to the Pebble
+        // app — so nobody configures a state/event/action against a connection that doesn't exist.
+        val warningBanner = scaffold.findViewById<TextView>(R.id.pbBridgeWarning)
+        warningBanner.setOnClickListener { startActivity(ConsentGuidanceActivity.intentFor(this)) }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                BridgeClient.get(this@PebbleConfigActivity).status.collect { status ->
+                    val warn = BridgeWarning.messageFor(status)
+                    warningBanner.text = warn
+                    warningBanner.visibility = if (warn == null) View.GONE else View.VISIBLE
+                }
+            }
+        }
+        // Nudge a (re)bind so a transient disconnect clears while the user is configuring.
+        BridgeClient.get(this).retryHandshake()
 
         // Library wiring: populate the saved input into the UI, then attach variable pickers.
         taskerHelper.onCreate()

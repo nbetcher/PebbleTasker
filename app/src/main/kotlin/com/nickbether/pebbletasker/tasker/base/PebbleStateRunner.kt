@@ -5,6 +5,7 @@ import com.joaomgcd.taskerpluginlibrary.condition.TaskerPluginRunnerConditionSta
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultCondition
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknown
+import com.nickbether.pebbletasker.ui.BridgeWarning
 
 /**
  * Base for ALL state plugins (FINAL DESIGN §2.2 / §4.2, FIX C8).
@@ -34,6 +35,8 @@ abstract class PebbleStateRunner<TInput : Any, TOutput : Any> :
         input: TaskerInput<TInput>,
         update: Unit?,
     ): TaskerPluginResultCondition<TOutput> = try {
+        // Warn (throttled notification) if Tasker is polling this state while we're not bridged.
+        BridgeWarning.warnIfUsedWhileUnbridged(context)
         evaluate(context, input.regular)
     } catch (t: Throwable) {
         TaskerPluginResultConditionUnknown()

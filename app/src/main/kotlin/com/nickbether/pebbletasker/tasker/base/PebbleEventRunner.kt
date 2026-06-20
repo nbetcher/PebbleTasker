@@ -7,6 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultCondition
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknown
 import com.nickbether.pebbletasker.cache.CachedEvent
 import com.nickbether.pebbletasker.cache.EventCache
+import com.nickbether.pebbletasker.ui.BridgeWarning
 
 /**
  * Base for ALL event plugins (FINAL DESIGN §2.1 / §4.2, FIX C3/C4/C9).
@@ -48,6 +49,8 @@ abstract class PebbleEventRunner<TInput : Any, TOutput : Any> :
         input: TaskerInput<TInput>,
         update: TOutput?,
     ): TaskerPluginResultCondition<TOutput> {
+        // Warn (throttled notification) if this event condition is evaluated while we're not bridged.
+        BridgeWarning.warnIfUsedWhileUnbridged(context)
         val cached = runCatching { EventCache.get(context).latest(eventType) }.getOrNull()
         return try {
             evaluate(context, input.regular, cached, update)

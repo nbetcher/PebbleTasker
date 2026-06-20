@@ -8,6 +8,7 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultError
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultSucess
 import com.nickbether.pebbletasker.bridge.BridgeResult
 import com.nickbether.pebbletasker.tasker.ErrCodes
+import com.nickbether.pebbletasker.ui.BridgeWarning
 
 /**
  * Base for ALL action plugins (FINAL DESIGN §2.3 / §4.2, FIX C5/C6).
@@ -61,6 +62,8 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
 
     @Suppress("UNCHECKED_CAST")
     final override fun run(context: Context, input: TaskerInput<TInput>): TaskerPluginResult<TOutput> {
+        // Warn (throttled notification) if this action is run while we're not bridged to the Pebble app.
+        BridgeWarning.warnIfUsedWhileUnbridged(context)
         val bridgeResult = execute(context, input)
         return when (bridgeResult) {
             is BridgeResult.Ok -> {

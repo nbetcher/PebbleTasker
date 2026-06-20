@@ -2,10 +2,12 @@
 <!--
   Shared chrome for EVERY Pebble config activity. PebbleConfigActivity inflates this, drops the
   subclass's own layout into @id/pbConfigContent, and applies window-inset padding to @id/pbScaffoldRoot
-  so the toolbar sits below the status bar (no immersive mode). The toolbar carries the ✓ accept / ✗
-  discard actions (menu/config_confirm.xml).
+  so the toolbar sits below the status bar (no immersive mode). The toolbar carries the accept / discard
+  actions; @id/pbBridgeWarning is a tap-to-set-up bar shown whenever the bridge isn't connected.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/pbScaffoldRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -15,6 +17,27 @@
         android:id="@+id/pbToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize" />
+
+    <!-- "Not connected to the Pebble app" warning bar. Hidden unless the bridge isn't Ready; tapping
+         it opens the setup guidance. PebbleConfigActivity binds its text/visibility to BridgeClient.status. -->
+    <TextView
+        android:id="@+id/pbBridgeWarning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="?attr/colorErrorContainer"
+        android:foreground="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:drawablePadding="10dp"
+        android:textColor="?attr/colorError"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        app:drawableStartCompat="@drawable/ic_warning"
+        app:drawableTint="?attr/colorError"
+        tools:text="Not connected to the Pebble app — tap to set up."
+        tools:visibility="visible" />
 
     <FrameLayout
         android:id="@+id/pbConfigContent"

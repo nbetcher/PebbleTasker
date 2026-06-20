@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Post the "Pebble app not connected" warning notification (Android 13+ runtime permission,
+         requested in onboarding; best-effort — the in-config warning banner needs no permission). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- IMPORTANT: never set android:sharedUserId — the bridge's consent requires a
          single-package uid (CallerVerifier:43). Setting it breaks consent. (FINAL DESIGN §0 FIX D2) -->

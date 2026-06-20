@@ -4,6 +4,7 @@ import android.app.Application
 import com.nickbether.pebbletasker.bridge.BridgeClient
 import com.nickbether.pebbletasker.tasker.event.EventRouting
 import com.nickbether.pebbletasker.tasker.state.StateRegistrations
+import com.nickbether.pebbletasker.ui.BridgeWarning
 
 /**
  * Application entry point for the Pebble x Tasker plugin.
@@ -31,6 +32,9 @@ class PebbleTaskerApp : Application() {
         // state condition immediately instead of waiting for Tasker's own poll (FINAL DESIGN §2.2).
         // Idempotent (EventRouter dedupes registrations via a set).
         StateRegistrations.registerAll()
-        // TODO(ui): create notification channels for ConsentGuidance/onboarding (UI-layer concern).
+        // Channel for the "bridge not connected" runtime warning: every event/state/action runner
+        // calls BridgeWarning.warnIfUsedWhileUnbridged(), which posts here when a Pebble automation
+        // runs while the bridge isn't established (e.g. after restoring a backup onto a new phone).
+        BridgeWarning.ensureChannel(this)
     }
 }

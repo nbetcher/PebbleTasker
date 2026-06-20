@@ -69,7 +69,6 @@ abstract class GenericEventConfigActivity<
         binding.pbTitle.setText(titleRes)
         binding.pbDesc.setText(descRes)
 
-        var watchField: TextInputEditText? = null
         for (spec in buildFields()) {
             val edit = GenericFieldBuilder.addField(
                 context = this,
@@ -77,18 +76,13 @@ abstract class GenericEventConfigActivity<
                 hint = spec.label,
                 numeric = spec.numeric,
                 options = spec.options,
+                watchSerial = spec.isWatchSerial,
             )
             if (spec.default.isNotEmpty()) edit.setText(spec.default)
             edits[spec.key] = edit
-            if (spec.isWatchSerial && watchField == null) watchField = edit
         }
-
-        if (watchField != null) {
-            binding.pbBtnPickWatch.visibility = android.view.View.VISIBLE
-            binding.pbBtnPickWatch.setOnClickListener {
-                WatchSerialPicker.show(this) { serial -> watchField.setText(serial) }
-            }
-        }
+        // Each serial/enum field now carries its own anchored dropdown; the shared button is unused.
+        binding.pbBtnPickWatch.visibility = android.view.View.GONE
 
         // Re-attach variable pickers now that fields were added dynamically (base attached the static
         // tree earlier, before these existed).

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One row in a CriteriaDropdown ListPopupWindow. Themed so it's readable on the Neon-Grid surface. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="48dp"
+    android:gravity="center_vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:textColor="?attr/colorOnSurface"
+    android:textAppearance="?attr/textAppearanceBodyLarge"
+    android:fontFamily="monospace" />

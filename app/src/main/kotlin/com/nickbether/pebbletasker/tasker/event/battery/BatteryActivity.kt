@@ -5,8 +5,8 @@ import com.google.android.material.button.MaterialButton
 import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfig
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.nickbether.pebbletasker.databinding.ActivityConfigBatteryBinding
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleConfigActivity
-import com.nickbether.pebbletasker.tasker.event.WatchSerialPicker
 
 /**
  * E4 config activity (Neon-Grid themed). AppCompatActivity-based (FIX C2) so Material3 renders.
@@ -28,10 +28,9 @@ class BatteryActivity :
     override fun getNewHelper(config: TaskerPluginConfig<BatteryFilter>) = BatteryHelper(config)
 
     override fun onConfigCreated(binding: ActivityConfigBatteryBinding) {
-        // Watch browse-picker writes the serial into the editable field (keeps %var support).
-        binding.pbBtnPickWatch.setOnClickListener {
-            WatchSerialPicker.show(this) { serial -> binding.pbEditSerial.setText(serial) }
-        }
+        // The serial field now carries its own "Any" + watches dropdown; the old button is redundant.
+        binding.pbBtnPickWatch.visibility = android.view.View.GONE
+        CriteriaDropdown.attachWatchSerial(binding.pbLayoutSerial)
         // Direction toggle mirrors into the editable direction field.
         binding.pbToggleDirection.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener

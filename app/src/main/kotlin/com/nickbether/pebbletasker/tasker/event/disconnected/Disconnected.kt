@@ -20,7 +20,7 @@ import com.nickbether.pebbletasker.tasker.base.PebbleEventRunner
 import com.nickbether.pebbletasker.tasker.event.BaseEventOutput
 import com.nickbether.pebbletasker.tasker.event.EventRouting
 import com.nickbether.pebbletasker.tasker.event.EventSupport
-import com.nickbether.pebbletasker.tasker.event.WatchSerialPicker
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 
 /**
  * E2 — Pebble Watch Disconnected (READY today).
@@ -82,9 +82,9 @@ class DisconnectedActivity :
     override fun onConfigCreated(binding: ActivityConfigSerialOnlyBinding) {
         binding.pbTitle.setText(R.string.pb_evt_disconnected_title)
         binding.pbDesc.setText(R.string.pb_evt_disconnected_desc)
-        binding.pbBtnPickWatch.setOnClickListener {
-            WatchSerialPicker.show(this) { serial -> binding.pbEditSerial.setText(serial) }
-        }
+        // The serial field now carries its own "Any" + watches dropdown; the old button is redundant.
+        binding.pbBtnPickWatch.visibility = android.view.View.GONE
+        CriteriaDropdown.attachWatchSerial(binding.pbLayoutSerial)
     }
 
     override fun assignFromInput(input: TaskerInput<DisconnectedFilter>) {

@@ -60,7 +60,11 @@ class OnboardingActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                bridge.status.collect { renderStatus(it) }
+                bridge.status.collect {
+                    renderStatus(it)
+                    // Connected for the first time -> kick off the short getting-started flow.
+                    GettingStartedActivity.maybeLaunch(this@OnboardingActivity, it)
+                }
             }
         }
 

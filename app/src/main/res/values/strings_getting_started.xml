@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the GettingStarted flow + its re-entry button. Step content lives in the activity. -->
+<resources>
+    <string name="gs_skip">Skip</string>
+    <string name="gs_back">Back</string>
+    <string name="gs_next">Next</string>
+    <string name="gs_done">Done</string>
+    <string name="main_btn_getting_started">Getting started</string>
+</resources>

@@ -40,12 +40,19 @@ class MainActivity : AppCompatActivity() {
         binding.btnDiagnostics.setOnClickListener {
             startActivity(Intent(this, DiagnosticsActivity::class.java))
         }
+        binding.btnGettingStarted.setOnClickListener {
+            startActivity(GettingStartedActivity.intentFor(this))
+        }
         binding.btnOpenPebble.setOnClickListener { openPebbleApp() }
 
         // Collect status only while STARTED; re-collected on resume so it always reflects reality.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                bridge.status.collect { render(it) }
+                bridge.status.collect {
+                    render(it)
+                    // The first time we're actually connected, kick off the short getting-started flow.
+                    GettingStartedActivity.maybeLaunch(this@MainActivity, it)
+                }
             }
         }
     }

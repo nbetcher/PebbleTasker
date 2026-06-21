@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.joaomgcd.taskerpluginlibrary.SimpleResultError
 import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfig
 import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfigHelper
@@ -28,6 +29,7 @@ import com.nickbether.pebbletasker.tasker.vars.RelevantVars
 import com.nickbether.pebbletasker.tasker.vars.VariableFieldBinder
 import com.nickbether.pebbletasker.ui.BridgeWarning
 import com.nickbether.pebbletasker.ui.ConsentGuidanceActivity
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -137,6 +139,19 @@ abstract class PebbleConfigActivity<
         // Nudge a (re)bind so a transient disconnect clears while the user is configuring.
         BridgeClient.get(this).retryHandshake()
 
+        // One-shot advisory popup when a plugin component is opened while the bridge isn't connected:
+        // a dismissible Neon-Grid dialog with a "Set up" shortcut. Only on first creation (not rotation),
+        // and after a short grace so a transient (re)bind isn't mistaken for "not working".
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                delay(1200)
+                val current = BridgeClient.get(this@PebbleConfigActivity).status.value
+                if (current !is BridgeClient.ConnectionStatus.Ready && !isFinishing && !isDestroyed) {
+                    showBridgeWarningDialog(current)
+                }
+            }
+        }
+
         // Library wiring: populate the saved input into the UI, then attach variable pickers.
         taskerHelper.onCreate()
         attachVariablePickers(b.root)
@@ -174,6 +189,17 @@ abstract class PebbleConfigActivity<
     protected fun discardConfig() {
         setResult(RESULT_CANCELED)
         finish()
+    }
+
+    /** Dismissible Neon-Grid popup advising the bridge isn't connected, with a "Set up" shortcut. */
+    private fun showBridgeWarningDialog(status: BridgeClient.ConnectionStatus) {
+        val msg = BridgeWarning.messageFor(status) ?: return
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Pebble isn't connected")
+            .setMessage("$msg\n\nThis won't do anything until the connection is set up.")
+            .setPositiveButton("Set up") { _, _ -> startActivity(ConsentGuidanceActivity.intentFor(this)) }
+            .setNegativeButton("Dismiss", null)
+            .show()
     }
 
     /** Surface a validation error. Default shows a short toast; subclasses may override for a dialog. */

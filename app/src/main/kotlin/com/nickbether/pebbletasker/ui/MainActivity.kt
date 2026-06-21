@@ -12,6 +12,7 @@ import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.bridge.BridgeClient
 import com.nickbether.pebbletasker.bridge.BridgeClient.ConnectionStatus
 import com.nickbether.pebbletasker.databinding.ActivityMainBinding
+import com.nickbether.pebbletasker.util.applyContentInsets
 import kotlinx.coroutines.launch
 
 /**
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyContentInsets()
 
         binding.btnSetup.setOnClickListener {
             startActivity(Intent(this, OnboardingActivity::class.java))

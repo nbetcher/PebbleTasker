@@ -13,6 +13,7 @@ import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.bridge.BridgeClient
 import com.nickbether.pebbletasker.bridge.BridgeClient.ConnectionStatus
 import com.nickbether.pebbletasker.databinding.ActivityConsentGuidanceBinding
+import com.nickbether.pebbletasker.util.applyContentInsets
 import kotlinx.coroutines.launch
 
 /**
@@ -39,6 +40,7 @@ class ConsentGuidanceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityConsentGuidanceBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyContentInsets()
 
         binding.btnRetry.setOnClickListener { bridge.retryHandshake() }
         binding.btnClose.setOnClickListener { finish() }

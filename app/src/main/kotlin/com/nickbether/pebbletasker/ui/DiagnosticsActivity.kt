@@ -24,6 +24,7 @@ import com.nickbether.pebbletasker.cache.EventCache
 import com.nickbether.pebbletasker.cache.EventRouter
 import com.nickbether.pebbletasker.databinding.ActivityDiagnosticsBinding
 import com.nickbether.pebbletasker.tasker.event.EventRouting
+import com.nickbether.pebbletasker.util.applyContentInsets
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -56,6 +57,7 @@ class DiagnosticsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDiagnosticsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyContentInsets()
 
         binding.btnSelftest.setOnClickListener { runSelfTest() }
         binding.btnRefresh.setOnClickListener { refreshAll() }

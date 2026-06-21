@@ -18,6 +18,7 @@ import com.nickbether.pebbletasker.bridge.BridgeClient
 import com.nickbether.pebbletasker.bridge.BridgeClient.ConnectionStatus
 import com.nickbether.pebbletasker.databinding.ActivityOnboardingBinding
 import com.nickbether.pebbletasker.util.BatteryOpt
+import com.nickbether.pebbletasker.util.applyContentInsets
 import kotlinx.coroutines.launch
 
 /**
@@ -47,6 +48,7 @@ class OnboardingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyContentInsets()
 
         binding.btnOpenPebble.setOnClickListener { openPebbleApp() }
         binding.btnBattery.setOnClickListener { requestBatteryExemption() }

@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
  *   - save-on-back through the AndroidX OnBackPressedDispatcher, so the config is persisted on gesture
  *     / predictive back too. (The old onKeyDown(KEYCODE_BACK) path never fired for gesture back, so
  *     backing out silently DISCARDED the configuration — this is the fix.)
- *   - the variable picker on every TextInputLayout (host relevant vars ∪ the plugin's %pb_* outputs).
+ *   - the variable picker on every TextInputLayout (host relevant vars ∪ the plugin's %pbl_* outputs).
  *
  * Subclasses implement inflateBinding / getNewHelper / assignFromInput / inputForTasker, and may
  * override [onConfigCreated] to wire pickers/toggles after fields + var pickers are bound.
@@ -75,7 +75,7 @@ abstract class PebbleConfigActivity<
     /** Whether this config requires a UI. No-input/no-config plugins override to false. */
     protected open val isConfigurable: Boolean = true
 
-    /** Whether to include the plugin's own %pb_* outputs in the picker suggestions (default true). */
+    /** Whether to include the plugin's own %pbl_* outputs in the picker suggestions (default true). */
     protected open val includePbVarsInPicker: Boolean = true
 
     override val context get() = applicationContext
@@ -172,7 +172,7 @@ abstract class PebbleConfigActivity<
 
     /**
      * Attach the variable picker to all variable fields under [root]. Reads Tasker's inbound relevant
-     * variables off this activity's intent (null-safe) and merges with the plugin's %pb_* outputs.
+     * variables off this activity's intent (null-safe) and merges with the plugin's %pbl_* outputs.
      */
     protected fun attachVariablePickers(root: View) {
         val hostVars = RelevantVars.fromIntent(intent)

@@ -7,7 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.output.TaskerOutputVariable
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * S4 outputs. %pb_json sub-paths: watchface_uuid, watchface_name.
+ * S4 outputs. %pbl_json sub-paths: watchface_uuid, watchface_name.
  */
 @TaskerInputRoot
 @TaskerOutputObject()

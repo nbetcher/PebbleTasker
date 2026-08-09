@@ -14,10 +14,10 @@ XML export (`.prf.xml`) you can import directly.
 
 | File | Type | What it demonstrates |
 |---|---|---|
-| `01_disconnect_flash.prf.xml` | Event → Task | **Pebble Watch Disconnected** fires a **Flash** + **Notify** on the phone. Uses `%pb_serial`. |
-| `02_low_battery_notify.prf.xml` | Event → Task | **Pebble Battery Level** (below 20%) posts a **Notify** — *"Watch battery low: %pb_battery%"*. Uses `%pb_battery`, `%pb_serial`. |
+| `01_disconnect_flash.prf.xml` | Event → Task | **Pebble Watch Disconnected** fires a **Flash** + **Notify** on the phone. Uses `%pbl_serial`. |
+| `02_low_battery_notify.prf.xml` | Event → Task | **Pebble Battery Level** (below 20%) posts a **Notify** — *"Watch battery low: %pbl_battery%"*. Uses `%pbl_battery`, `%pbl_serial`. |
 | `03_send_notification_with_action.prf.xml` | Standalone Task | **Pebble Send Watch Notification** action with title/body/subtitle and an `actions_json` one-button array. No trigger — run it manually or wire it to your own profile. |
-| `04_connected_keep_screen_on.prf.xml` | State → Enter/Exit Tasks | **Pebble Watch Connected** keeps the phone display awake while connected (Display Timeout + Keep Device Awake), and restores normal behaviour on disconnect. Uses `%pb_connected`. |
+| `04_connected_keep_screen_on.prf.xml` | State → Enter/Exit Tasks | **Pebble Watch Connected** keeps the phone display awake while connected (Display Timeout + Keep Device Awake), and restores normal behaviour on disconnect. Uses `%pbl_connected`. |
 
 ### Plugin pieces these examples touch
 
@@ -30,13 +30,13 @@ XML export (`.prf.xml`) you can import directly.
 
 ### Output variables
 
-The plugin exposes Pebble data as `%pb_*` Tasker variables. The ones used in these examples:
+The plugin exposes Pebble data as `%pbl_*` Tasker variables. The ones used in these examples:
 
-- `%pb_serial` — the watch serial that produced the event.
-- `%pb_battery` — battery percent (integer), from the Battery Level event.
-- `%pb_connected` — `true`/`false`, from the Watch Connected state.
-- `%pb_json` — the full event/result payload as a JSON string. With Tasker's structured
-  output you can drill in, e.g. `%pb_json.watch.battery`.
+- `%pbl_serial` — the watch serial that produced the event.
+- `%pbl_battery` — battery percent (integer), from the Battery Level event.
+- `%pbl_connected` — `true`/`false`, from the Watch Connected state.
+- `%pbl_json` — the full event/result payload as a JSON string. With Tasker's structured
+  output you can drill in, e.g. `%pbl_json.watch.battery`.
 
 ---
 
@@ -117,7 +117,7 @@ Finally, ensure the imported **Profile is enabled** (the toggle on the Profiles 
   `<code>1000</code>` (Tasker's generic "Plugin" code). The *specific* Pebble plugin is
   resolved from the two trailing strings: `<Str sr="arg1">` = package
   (`com.nickbether.pebbletasker`) and `<Str sr="arg2">` = the plugin's config-activity class.
-- **Variables read like text.** `%pb_battery` etc. are only populated **inside the task that
+- **Variables read like text.** `%pbl_battery` etc. are only populated **inside the task that
   the matching profile triggers**. Referencing them elsewhere yields empty values.
 - **`actions_json` is a JSON string.** In example 03 the JSON's quotes/brackets are
   XML-escaped (`&quot;`, etc.) inside the `<Bundle>`. Decoded it is:

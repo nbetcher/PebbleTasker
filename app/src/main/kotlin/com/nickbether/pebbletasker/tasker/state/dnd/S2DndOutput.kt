@@ -7,7 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.output.TaskerOutputVariable
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * S2 outputs. %pb_json sub-paths: dnd, serial.
+ * S2 outputs. %pbl_json sub-paths: dnd, serial.
  */
 @TaskerInputRoot
 @TaskerOutputObject()

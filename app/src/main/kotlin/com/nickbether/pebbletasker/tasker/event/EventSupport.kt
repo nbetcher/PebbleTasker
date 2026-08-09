@@ -15,8 +15,8 @@ import kotlinx.serialization.json.put
  * Every event output carries:
  *  - the watch IDENTITY block (1:1 with WatchRef), blank-safe (on watch.disconnected only
  *    serial/name/address are populated; the rest are null per ConnectivityCollector:30-34),
- *  - the universal trio %pb_event_type / %pb_seq / %pb_boot_id,
- *  - one structured %pb_json blob (Tasker 5.12+ reads %pb_json.field).
+ *  - the universal trio %pbl_event_type / %pbl_seq / %pbl_boot_id,
+ *  - one structured %pbl_json blob (Tasker 5.12+ reads %pbl_json.field).
  *
  * These helpers keep that surface identical across all events without a shared output superclass
  * (the library reflects over each concrete @TaskerOutputObject, so inheritance of annotated getters
@@ -24,7 +24,7 @@ import kotlinx.serialization.json.put
  */
 object EventSupport {
 
-    /** Serializer for the %pb_json blob. Stable key order, omit nulls handled by builder. */
+    /** Serializer for the %pbl_json blob. Stable key order, omit nulls handled by builder. */
     val json: Json = Json { encodeDefaults = true }
 
     /** Identity block extracted from an event's WatchRef (all fields blank/empty when absent). */
@@ -63,8 +63,8 @@ object EventSupport {
     }
 
     /**
-     * Build the %pb_json blob from the identity block plus the event's flat data map and metadata.
-     * Used by every event output so %pb_json.<field> is consistent and never throws.
+     * Build the %pbl_json blob from the identity block plus the event's flat data map and metadata.
+     * Used by every event output so %pbl_json.<field> is consistent and never throws.
      */
     fun buildJson(cached: CachedEvent?, extra: Map<String, String> = emptyMap()): String {
         val id = Identity.from(cached?.watch)

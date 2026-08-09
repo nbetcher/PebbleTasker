@@ -23,7 +23,7 @@ import com.nickbether.pebbletasker.tasker.vars.PbVars
  * A17 — Toggle Developer Connection (FINAL DESIGN §2.3, DANGEROUS tier).
  *
  * Sends `dev.toggleConnection`. The bridge ALSO requires its app-wide developer-commands toggle ON;
- * otherwise it returns NOT_AUTHORIZED (surfaced as %pb_ok=false).
+ * otherwise it returns NOT_AUTHORIZED (surfaced as %pbl_ok=false).
  *
  * `enable` accepts true/false/on/off/1/0, or is omitted to flip. The config exposes a segmented
  * On/Off/Toggle group that WRITES INTO the editable `editEnable` field (which stays %var-capable and

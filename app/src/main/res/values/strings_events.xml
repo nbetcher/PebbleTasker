@@ -8,9 +8,9 @@
 
     <!-- ── shared field labels (pb_lbl_*) ── -->
     <string name="pb_evt_lbl_serial">Watch serial (blank = any)</string>
-    <string name="pb_lbl_threshold">Battery threshold %</string>
+    <string name="pb_lbl_threshold">Battery threshold % (blank = any level)</string>
     <string name="pb_lbl_direction">Direction</string>
-    <string name="pb_lbl_direction_value">Direction (below / above)</string>
+    <string name="pb_lbl_direction_value">Direction (any / below / above)</string>
     <string name="pb_lbl_reason">Reason contains (blank = any)</string>
     <string name="pb_lbl_pkg">App package (blank = any)</string>
     <string name="pb_lbl_app_name">App name contains (blank = any)</string>
@@ -26,13 +26,16 @@
     <string name="pb_evt_lbl_fw_status">Firmware status (blank = any)</string>
     <string name="pb_evt_lbl_dev_enabled">Dev enabled (true / false / blank = any)</string>
     <string name="pb_evt_lbl_transport">Transport (blank = any)</string>
-    <string name="pb_lbl_error_type">Error type (blank = any error; type \"gap\" for reconnect gaps)</string>
+    <string name="pb_lbl_error_type">Error type (blank = any real error)</string>
+    <string name="pb_err_opt_any_incl_gaps">Any, including missed-event gaps</string>
+    <string name="pb_err_opt_gap_only">Missed-event gaps only</string>
     <string name="pb_lbl_unused">(no options)</string>
 
     <!-- ── shared config-UI strings ── -->
     <string name="pb_evt_pick_watch">Pick a connected watch…</string>
     <string name="pb_serial_filter_desc">Leave the serial blank to match any paired watch, or enter a serial / %variable. Use the picker to fill it from a connected watch.</string>
-    <string name="pb_outputs_hint">All outputs are available to your task as %pb_… variables, plus one structured %pb_json (read sub-fields as %pb_json.field in Tasker 5.12+).</string>
+    <string name="pb_outputs_hint">All outputs are available to your task as %pbl_… variables, plus one structured %pbl_json (read sub-fields as %pbl_json.field in Tasker 5.12+).</string>
+    <string name="pb_dir_any">Any</string>
     <string name="pb_dir_below">Below</string>
     <string name="pb_dir_above">Above</string>
 

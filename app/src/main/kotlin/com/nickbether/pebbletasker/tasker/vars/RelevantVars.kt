@@ -33,7 +33,7 @@ object RelevantVars {
 
     /**
      * The full suggestion set for a field dialog: Tasker's inbound vars first (most relevant to the
-     * user's task), then the plugin's own `%pb_*` outputs, de-duplicated, order-preserving.
+     * user's task), then the plugin's own `%pbl_*` outputs, de-duplicated, order-preserving.
      */
     fun suggestionsFor(hostVars: Array<String>, includePbVars: Boolean = true): Array<String> {
         if (!includePbVars) return hostVars

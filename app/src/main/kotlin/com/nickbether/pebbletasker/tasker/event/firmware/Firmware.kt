@@ -81,7 +81,7 @@ class FirmwareHelper(config: TaskerPluginConfig<FirmwareFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<FirmwareFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires on a firmware update status change.")
-            .append("\nOutputs: %pb_fw_status %pb_fw_version %pb_progress + %pb_json.")
+            .append("\nOutputs: %pbl_fw_status %pbl_fw_version %pbl_progress + %pbl_json.")
     }
 }
 
@@ -92,7 +92,19 @@ class FirmwareActivity :
     override val descRes = R.string.pb_evt_firmware_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("fw_status", getString(R.string.pb_evt_lbl_fw_status)),
+        // Blank already matched anything; the pick-list makes that visible ("Any") and spells out the
+        // status vocabulary that was previously only described in the plugin's help text.
+        FieldSpec(
+            "fw_status",
+            getString(R.string.pb_evt_lbl_fw_status),
+            options = listOf(
+                "Available" to "available",
+                "Downloading" to "downloading",
+                "Installing" to "installing",
+                "Complete" to "complete",
+                "Failed" to "failed",
+            ),
+        ),
     )
 
     override fun getNewHelper(config: TaskerPluginConfig<FirmwareFilter>) = FirmwareHelper(config)

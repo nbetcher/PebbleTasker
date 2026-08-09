@@ -12,7 +12,7 @@ import com.nickbether.pebbletasker.tasker.ErrCodes
  *          could not complete (not bound, timeout, RemoteException). [code] is an [ErrCodes] int.
  *
  * Runners map [Err] differently depending on plugin kind (see PebbleActionRunner / PebbleEventRunner
- * / PebbleStateRunner): actions surface it as %pb_ok=false + %pb_err/%pb_errmsg; conditions return
+ * / PebbleStateRunner): actions surface it as %pbl_ok=false + %pbl_err/%pbl_errmsg; conditions return
  * Unknown so contexts don't flap.
  */
 sealed class BridgeResult<out T> {

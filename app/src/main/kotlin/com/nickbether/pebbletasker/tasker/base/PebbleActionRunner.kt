@@ -18,7 +18,7 @@ import com.nickbether.pebbletasker.ui.BridgeWarning
  *
  * RESULT MODEL — success-with-ok=false:
  *   - Bridge SUCCESS and bridge-returned ERRORS (NOT_AUTHORIZED, INVALID_ARGS, ...) BOTH return
- *     TaskerPluginResultSucess(output). The output carries %pb_ok / %pb_err / %pb_errmsg / %pb_json,
+ *     TaskerPluginResultSucess(output). The output carries %pbl_ok / %pbl_err / %pbl_errmsg / %pbl_json,
  *     because outputs are NOT delivered on the TaskerPluginResultError path — so error detail would
  *     be invisible to the user's task otherwise.
  *   - HARD infrastructure failure ONLY (not bound, timeout, RemoteException) returns
@@ -59,7 +59,7 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
 
     /**
      * Build the typed output object from the normalized [CommandResult]. Implementations map
-     * result.data fields into named %pb_* outputs and set %pb_ok/%pb_err/%pb_errmsg/%pb_json.
+     * result.data fields into named %pbl_* outputs and set %pbl_ok/%pbl_err/%pbl_errmsg/%pbl_json.
      */
     abstract fun buildOutput(input: TaskerInput<TInput>, result: CommandResult): TOutput
 
@@ -101,7 +101,7 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
                     // Infra failure: %err / %errmsg via the error path (no output delivered).
                     TaskerPluginResultError(bridgeResult.code, bridgeResult.message.ifEmpty { "error" }) as TaskerPluginResult<TOutput>
                 } else {
-                    // Bridge-reported error: deliver it AS output so the task can branch on %pb_ok.
+                    // Bridge-reported error: deliver it AS output so the task can branch on %pbl_ok.
                     val out = buildOutput(
                         input,
                         CommandResult(

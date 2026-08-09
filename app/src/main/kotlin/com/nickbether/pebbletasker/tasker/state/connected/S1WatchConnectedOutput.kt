@@ -10,7 +10,7 @@ import com.nickbether.pebbletasker.tasker.vars.PbVars
  * S1 outputs. Dual-annotated (@TaskerInputRoot + @TaskerOutputObject) so the same class doubles as
  * the requestQuery pass-through payload (FIX C11). The watch-identity block is 1:1 with WatchRef.
  *
- * %pb_json sub-paths: serial, name, nickname, model, fw, battery, address, connected, connected_count.
+ * %pbl_json sub-paths: serial, name, nickname, model, fw, battery, address, connected, connected_count.
  */
 @TaskerInputRoot
 @TaskerOutputObject()

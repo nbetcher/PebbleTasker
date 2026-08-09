@@ -72,7 +72,7 @@ class LaunchAppRunner : PebbleActionRunner<LaunchAppInput, LaunchAppOutput>() {
             uuid = ActionOutputs.data(result, "uuid") ?: input.regular.uuid,
         )
 
-    // INVALID_ARGS for a missing required uuid is a SOFT error (delivered as %pb_ok=false), not infra.
+    // INVALID_ARGS for a missing required uuid is a SOFT error (delivered as %pbl_ok=false), not infra.
     override fun isHardFailure(code: Int): Boolean =
         code != com.nickbether.pebbletasker.tasker.ErrCodes.INVALID_ARGS && super.isHardFailure(code)
 }

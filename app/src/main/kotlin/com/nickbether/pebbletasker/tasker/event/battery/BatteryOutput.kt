@@ -8,8 +8,8 @@ import com.nickbether.pebbletasker.tasker.event.BaseEventOutput
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * E4 output. Extends [BaseEventOutput] (identity + universal + %pb_json + %pb_battery) and adds the
- * event-specific %pb_direction. Dual-annotated so it doubles as a pass-through payload (FIX C11).
+ * E4 output. Extends [BaseEventOutput] (identity + universal + %pbl_json + %pbl_battery) and adds the
+ * event-specific %pbl_direction. Dual-annotated so it doubles as a pass-through payload (FIX C11).
  * @JvmOverloads is mandatory (FIX C14).
  */
 @TaskerInputRoot

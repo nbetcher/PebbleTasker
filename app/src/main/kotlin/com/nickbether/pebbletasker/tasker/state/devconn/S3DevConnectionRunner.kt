@@ -13,7 +13,7 @@ import com.nickbether.pebbletasker.tasker.state.StateSupport
  * S3 runner. Reads the last cached `dev.state` event (data["enabled"], data["transport"]).
  *
  *  - no cached dev.state yet (bridge hasn't reported / collector absent) -> Unknown (won't flap).
- *  - enabled == true  -> Satisfied + %pb_dev_enabled / %pb_transport.
+ *  - enabled == true  -> Satisfied + %pbl_dev_enabled / %pbl_transport.
  *  - enabled == false -> Unsatisfied.
  */
 class S3DevConnectionRunner : PebbleStateRunner<S3DevConnectionInput, S3DevConnectionOutput>() {

@@ -7,7 +7,7 @@
   WHAT IT DOES
     Event context  : Pebble Battery Level, direction = below, threshold = 20
                      (plugin EVENT)
-    Task           : Notify  ->  "Watch battery low: %pb_battery%"
+    Task           : Notify  ->  "Watch battery low: %pbl_battery%"
 
   HOW TO USE
     See README.md. After import, OPEN the "Pebble Battery Level" event and
@@ -20,8 +20,8 @@
       .tasker.event.battery.BatteryActivity
     * Inputs configured here: SERIAL (empty = any), THRESHOLD = 20,
       DIRECTION = below.
-    * Outputs exported by this event: %pb_battery (integer percent),
-      %pb_serial, and the structured %pb_json.
+    * Outputs exported by this event: %pbl_battery (integer percent),
+      %pbl_serial, and the structured %pbl_json.
   ============================================================================
 -->
 <TaskerData sr="" dvi="1" tv="6.6">
@@ -66,7 +66,7 @@
 		<Action sr="act0" ve="7">
 			<code>523</code>
 			<Str sr="arg0" ve="3">Pebble battery low</Str>
-			<Str sr="arg1" ve="3">Watch battery low: %pb_battery% (serial %pb_serial)</Str>
+			<Str sr="arg1" ve="3">Watch battery low: %pbl_battery% (serial %pbl_serial)</Str>
 			<Img sr="arg2" ve="2">
 				<nme>hl_device_access_battery</nme>
 			</Img>

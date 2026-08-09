@@ -90,4 +90,4 @@ delivery is bounded by the host app's master switch + per-category consent toggl
 content is off + redacted by default); command **tier** is granted per client at approval, and the
 DANGEROUS tier additionally needs the app's "allow dangerous commands" toggle. Capability gating
 remains the forward-compat mechanism — anything the bridge doesn't advertise stays dark, without
-orphaning saved configs (the `%pb_*` names and input-field keys are a frozen, append-only contract).
+orphaning saved configs (the `%pbl_*` names and input-field keys are a frozen, append-only contract).

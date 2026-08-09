@@ -31,7 +31,7 @@
       XML-escaped inside the <Bundle> below. It declares one button
       ("Open") that the watch shows; the chosen action id is surfaced via
       the "Pebble Notification Action" event if you build a follow-up
-      profile. Outputs of this action: %pb_json (and on error %err/%errmsg).
+      profile. Outputs of this action: %pbl_json (and on error %err/%errmsg).
   ============================================================================
 -->
 <TaskerData sr="" dvi="1" tv="6.6">

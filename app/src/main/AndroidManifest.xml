@@ -333,7 +333,7 @@
              Each is exported (Tasker launches it) + Theme.NeonGrid. Sensitive ones apply FLAG_SECURE
              in code (ActionConfigActivity.isSensitive). All are NEEDS-EXECUTE: they call
              BridgeClient.execute, gated behind the bridge's commands.core capability (so they fail
-             cleanly with %pb_ok=false / UNSUPPORTED_COMMAND until the bridge advertises it).
+             cleanly with %pbl_ok=false / UNSUPPORTED_COMMAND until the bridge advertises it).
              ════════════════════════════════════════════════════════════════════════════ -->
         <activity android:name=".tasker.action.getinfo.GetInfoActivity"
             android:exported="true" android:label="Pebble: Get Watch Info"

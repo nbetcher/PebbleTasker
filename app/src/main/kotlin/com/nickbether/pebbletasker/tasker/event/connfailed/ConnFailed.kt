@@ -74,7 +74,7 @@ class ConnFailedHelper(config: TaskerPluginConfig<ConnFailedFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<ConnFailedFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when a watch connection fails.")
-            .append("\nOutputs: %pb_reason + identity + %pb_json.")
+            .append("\nOutputs: %pbl_reason + identity + %pbl_json.")
     }
 }
 

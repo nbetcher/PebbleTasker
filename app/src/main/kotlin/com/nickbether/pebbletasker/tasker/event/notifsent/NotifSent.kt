@@ -28,7 +28,7 @@ import com.nickbether.pebbletasker.tasker.vars.PbVars
  * notif.sent.
  *
  * REDACTION GATE (FINAL DESIGN FIX A5): today's bridge hardcodes contentRedacted = true, so title/
- * text are NOT available. When redacted, the runner emits "(redacted)" for %pb_title/%pb_text rather
+ * text are NOT available. When redacted, the runner emits "(redacted)" for %pbl_title/%pbl_text rather
  * than blank, so a user task can tell "redacted" apart from "empty". On a future bridge that sets
  * contentRedacted = false (carried in the event data as `redacted`), the real content flows through.
  */
@@ -129,8 +129,8 @@ class NotifSentHelper(config: TaskerPluginConfig<NotifSentFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<NotifSentFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when a notification is sent to the watch.")
-            .append("\nOutputs: %pb_pkg %pb_app_name %pb_title %pb_text %pb_channel_id")
-            .append(" %pb_actions() %pb_actions_count + %pb_json.")
+            .append("\nOutputs: %pbl_pkg %pbl_app_name %pbl_title %pbl_text %pbl_channel_id")
+            .append(" %pbl_actions() %pbl_actions_count + %pbl_json.")
             .append("\nNote: title/text are \"(redacted)\" unless the Pebble app allows content.")
     }
 }

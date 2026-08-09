@@ -8,8 +8,8 @@ import com.nickbether.pebbletasker.tasker.vars.PbVars
 /**
  * Shared output superclass for the event plugins (FINAL DESIGN §2.1 conventions).
  *
- * Carries the watch IDENTITY block + the universal %pb_event_type / %pb_seq / %pb_boot_id + the
- * structured %pb_json blob — the surface every event shares. Each concrete event Output extends this
+ * Carries the watch IDENTITY block + the universal %pbl_event_type / %pbl_seq / %pbl_boot_id + the
+ * structured %pbl_json blob — the surface every event shares. Each concrete event Output extends this
  * and adds only its event-specific @get:TaskerOutputVariable getters.
  *
  * WHY inheritance is safe here: the library collects outputs via `realType.methods` (Java

@@ -7,7 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.output.TaskerOutputVariable
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * S6 outputs. %pb_json sub-paths: bt_enabled.
+ * S6 outputs. %pbl_json sub-paths: bt_enabled.
  */
 @TaskerInputRoot
 @TaskerOutputObject()

@@ -34,17 +34,25 @@ class BatteryRunner : PebbleEventRunner<BatteryFilter, BatteryOutput>() {
             return TaskerPluginResultConditionUnsatisfied()
         }
         val level = e.int("level") ?: return TaskerPluginResultConditionUnknown()
+        val direction = filter.direction?.trim().orEmpty()
         val threshold = filter.threshold?.trim()?.toIntOrNull()
-            ?: return TaskerPluginResultConditionUnsatisfied()
-        val above = filter.direction?.trim()?.equals("above", ignoreCase = true) == true
-        val crossed = if (above) level >= threshold else level <= threshold
-        if (!crossed) return TaskerPluginResultConditionUnsatisfied()
+        val above = direction.equals("above", ignoreCase = true)
 
-        return TaskerPluginResultConditionSatisfied(context, buildOutput(e, level, above))
+        // "Any" (or no usable threshold) fires on every battery report. Without this, a blank or
+        // non-numeric threshold silently produced an event that could never fire.
+        val unconditional = direction.equals(DIRECTION_ANY, ignoreCase = true) || threshold == null
+        if (!unconditional) {
+            val crossed = if (above) level >= threshold!! else level <= threshold!!
+            if (!crossed) return TaskerPluginResultConditionUnsatisfied()
+        }
+
+        return TaskerPluginResultConditionSatisfied(
+            context,
+            buildOutput(e, level, if (unconditional) DIRECTION_ANY else if (above) "above" else "below"),
+        )
     }
 
-    private fun buildOutput(e: CachedEvent, level: Int, above: Boolean): BatteryOutput {
-        val direction = if (above) "above" else "below"
+    private fun buildOutput(e: CachedEvent, level: Int, direction: String): BatteryOutput {
         return BatteryOutput(pbDirection = direction).fillBase<BatteryOutput>(
             e,
             mapOf("battery" to level.toString(), "direction" to direction),
@@ -52,5 +60,10 @@ class BatteryRunner : PebbleEventRunner<BatteryFilter, BatteryOutput>() {
             // The battery EVENT level lives in data["level"], not WatchRef.battery — override it.
             it.pbBattery = level.toString()
         }
+    }
+
+    companion object {
+        /** Direction value meaning "no threshold — fire on any battery report". */
+        const val DIRECTION_ANY = "any"
     }
 }

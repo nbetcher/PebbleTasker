@@ -82,7 +82,7 @@ class DevConnHelper(config: TaskerPluginConfig<DevConnFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<DevConnFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when the developer connection state changes.")
-            .append("\nOutputs: %pb_dev_enabled %pb_transport + %pb_json.")
+            .append("\nOutputs: %pbl_dev_enabled %pbl_transport + %pbl_json.")
     }
 }
 
@@ -93,7 +93,13 @@ class DevConnActivity :
     override val descRes = R.string.pb_evt_devconn_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("dev_enabled", getString(R.string.pb_evt_lbl_dev_enabled)),
+        // Blank already matched anything; the pick-list makes that visible ("Any") instead of leaving
+        // the true/false convention to the hint text.
+        FieldSpec(
+            "dev_enabled",
+            getString(R.string.pb_evt_lbl_dev_enabled),
+            options = listOf("Enabled" to "true", "Disabled" to "false"),
+        ),
         FieldSpec("transport", getString(R.string.pb_evt_lbl_transport)),
     )
 

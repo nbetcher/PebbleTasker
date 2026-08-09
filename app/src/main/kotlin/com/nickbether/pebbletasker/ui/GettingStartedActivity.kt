@@ -41,13 +41,13 @@ class GettingStartedActivity : AppCompatActivity() {
         ),
         Step(
             "Use your watch data",
-            "Pebble events fill %pb_ variables you can use anywhere in the task — e.g. %pb_serial, " +
-                "%pb_battery, %pb_connected, and the whole payload as %pb_json.",
+            "Pebble events fill %pbl_ variables you can use anywhere in the task — e.g. %pbl_serial, " +
+                "%pbl_battery, %pbl_connected, and the whole payload as %pbl_json.",
         ),
         Step(
             "Try these",
             "• Watch disconnects → flash + notify your phone\n" +
-                "• Battery below 20% → \"Watch battery: %pb_battery%\"\n" +
+                "• Battery below 20% → \"Watch battery: %pbl_battery%\"\n" +
                 "• Watch connected → keep the phone screen awake\n" +
                 "• Send a notification to the watch on demand\n\n" +
                 "Ready-to-import copies of these live in the project's docs/examples folder.",

@@ -13,7 +13,7 @@ import com.nickbether.pebbletasker.tasker.state.StateSupport
  * S6 runner. Reads the last cached `bt.state` event (data["enabled"]).
  *
  *  - no cached bt.state yet  -> Unknown.
- *  - enabled == true         -> Satisfied + %pb_bt_enabled.
+ *  - enabled == true         -> Satisfied + %pbl_bt_enabled.
  *  - enabled == false        -> Unsatisfied.
  */
 class S6BluetoothRunner : PebbleStateRunner<S6BluetoothInput, S6BluetoothOutput>() {

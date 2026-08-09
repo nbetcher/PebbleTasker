@@ -6,7 +6,7 @@ import com.nickbether.pebbletasker.tasker.base.PebbleEventHelper
 
 /**
  * E4 helper. Plain TaskerPluginConfigHelper base (FIX C7); supplies the three *Class members and a
- * dynamic blurb documenting the %pb_json sub-paths (Tasker's picker only suggests %pb_json itself).
+ * dynamic blurb documenting the %pbl_json sub-paths (Tasker's picker only suggests %pbl_json itself).
  */
 class BatteryHelper(config: TaskerPluginConfig<BatteryFilter>) :
     PebbleEventHelper<BatteryFilter, BatteryOutput, BatteryRunner>(config) {
@@ -24,7 +24,7 @@ class BatteryHelper(config: TaskerPluginConfig<BatteryFilter>) :
             .append(f.threshold ?: "20")
             .append("% on ")
             .append(serial)
-            .append(".\nOutputs: %pb_battery %pb_direction + identity, and %pb_json")
+            .append(".\nOutputs: %pbl_battery %pbl_direction + identity, and %pbl_json")
             .append(" (.battery .direction .serial .name).")
     }
 }

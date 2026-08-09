@@ -37,7 +37,7 @@ import kotlinx.serialization.json.jsonObject
  * On today's bridge (no execute()) the subscribe is a silent no-op and the event simply never fires.
  *
  * The dict is delivered as a flat JSON object in data["dict_json"]; the runner also splits it into
- * parallel %pb_keys()/%pb_values() arrays for convenience.
+ * parallel %pbl_keys()/%pbl_values() arrays for convenience.
  */
 @TaskerInputRoot
 class AppMessageFilter @JvmOverloads constructor(
@@ -129,7 +129,7 @@ class AppMessageHelper(config: TaskerPluginConfig<AppMessageFilter>) :
     override fun addToStringBlurb(input: TaskerInput<AppMessageFilter>, blurbBuilder: StringBuilder) {
         val uuid = input.regular.uuid?.takeIf { it.isNotBlank() } ?: "(set a UUID)"
         blurbBuilder.append("Fires when app ").append(uuid).append(" sends an AppMessage.")
-            .append("\nOutputs: %pb_uuid %pb_dict_json %pb_keys() %pb_values() + %pb_json.")
+            .append("\nOutputs: %pbl_uuid %pbl_dict_json %pbl_keys() %pbl_values() + %pbl_json.")
     }
 }
 

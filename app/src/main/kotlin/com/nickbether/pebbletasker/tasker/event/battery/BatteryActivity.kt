@@ -34,18 +34,25 @@ class BatteryActivity :
         // Direction toggle mirrors into the editable direction field.
         binding.pbToggleDirection.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
-            val value = if (checkedId == binding.pbBtnAbove.id) "above" else "below"
+            val value = when (checkedId) {
+                binding.pbBtnAbove.id -> "above"
+                binding.pbBtnAny.id -> BatteryRunner.DIRECTION_ANY
+                else -> "below"
+            }
             binding.pbEditDirection.setText(value)
+            // The threshold is meaningless with no comparison; grey it out so that reads as deliberate.
+            binding.pbLayoutThreshold.isEnabled = value != BatteryRunner.DIRECTION_ANY
         }
     }
 
     override fun assignFromInput(input: TaskerInput<BatteryFilter>) {
         val f = input.regular
         binding?.apply {
+            val direction = f.direction?.trim()?.ifEmpty { null } ?: "below"
             pbEditSerial.setText(f.serial.orEmpty())
             pbEditThreshold.setText(f.threshold ?: "20")
-            pbEditDirection.setText(f.direction ?: "below")
-            syncDirectionToggle(this, f.direction ?: "below")
+            pbEditDirection.setText(direction)
+            syncDirectionToggle(this, direction)
         }
     }
 
@@ -54,14 +61,19 @@ class BatteryActivity :
             BatteryFilter(
                 serial = binding?.pbEditSerial?.text?.toString()?.trim().orEmpty(),
                 threshold = binding?.pbEditThreshold?.text?.toString()?.trim().orEmpty(),
-                direction = binding?.pbEditDirection?.text?.toString()?.trim()
-                    ?.ifEmpty { "below" } ?: "below",
+                // Blank now means "any level" rather than an event that can never fire, so an empty
+                // direction no longer has to be coerced to "below".
+                direction = binding?.pbEditDirection?.text?.toString()?.trim().orEmpty(),
             ),
         )
 
     private fun syncDirectionToggle(binding: ActivityConfigBatteryBinding, direction: String) {
-        val btn: MaterialButton =
-            if (direction.equals("above", ignoreCase = true)) binding.pbBtnAbove else binding.pbBtnBelow
+        val btn: MaterialButton = when {
+            direction.equals("above", ignoreCase = true) -> binding.pbBtnAbove
+            direction.equals(BatteryRunner.DIRECTION_ANY, ignoreCase = true) -> binding.pbBtnAny
+            else -> binding.pbBtnBelow
+        }
         binding.pbToggleDirection.check(btn.id)
+        binding.pbLayoutThreshold.isEnabled = btn.id != binding.pbBtnAny.id
     }
 }

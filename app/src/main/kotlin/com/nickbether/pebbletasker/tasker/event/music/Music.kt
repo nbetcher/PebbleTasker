@@ -67,7 +67,7 @@ class MusicHelper(config: TaskerPluginConfig<MusicFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<MusicFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when the watch sends a music command.")
-            .append("\nOutputs: %pb_music_action + %pb_json.")
+            .append("\nOutputs: %pbl_music_action + %pbl_json.")
     }
 }
 

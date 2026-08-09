@@ -32,7 +32,7 @@ import com.nickbether.pebbletasker.tasker.vars.PbVars
  * All fields are %var-capable; `vibe` has a segmented convenience that writes into the editable
  * `editVibe` field (the source of truth, FIX crit-1 #5).
  *
- * Bridge success `data`: item_id, delivered -> %pb_item_id / %pb_delivered.
+ * Bridge success `data`: item_id, delivered -> %pbl_item_id / %pbl_delivered.
  */
 
 @TaskerInputRoot

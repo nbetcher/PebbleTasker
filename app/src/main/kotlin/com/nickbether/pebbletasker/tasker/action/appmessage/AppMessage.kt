@@ -29,7 +29,7 @@ import org.json.JSONObject
  * parsed Int else String). The user supplies a JSON object keyed by integer AppMessage keys; this
  * runner flattens it into the d.* args. uuid is required.
  *
- * Bridge success `data`: uuid, acked ("true"/"false") -> surfaced as %pb_uuid and %pb_delivered.
+ * Bridge success `data`: uuid, acked ("true"/"false") -> surfaced as %pbl_uuid and %pbl_delivered.
  */
 
 @TaskerInputRoot

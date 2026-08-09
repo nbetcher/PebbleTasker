@@ -91,7 +91,7 @@ class AppChangedHelper(config: TaskerPluginConfig<AppChangedFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<AppChangedFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when the foreground watch app/watchface changes.")
-            .append("\nOutputs: %pb_uuid %pb_app_name %pb_app_type %pb_prev_uuid + %pb_json.")
+            .append("\nOutputs: %pbl_uuid %pbl_app_name %pbl_app_type %pbl_prev_uuid + %pbl_json.")
     }
 }
 

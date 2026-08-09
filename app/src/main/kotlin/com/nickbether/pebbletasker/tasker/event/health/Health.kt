@@ -73,7 +73,7 @@ class HealthHelper(config: TaskerPluginConfig<HealthFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<HealthFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when watch health metrics update.")
-            .append("\nOutputs: %pb_steps_today %pb_latest_hr + %pb_json.")
+            .append("\nOutputs: %pbl_steps_today %pbl_latest_hr + %pbl_json.")
     }
 }
 

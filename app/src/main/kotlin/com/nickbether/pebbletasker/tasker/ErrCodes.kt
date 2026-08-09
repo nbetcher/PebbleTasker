@@ -4,7 +4,7 @@ package com.nickbether.pebbletasker.tasker
  * FROZEN CONTRACT (FINAL DESIGN "CONTRACTS TO FREEZE" #2).
  *
  * Maps the bridge's string ErrorCode vocabulary to stable integer codes surfaced as Tasker's
- * %err on hard-failure actions, and carried as %pb_err on the success-with-ok=false model. These
+ * %err on hard-failure actions, and carried as %pbl_err on the success-with-ok=false model. These
  * integers are a permanent contract: user Tasker tasks may branch on `%err == 21`, so NEVER
  * renumber an existing code. New codes are append-only.
  *

@@ -14,7 +14,7 @@ import com.nickbether.pebbletasker.tasker.state.StateSupport
  *
  *  - no cached fw.status yet                 -> Unknown.
  *  - serial filter set and doesn't match     -> Unsatisfied.
- *  - status is an in-progress phase          -> Satisfied + %pb_fw_progress / %pb_fw_status.
+ *  - status is an in-progress phase          -> Satisfied + %pbl_fw_progress / %pbl_fw_status.
  *  - status is idle/complete/failed          -> Unsatisfied.
  */
 class S5FirmwareUpdatingRunner :

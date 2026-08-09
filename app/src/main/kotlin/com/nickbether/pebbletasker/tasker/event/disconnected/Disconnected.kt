@@ -66,7 +66,7 @@ class DisconnectedHelper(config: TaskerPluginConfig<DisconnectedFilter>) :
     override fun addToStringBlurb(input: TaskerInput<DisconnectedFilter>, blurbBuilder: StringBuilder) {
         val serial = input.regular.serial?.takeIf { it.isNotBlank() } ?: "any watch"
         blurbBuilder.append("Fires when ").append(serial).append(" disconnects.")
-            .append("\nOutputs: %pb_serial %pb_name %pb_address + %pb_json")
+            .append("\nOutputs: %pbl_serial %pbl_name %pbl_address + %pbl_json")
             .append(" (model/fw/battery are blank on disconnect).")
     }
 }

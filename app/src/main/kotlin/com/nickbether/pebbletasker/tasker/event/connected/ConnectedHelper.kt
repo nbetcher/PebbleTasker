@@ -14,6 +14,6 @@ class ConnectedHelper(config: TaskerPluginConfig<ConnectedFilter>) :
     override fun addToStringBlurb(input: TaskerInput<ConnectedFilter>, blurbBuilder: StringBuilder) {
         val serial = input.regular.serial?.takeIf { it.isNotBlank() } ?: "any watch"
         blurbBuilder.append("Fires when ").append(serial).append(" connects.")
-            .append("\nOutputs: identity block + %pb_json.")
+            .append("\nOutputs: identity block + %pbl_json.")
     }
 }

@@ -80,6 +80,6 @@ internal object StateSupport {
         }
     }
 
-    /** "true"/"false" of a Boolean for %pb_* outputs (Tasker treats these as truthy strings). */
+    /** "true"/"false" of a Boolean for %pbl_* outputs (Tasker treats these as truthy strings). */
     fun boolStr(b: Boolean): String = if (b) "true" else "false"
 }

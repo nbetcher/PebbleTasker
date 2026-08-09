@@ -91,8 +91,8 @@ class CallHelper(config: TaskerPluginConfig<CallFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<CallFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires on a call state change involving the watch.")
-            .append("\nOutputs: %pb_call_state %pb_call_action %pb_number %pb_caller_name")
-            .append(" %pb_handled_on_watch + %pb_json.")
+            .append("\nOutputs: %pbl_call_state %pbl_call_action %pbl_number %pbl_caller_name")
+            .append(" %pbl_handled_on_watch + %pbl_json.")
     }
 }
 

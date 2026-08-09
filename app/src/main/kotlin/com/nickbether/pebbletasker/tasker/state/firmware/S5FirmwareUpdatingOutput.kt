@@ -7,7 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.output.TaskerOutputVariable
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * S5 outputs. %pb_json sub-paths: fw_progress, fw_status, serial.
+ * S5 outputs. %pbl_json sub-paths: fw_progress, fw_status, serial.
  */
 @TaskerInputRoot
 @TaskerOutputObject()

@@ -32,8 +32,8 @@ import com.nickbether.pebbletasker.tasker.vars.PbVars
  *
  * error_type filter: blank = any REAL bridge error. A reconnect/boot "gap" is NOT an error and does
  * NOT match a blank filter — set error_type = "gap" to opt into gap notices. "error" or a specific
- * bridge error code likewise match real errors only. Gap events carry %pb_gap_from / %pb_gap_to;
- * real errors carry %pb_error_msg.
+ * bridge error code likewise match real errors only. Gap events carry %pbl_gap_from / %pbl_gap_to;
+ * real errors carry %pbl_error_msg.
  */
 @TaskerInputRoot
 class BridgeErrorFilter @JvmOverloads constructor(
@@ -81,10 +81,13 @@ class BridgeErrorRunner : PebbleEventRunner<BridgeErrorFilter, BridgeErrorOutput
             // profile. Subscribe explicitly with error_type = "gap". Nothing is lost by ignoring it —
             // state conditions already re-converge via EventRouter.requestQueryAll on reconnect, and the
             // genuinely-missed one-shot events can't be replayed anyway (that's what defines the gap).
-            !filter.errorType.isNullOrBlank() && FilterMatch.eq(filter.errorType, "gap")
+            // "any" opts back in to everything, since blank alone can't express "errors AND gaps".
+            !filter.errorType.isNullOrBlank() &&
+                (FilterMatch.eq(filter.errorType, "gap") || FilterMatch.eq(filter.errorType, ERROR_TYPE_ANY))
         } else {
             // Real errors: blank = any; else match the error_type or a keyword in the code/message.
-            FilterMatch.eq(filter.errorType, errorType) ||
+            FilterMatch.eq(filter.errorType, ERROR_TYPE_ANY) ||
+                FilterMatch.eq(filter.errorType, errorType) ||
                 FilterMatch.contains(filter.errorType, e.str("error_msg"))
         }
         if (!matches) return TaskerPluginResultConditionUnsatisfied()
@@ -111,6 +114,11 @@ class BridgeErrorRunner : PebbleEventRunner<BridgeErrorFilter, BridgeErrorOutput
         b == null -> a
         else -> if (b.ts >= a.ts) b else a
     }
+
+    companion object {
+        /** Opt in to everything, including recovery gaps — blank alone can only mean "real errors". */
+        const val ERROR_TYPE_ANY = "any"
+    }
 }
 
 class BridgeErrorHelper(config: TaskerPluginConfig<BridgeErrorFilter>) :
@@ -120,8 +128,8 @@ class BridgeErrorHelper(config: TaskerPluginConfig<BridgeErrorFilter>) :
     override val runnerClass = BridgeErrorRunner::class.java
 
     override fun addToStringBlurb(input: TaskerInput<BridgeErrorFilter>, blurbBuilder: StringBuilder) {
-        blurbBuilder.append("Fires on a real bridge error; set error type to \"gap\" to also catch reconnect/boot event gaps.")
-            .append("\nOutputs: %pb_error_type %pb_error_msg %pb_gap_from %pb_gap_to + %pb_json.")
+        blurbBuilder.append("Fires on a real bridge error. Blank = any real error; \"gap\" = only missed-event gaps; \"any\" = both.")
+            .append("\nOutputs: %pbl_error_type %pbl_error_msg %pbl_gap_from %pbl_gap_to + %pbl_json.")
     }
 }
 
@@ -132,7 +140,16 @@ class BridgeErrorActivity :
     override val descRes = R.string.pb_evt_bridgeerror_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("error_type", getString(R.string.pb_lbl_error_type)),
+        FieldSpec(
+            "error_type",
+            getString(R.string.pb_lbl_error_type),
+            // "Any" (blank) stays real-errors-only so a reconnect gap can't spam a catch-all profile;
+            // the explicit rows opt in to gaps.
+            options = listOf(
+                getString(R.string.pb_err_opt_any_incl_gaps) to BridgeErrorRunner.ERROR_TYPE_ANY,
+                getString(R.string.pb_err_opt_gap_only) to "gap",
+            ),
+        ),
     )
 
     override fun getNewHelper(config: TaskerPluginConfig<BridgeErrorFilter>) = BridgeErrorHelper(config)

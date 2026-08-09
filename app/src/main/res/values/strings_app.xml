@@ -46,7 +46,7 @@
     <string name="main_btn_open_pebble">Open Pebble app</string>
 
     <string name="main_plugins_heading">What you can build</string>
-    <string name="main_plugins_body">Add a Pebble plugin in Tasker as an Event, State, or Action:\n\n• Events — connect/disconnect, battery, notifications, music, calls.\n• States — connected, Do Not Disturb, watchface, firmware updating.\n• Actions — send a notification, launch an app, connect/disconnect, and more.\n\nEvery field takes %variables; every plugin returns %pb_… outputs.</string>
+    <string name="main_plugins_body">Add a Pebble plugin in Tasker as an Event, State, or Action:\n\n• Events — connect/disconnect, battery, notifications, music, calls.\n• States — connected, Do Not Disturb, watchface, firmware updating.\n• Actions — send a notification, launch an app, connect/disconnect, and more.\n\nEvery field takes %variables; every plugin returns %pbl_… outputs.</string>
 
     <string name="main_caps_heading">Available now</string>
     <string name="main_caps_body">Which plugins work depends on what the installed Pebble app supports. Open Diagnostics for the live list. Unsupported ones stay hidden until the app catches up — your saved profiles are never orphaned.</string>

@@ -92,7 +92,7 @@ class NotifActionHelper(config: TaskerPluginConfig<NotifActionFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<NotifActionFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when a notification action is taken on the watch.")
-            .append("\nOutputs: %pb_action %pb_action_id %pb_reply_text %pb_pkg + %pb_json.")
+            .append("\nOutputs: %pbl_action %pbl_action_id %pbl_reply_text %pbl_pkg + %pbl_json.")
     }
 }
 

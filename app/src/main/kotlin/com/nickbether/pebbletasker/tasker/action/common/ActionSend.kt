@@ -17,7 +17,7 @@ import com.nickbether.pebbletasker.bridge.dto.CommandEnvelope
  *     wraps it as CommandResult(ok=true));
  *   - on bridge ERROR (NOT_AUTHORIZED / INVALID_ARGS / RATE_LIMITED / UNSUPPORTED_COMMAND / timeout
  *     / unreachable), passes the BridgeResult.Err straight through (the runner base decides whether
- *     it is a soft error -> %pb_ok=false output, or a hard infra error -> Tasker %err/%errmsg).
+ *     it is a soft error -> %pbl_ok=false output, or a hard infra error -> Tasker %err/%errmsg).
  *
  * Keeping this in one place means every action maps the bridge result identically.
  */

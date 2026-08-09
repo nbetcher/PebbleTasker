@@ -28,7 +28,7 @@
     * "Keep Device Awake" is not a single Tasker action code; in exports it
       is the task-level <stayawake> flag plus (optionally) a Display Timeout
       action. Both are shown here.
-    * Outputs of this state: %pb_connected (true/false), %pb_serial, %pb_json.
+    * Outputs of this state: %pbl_connected (true/false), %pbl_serial, %pbl_json.
     * <mid0> = Enter task, <mid1> = Exit task.
   ============================================================================
 -->

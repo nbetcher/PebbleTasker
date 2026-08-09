@@ -77,7 +77,7 @@ class TimelineHelper(config: TaskerPluginConfig<TimelineFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<TimelineFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when a timeline pin action is invoked.")
-            .append("\nOutputs: %pb_pin_uuid %pb_action_id + %pb_json.")
+            .append("\nOutputs: %pbl_pin_uuid %pbl_action_id + %pbl_json.")
     }
 }
 

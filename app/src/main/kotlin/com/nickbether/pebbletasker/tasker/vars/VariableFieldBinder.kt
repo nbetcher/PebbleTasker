@@ -36,7 +36,7 @@ object VariableFieldBinder {
     /**
      * Attach the variable picker to a single [TextInputLayout]/[EditText] pair.
      *
-     * @param suggestions the merged suggestion list (Tasker inbound vars + plugin %pb_* outputs).
+     * @param suggestions the merged suggestion list (Tasker inbound vars + plugin %pbl_* outputs).
      *        Pass [RelevantVars.suggestionsFor]. May be empty — then the icon just focuses the field.
      */
     fun attach(layout: TextInputLayout, edit: EditText, suggestions: Array<String>) {

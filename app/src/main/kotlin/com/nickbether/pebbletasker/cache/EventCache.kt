@@ -41,7 +41,7 @@ private val Context.eventDataStore by preferencesDataStore(name = "pb_event_cach
  * Thread-safety: [put]/[putBatch] are synchronized; the in-memory map is concurrent. DataStore
  * writes are launched on the caller's coroutine when available, else best-effort blocking.
  */
-class EventCache private constructor(private val appContext: Context) {
+class EventCache internal constructor(private val appContext: Context) {
 
     private val mem = ConcurrentHashMap<String, CachedEvent>()
 
@@ -54,8 +54,12 @@ class EventCache private constructor(private val appContext: Context) {
      *  MUST NOT block on disk (FINAL DESIGN §3.3 — onEvents enqueues and returns immediately). */
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    init {
-        // Warm the in-memory mirror from disk so synchronous runner reads work after cold start.
+    /**
+     * Warm the in-memory mirror from disk so synchronous runner reads work after a cold start.
+     * Called once by [get]; kept explicit rather than an init block so construction has no side
+     * effects and tests can exercise the delivery logic without touching DataStore.
+     */
+    private fun warm() {
         runCatching {
             runBlocking {
                 val prefs = appContext.eventDataStore.data.first()
@@ -103,8 +107,11 @@ class EventCache private constructor(private val appContext: Context) {
             mem.clear()
         }
         memBootId = bootId
-        // Don't lower the high-water below what we've already processed this boot.
-        if (prevBoot != bootId || latestSeq > memHighWater) memHighWater = latestSeq
+        // Only reset the high-water on a NEW boot. Raising it to latestSeq within the same boot would
+        // skip every event that arrived while this process was dead — the caller derives its replay
+        // cursor from this value immediately after seeding — and the seq-gap check in putAll() can no
+        // longer see the hole either, so the loss is silent.
+        if (prevBoot != bootId) memHighWater = latestSeq
         persist()
         gap?.let { mem[it.type] = it }
         return gap
@@ -206,7 +213,7 @@ class EventCache private constructor(private val appContext: Context) {
 
         fun get(context: Context): EventCache =
             instance ?: synchronized(this) {
-                instance ?: EventCache(context.applicationContext).also { instance = it }
+                instance ?: EventCache(context.applicationContext).also { it.warm(); instance = it }
             }
 
         /** Discard the disconnected/never-populated WatchRef fields are documented per E2; helper. */

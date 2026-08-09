@@ -81,6 +81,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     buildFeatures {
         viewBinding = true
         // AIDL is required: the plugin compiles the byte-identical bridge AIDL package so
@@ -94,6 +98,9 @@ android {
         getByName("main") {
             kotlin.srcDir("src/main/kotlin")
         }
+        getByName("test") {
+            kotlin.srcDir("src/test/kotlin")
+        }
     }
 }
 
@@ -105,6 +112,13 @@ kotlin {
 }
 
 dependencies {
+    // --- Unit tests: Robolectric supplies the Context the DataStore-backed cache needs, so the
+    //     delivery logic (high-water, dedupe, gap synthesis) is testable on the JVM. ---
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.test:core:1.6.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+
     // --- AndroidX core / UI (AppCompat so Material3 + Theme.NeonGrid renders in config
     //     activities; FINAL DESIGN §0 FIX C2 re-implements TaskerPluginConfig on AppCompatActivity) ---
     implementation("androidx.core:core-ktx:1.13.1")

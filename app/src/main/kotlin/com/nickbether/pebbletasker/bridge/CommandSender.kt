@@ -45,6 +45,7 @@ class CommandSender(private val appContext: Context) {
         const val TIMELINE_INSERT = "timeline.insert"
         const val TIMELINE_DELETE = "timeline.delete"
         const val SYSTEM_PING = "system.ping"
+        const val SYSTEM_GET_LOCKER = "system.getLocker"
         const val HEALTH_SNAPSHOT = "health.snapshot"
         const val FW_CHECK = "fw.check"
         const val DEV_TOGGLE_CONNECTION = "dev.toggleConnection"

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import com.nickbether.pebbletasker.log.PLog
 import coredevices.coreapp.automation.IBridgeService
 import java.util.concurrent.atomic.AtomicReference
 
@@ -47,38 +48,55 @@ class BridgeConnection(
             stateRef.set(State.BOUND)
             backoffMs = MIN_BACKOFF_MS // reset backoff on a clean connect
             if (svc != null) {
+                PLog.i { "conn: onServiceConnected -> BOUND ($name)" }
                 runCatching { onConnected(svc) }
             } else {
                 // Null interface — treat as a failed bind and retry.
+                PLog.w { "conn: onServiceConnected but binder is null; treating as drop" }
                 handleDrop()
             }
         }
 
-        override fun onServiceDisconnected(name: ComponentName?) = handleDrop()
+        override fun onServiceDisconnected(name: ComponentName?) {
+            PLog.w { "conn: onServiceDisconnected ($name)" }
+            handleDrop()
+        }
 
-        override fun onBindingDied(name: ComponentName?) = handleDrop()
+        override fun onBindingDied(name: ComponentName?) {
+            PLog.w { "conn: onBindingDied ($name)" }
+            handleDrop()
+        }
 
         override fun onNullBinding(name: ComponentName?) {
             // Service exists but returned no binder (e.g. unexported / refused). Back off and retry.
+            PLog.w { "conn: onNullBinding ($name) — service refused to return a binder" }
             handleDrop()
         }
     }
 
     /** Bind if not already bound/binding. Idempotent. */
     fun ensureBound() {
-        if (stateRef.get() != State.UNBOUND) return
+        if (stateRef.get() != State.UNBOUND) {
+            PLog.d { "conn: ensureBound skipped (state=${stateRef.get()})" }
+            return
+        }
         if (!stateRef.compareAndSet(State.UNBOUND, State.BINDING)) return
         val intent = Intent(BIND_ACTION).setPackage(CertPinner.BRIDGE_PACKAGE)
+        PLog.i { "conn: bindService -> ${CertPinner.BRIDGE_PACKAGE} / $BIND_ACTION" }
         val ok = try {
             appContext.bindService(intent, conn, Context.BIND_AUTO_CREATE)
         } catch (t: Throwable) {
+            PLog.e(t) { "conn: bindService threw" }
             false
         }
         if (!ok) {
             // App not installed / not queryable / refused. Roll back and schedule a retry.
+            PLog.w { "conn: bindService returned false (app absent / not queryable / refused)" }
             runCatching { appContext.unbindService(conn) }
             stateRef.set(State.UNBOUND)
             scheduleNextRebind()
+        } else {
+            PLog.d { "conn: bindService accepted; awaiting onServiceConnected" }
         }
     }
 
@@ -100,6 +118,7 @@ class BridgeConnection(
     private fun scheduleNextRebind() {
         val delay = backoffMs
         backoffMs = (backoffMs * 2).coerceAtMost(MAX_BACKOFF_MS)
+        PLog.i { "conn: scheduling rebind in ${delay}ms (next backoff ${backoffMs}ms)" }
         scheduleRebind(delay)
     }
 

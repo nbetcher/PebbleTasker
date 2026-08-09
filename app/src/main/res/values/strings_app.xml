@@ -37,7 +37,7 @@
     <string name="main_status_cert_mismatch">Pebble app signature changed</string>
     <string name="main_status_error">Bridge error</string>
 
-    <string name="main_status_ready_detail">Events and state are flowing. You can add Pebble plugins in Tasker now.</string>
+    <string name="main_status_ready_detail">Connected. Add Pebble plugins in Tasker now.</string>
     <string name="main_status_action_needed">Action needed — tap to fix.</string>
 
     <string name="main_btn_setup">Set up access</string>
@@ -46,10 +46,10 @@
     <string name="main_btn_open_pebble">Open Pebble app</string>
 
     <string name="main_plugins_heading">What you can build</string>
-    <string name="main_plugins_body">In Tasker, add a Pebble plugin as an Event, State, or Action:\n\n• Events — watch connected/disconnected, battery level, notifications, music, calls, and more.\n• States — watch connected, Do Not Disturb, active watchface, firmware updating.\n• Actions — send a watch notification, launch an app or watchface, send an AppMessage, connect/disconnect, and more.\n\nEvery field accepts Tasker %variables, and every plugin emits %pb_… output variables (including a structured %pb_json).</string>
+    <string name="main_plugins_body">Add a Pebble plugin in Tasker as an Event, State, or Action:\n\n• Events — connect/disconnect, battery, notifications, music, calls.\n• States — connected, Do Not Disturb, watchface, firmware updating.\n• Actions — send a notification, launch an app, connect/disconnect, and more.\n\nEvery field takes %variables; every plugin returns %pb_… outputs.</string>
 
     <string name="main_caps_heading">Available now</string>
-    <string name="main_caps_body">The plugins you can use depend on what the installed Pebble app supports. Open Diagnostics to see the live capability list. Plugins the bridge can\'t serve yet stay hidden until the Pebble app catches up — your saved Tasker profiles are never orphaned.</string>
+    <string name="main_caps_body">Which plugins work depends on what the installed Pebble app supports. Open Diagnostics for the live list. Unsupported ones stay hidden until the app catches up — your saved profiles are never orphaned.</string>
 
     <string name="main_footer">com.nickbether.pebbletasker</string>
 
@@ -57,24 +57,24 @@
     <string name="onboarding_title">Set up Pebble Tasker</string>
 
     <!-- Step 1: master switch -->
-    <string name="onboarding_step1_heading">Step 1 — Turn on Automation access</string>
-    <string name="onboarding_step1_body">This plugin talks to your watch through the Pebble app\'s automation bridge. That bridge is OFF by default.\n\nOpen the Pebble app, go to Settings → Automation access, and turn on the master switch. Until you do, the Pebble app won\'t even offer to approve this plugin.</string>
+    <string name="onboarding_step1_heading">1 — Turn on Automation access</string>
+    <string name="onboarding_step1_body">The plugin reaches your watch through the Pebble app\'s automation bridge, which is OFF by default.\n\nOpen the Pebble app → Settings → Automation access → turn on the master switch.</string>
     <string name="onboarding_step1_open">Open Pebble app</string>
 
     <!-- Step 2: approve this plugin -->
-    <string name="onboarding_step2_heading">Step 2 — Approve this plugin</string>
-    <string name="onboarding_step2_body">Once Automation access is on, the Pebble app will ask you to approve “Pebble Tasker Plugin”. Tap the notification in the Pebble app (or open Settings → Automation access and approve it there).\n\nThe first time you connect, this plugin also pins the Pebble app\'s signature so a swapped-out app can\'t silently impersonate it.</string>
+    <string name="onboarding_step2_heading">2 — Approve this plugin</string>
+    <string name="onboarding_step2_body">With access on, approve “Pebble Tasker Plugin” when the Pebble app prompts (or in Settings → Automation access). The first approval also pins the app\'s signature.</string>
 
     <!-- Step 3: battery exemption -->
-    <string name="onboarding_step3_heading">Step 3 — Keep the connection alive</string>
-    <string name="onboarding_step3_body">Android can put background apps to sleep, which delays watch events reaching Tasker. Exempting Pebble Tasker from battery optimization keeps events arriving promptly.\n\nThis is optional, but recommended for reliable event-driven profiles.</string>
+    <string name="onboarding_step3_heading">3 — Keep it alive (optional)</string>
+    <string name="onboarding_step3_body">Android may sleep background apps and delay watch events. Allowing background activity keeps events prompt. Recommended.</string>
     <string name="onboarding_btn_battery_request">Allow background activity</string>
-    <string name="onboarding_battery_already">Battery optimization is already disabled for this app.</string>
+    <string name="onboarding_battery_already">Battery optimization is already off for this app.</string>
     <string name="onboarding_battery_unavailable">Battery optimization settings aren\'t available on this device.</string>
 
     <!-- Step 4: verify -->
-    <string name="onboarding_step4_heading">Step 4 — Verify</string>
-    <string name="onboarding_step4_body">Check the live connection status below. When it reads “Connected and authorized,” you\'re done — add Pebble plugins in Tasker.</string>
+    <string name="onboarding_step4_heading">4 — Verify</string>
+    <string name="onboarding_step4_body">When the status below reads “Connected and authorized,” you\'re done.</string>
     <string name="onboarding_verify_label">Connection status</string>
     <string name="onboarding_btn_recheck">Re-check connection</string>
     <string name="onboarding_btn_finish">Finish</string>
@@ -85,25 +85,25 @@
 
     <!-- NOT_AUTHORIZED (first run / master off / revoked) -->
     <string name="consent_not_authorized_heading">Automation access is off</string>
-    <string name="consent_not_authorized_body">The Pebble app\'s Automation access master switch is off (it defaults to off), or access for this plugin was revoked.\n\nOpen the Pebble app → Settings → Automation access and turn on the master switch. Then re-check the connection here.</string>
+    <string name="consent_not_authorized_body">Automation access is off in the Pebble app (it defaults to off), or was revoked.\n\nOpen Pebble → Settings → Automation access, turn on the master switch, then re-check.</string>
 
     <!-- CONSENT_PENDING (master on, awaiting approval) -->
     <string name="consent_pending_heading">Approval needed in the Pebble app</string>
-    <string name="consent_pending_body">Automation access is on, and the Pebble app is waiting for you to approve “Pebble Tasker Plugin.”\n\nTap the approval notification in the Pebble app, or open Pebble → Settings → Automation access and approve it there. This screen will update automatically once you approve.</string>
+    <string name="consent_pending_body">The Pebble app is waiting for you to approve “Pebble Tasker Plugin.” Approve it there — this screen updates automatically.</string>
 
     <!-- CERT_MISMATCH (signing cert changed) -->
     <string name="consent_cert_mismatch_heading">Pebble app signature changed</string>
-    <string name="consent_cert_mismatch_body">The Pebble app\'s signing certificate is different from the one this plugin trusted before. This can happen after a legitimate reinstall from a different source — but it can also mean a different app is impersonating Pebble.\n\nOnly re-trust if you intentionally reinstalled the Pebble app. If you\'re unsure, do not re-trust and reinstall the Pebble app from its official source first.</string>
+    <string name="consent_cert_mismatch_body">The Pebble app\'s signing certificate changed since this plugin trusted it. Normal after a reinstall from a different source — but it could also mean another app is impersonating Pebble.\n\nOnly re-trust if you reinstalled it yourself.</string>
     <string name="consent_cert_current_label">New certificate (SHA-256)</string>
     <string name="consent_btn_retrust">Re-trust this signature</string>
 
     <!-- App absent -->
     <string name="consent_app_absent_heading">Pebble app not installed</string>
-    <string name="consent_app_absent_body">The Pebble app (coredevices.coreapp) isn\'t installed, so there\'s no automation bridge to connect to. Install the Pebble app, then return here.</string>
+    <string name="consent_app_absent_body">The Pebble app isn\'t installed, so there\'s nothing to connect to. Install it, then return here.</string>
 
     <!-- Generic error -->
     <string name="consent_error_heading">Connection error</string>
-    <string name="consent_error_body">The plugin couldn\'t complete the handshake with the Pebble app. Make sure the Pebble app is installed and up to date, then retry.</string>
+    <string name="consent_error_body">Couldn\'t complete the handshake. Make sure the Pebble app is installed and up to date, then retry.</string>
 
     <!-- Connected (nothing to do) -->
     <string name="consent_ok_heading">All set</string>

@@ -15,6 +15,7 @@ import com.nickbether.pebbletasker.tasker.action.common.ActionHelper
 import com.nickbether.pebbletasker.tasker.action.common.ActionOutputs
 import com.nickbether.pebbletasker.tasker.action.common.ActionSend
 import com.nickbether.pebbletasker.tasker.action.common.SerialUuidActionActivity
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
@@ -89,6 +90,9 @@ class SetWatchfaceActivity :
     SerialUuidActionActivity<SetWatchfaceInput, SetWatchfaceOutput, SetWatchfaceRunner, SetWatchfaceHelper>() {
     override val titleRes = R.string.act_set_watchface_title
     override val descRes = R.string.act_set_watchface_desc
+
+    // Setting a watchface expects a face UUID -> list (and validate against) the locker's watchfaces.
+    override val uuidLookup = CriteriaDropdown.Source.LOCKER_FACE
     override fun getNewHelper(config: TaskerPluginConfig<SetWatchfaceInput>) = SetWatchfaceHelper(config)
     override fun makeInput(serial: String?, uuid: String?) = SetWatchfaceInput(serial = serial, uuid = uuid)
     override fun serialOf(input: SetWatchfaceInput) = input.serial

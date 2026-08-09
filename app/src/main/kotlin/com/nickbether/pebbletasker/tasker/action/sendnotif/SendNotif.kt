@@ -1,7 +1,10 @@
 package com.nickbether.pebbletasker.tasker.action.sendnotif
 
 import android.content.Context
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
 import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfig
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInputField
@@ -122,18 +125,56 @@ class SendNotifActivity :
     override fun onConfigCreated(binding: ActivityActionSendNotifBinding) {
         super.onConfigCreated(binding)
         wireWatchBrowse(binding.layoutSerial)
+        binding.vibePreview.compact = true
+
         binding.toggleVibe.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
-            val literal = when (checkedId) {
-                R.id.btnVibeNone -> "none"
-                R.id.btnVibeShort -> "short"
-                R.id.btnVibeLong -> "long"
-                R.id.btnVibeDouble -> "double"
-                else -> return@addOnButtonCheckedListener
+            when (checkedId) {
+                R.id.btnVibeNone -> selectKeyword(binding, "none")
+                R.id.btnVibeShort -> selectKeyword(binding, "short")
+                R.id.btnVibeLong -> selectKeyword(binding, "long")
+                R.id.btnVibeCustom -> selectCustom(binding)
             }
-            binding.editVibe.setText(literal)
-            binding.editVibe.setSelection(literal.length)
         }
+
+        binding.btnVibeBuild.setOnClickListener {
+            VibeBuilderDialog.show(this, binding.editVibe.text?.toString()) { csv ->
+                binding.editVibe.setText(csv)
+                binding.editVibe.setSelection(binding.editVibe.text?.length ?: 0)
+            }
+        }
+
+        // Render-only inline buzz/pause glyphs + keep the small preview in sync as the CSV changes.
+        binding.editVibe.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                VibePattern.decorate(binding.editVibe)
+                binding.vibePreview.setPattern(VibePattern.parse(s?.toString()))
+            }
+        })
+
+        // Render the restored value now that the field + watcher exist (assign ran before this).
+        VibePattern.decorate(binding.editVibe)
+        binding.vibePreview.setPattern(VibePattern.parse(binding.editVibe.text?.toString()))
+
+        // Single source of truth for the editor's visibility: the (restored) radio selection. Keeps
+        // the section in sync regardless of assign/onCreate/onRestoreInstanceState ordering on rotation.
+        binding.customVibeSection.visibility =
+            if (binding.toggleVibe.checkedButtonId == R.id.btnVibeCustom) View.VISIBLE else View.GONE
+    }
+
+    /** None/Short/Long: the keyword IS the value; hide the custom editor. */
+    private fun selectKeyword(binding: ActivityActionSendNotifBinding, literal: String) {
+        binding.customVibeSection.visibility = View.GONE
+        binding.editVibe.setText(literal)
+    }
+
+    /** Custom: reveal the editor; start a fresh empty pattern if a keyword/blank was there. */
+    private fun selectCustom(binding: ActivityActionSendNotifBinding) {
+        binding.customVibeSection.visibility = View.VISIBLE
+        val cur = binding.editVibe.text?.toString()?.trim().orEmpty()
+        if (cur.isEmpty() || VibePattern.isKeyword(cur)) binding.editVibe.setText("")
     }
 
     override fun assignFromInput(input: TaskerInput<SendNotifInput>) {
@@ -144,14 +185,41 @@ class SendNotifActivity :
             b.editBody.setText(r.body)
             b.editSubtitle.setText(r.subtitle)
             b.editIcon.setText(r.icon)
-            b.editVibe.setText(r.vibe)
             b.editActions.setText(r.actionsJson)
-            when (r.vibe?.trim()?.lowercase()) {
-                "none" -> b.toggleVibe.check(R.id.btnVibeNone)
-                "short" -> b.toggleVibe.check(R.id.btnVibeShort)
-                "long" -> b.toggleVibe.check(R.id.btnVibeLong)
-                "double" -> b.toggleVibe.check(R.id.btnVibeDouble)
-                else -> b.toggleVibe.clearChecked() // %var or custom -> detach
+            applyVibe(b, r.vibe)
+        }
+    }
+
+    /** Restore the vibe UI: keyword -> its radio; legacy "double" + any CSV/%var -> Custom editor. */
+    private fun applyVibe(b: ActivityActionSendNotifBinding, vibe: String?) {
+        val raw = vibe?.trim().orEmpty()
+        when (raw.lowercase()) {
+            "none", "short", "long" -> {
+                val canonical = raw.lowercase()
+                b.editVibe.setText(canonical)
+                b.toggleVibe.check(
+                    when (canonical) {
+                        "none" -> R.id.btnVibeNone
+                        "short" -> R.id.btnVibeShort
+                        else -> R.id.btnVibeLong
+                    },
+                )
+                b.customVibeSection.visibility = View.GONE
+            }
+            "double" -> { // legacy saved value -> migrate to its editable CSV
+                b.editVibe.setText("160,120,160")
+                b.toggleVibe.check(R.id.btnVibeCustom)
+                b.customVibeSection.visibility = View.VISIBLE
+            }
+            "" -> {
+                b.editVibe.setText("")
+                b.toggleVibe.clearChecked()
+                b.customVibeSection.visibility = View.GONE
+            }
+            else -> { // a CSV pattern or a %variable (keep original casing for %vars)
+                b.editVibe.setText(raw)
+                b.toggleVibe.check(R.id.btnVibeCustom)
+                b.customVibeSection.visibility = View.VISIBLE
             }
         }
     }

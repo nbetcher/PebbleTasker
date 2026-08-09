@@ -13,6 +13,7 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknow
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnsatisfied
 import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.cache.CachedEvent
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleEventHelper
 import com.nickbether.pebbletasker.tasker.base.PebbleEventRunner
 import com.nickbether.pebbletasker.tasker.event.BaseEventOutput
@@ -87,7 +88,7 @@ class TimelineActivity :
     override val descRes = R.string.pb_evt_timeline_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("pin_uuid", getString(R.string.pb_lbl_pin_uuid)),
+        FieldSpec("pin_uuid", getString(R.string.pb_lbl_pin_uuid), lookup = CriteriaDropdown.Source.LOCKER_ANY),
         FieldSpec("action_id", getString(R.string.pb_lbl_action_id)),
     )
 

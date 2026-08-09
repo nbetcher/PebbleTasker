@@ -27,6 +27,8 @@ object GenericFieldBuilder {
      * @param numeric when true, sets a numeric-friendly inputType (still accepts %vars as text).
      * @param options when set, gives the field a fixed "Any" + values criteria dropdown.
      * @param watchSerial when true, gives the field a live "Any" + connected-watches dropdown.
+     * @param lookup when set, gives the field a live source-of-truth dropdown + non-blocking validation
+     *   (watch serial, installed package, or locker app/face UUID). Takes precedence over the above.
      */
     fun addField(
         context: Context,
@@ -36,6 +38,7 @@ object GenericFieldBuilder {
         singleLine: Boolean = true,
         options: List<Pair<String, String>>? = null,
         watchSerial: Boolean = false,
+        lookup: CriteriaDropdown.Source? = null,
     ): TextInputEditText {
         // Construct with the theme's default textInputStyle (mapped to Widget.NeonGrid.TextInputLayout
         // in Theme.NeonGrid), so the field is themed consistently with the XML-authored fields.
@@ -57,6 +60,7 @@ object GenericFieldBuilder {
         // Criteria affordance (FIX #3a: START icon + field tap, never the end-icon variable slot):
         // a live watch-serial dropdown, or a fixed "Any" + values pick-list for an enumerable filter.
         when {
+            lookup != null -> CriteriaDropdown.attach(layout, lookup)
             watchSerial -> CriteriaDropdown.attachWatchSerial(layout)
             options != null -> CriteriaDropdown.attachFixed(layout, options)
         }

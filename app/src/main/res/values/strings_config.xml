@@ -8,4 +8,18 @@
     <!-- Criteria pick-lists (serial + fixed-value fields). "Any" clears the field to match everything. -->
     <string name="pb_lookup_any">Any</string>
     <string name="pb_lookup_pick">Choose a value</string>
+
+    <!-- Non-blocking "nothing matches" warnings (neon-yellow bubble). Never prevent saving. -->
+    <string name="pb_warn_no_serial">No connected watch matches this serial right now — you can still save.</string>
+    <string name="pb_warn_no_package">No installed app matches this package right now — you can still save.</string>
+    <string name="pb_warn_no_uuid">No watch app or face in your locker matches this UUID right now — you can still save.</string>
+
+    <!-- "Not set up" dialog (shown when a plugin is configured before the Pebble app is authorized). -->
+    <string name="config_not_setup_title">Finish setup first</string>
+    <string name="config_not_setup_body">Pebble Tasker isn\'t connected to the Pebble app yet. Open it to turn on Automation access.</string>
+    <string name="config_not_setup_block_body">Not saved — Pebble Tasker isn\'t set up yet, so this wouldn\'t do anything. Open the Pebble app to finish setup, then save.</string>
+    <string name="config_not_setup_guide">Setup guide</string>
+
+    <!-- Run-time hard error (Tasker %errmsg) when an action runs on a device where setup never completed. -->
+    <string name="error_not_set_up">Pebble Tasker isn\'t set up on this device. Open the app and turn on Automation access in the Pebble app.</string>
 </resources>

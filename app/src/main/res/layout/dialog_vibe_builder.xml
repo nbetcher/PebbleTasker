@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Custom vibration builder popup (A2 Send Watch Notification). Tap-and-hold the pad to buzz, release to
+  pause; the pattern is recorded as an on,off,on,… CSV, visualised live, and previewable on the phone.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/vibe_builder_help"
+            android:textAppearance="@style/TextAppearance.NeonGrid.BodySmall"
+            android:textColor="@color/ng_text_secondary" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/padRecord"
+            style="@style/Widget.NeonGrid.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="16dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/padLabel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/vibe_builder_pad"
+                android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
+                android:textColor="@color/ng_yellow" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.nickbether.pebbletasker.ui.widget.VibrationPatternView
+            android:id="@+id/patternView"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/vibe_builder_pattern_label"
+            android:textAppearance="@style/TextAppearance.NeonGrid.LabelMedium"
+            android:textColor="@color/ng_text_secondary" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutPattern"
+            style="@style/Widget.NeonGrid.TextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editPattern"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:inputType="text"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnClear"
+                style="@style/Widget.NeonGrid.Button.Ghost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/vibe_clear" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPreview"
+                style="@style/Widget.NeonGrid.Button.Accent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/vibe_preview"
+                app:icon="@drawable/ic_vibe_buzz" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -26,7 +26,7 @@
     <string name="pb_evt_lbl_fw_status">Firmware status (blank = any)</string>
     <string name="pb_evt_lbl_dev_enabled">Dev enabled (true / false / blank = any)</string>
     <string name="pb_evt_lbl_transport">Transport (blank = any)</string>
-    <string name="pb_lbl_error_type">Error type (error / gap / blank = any)</string>
+    <string name="pb_lbl_error_type">Error type (blank = any error; type \"gap\" for reconnect gaps)</string>
     <string name="pb_lbl_unused">(no options)</string>
 
     <!-- ── shared config-UI strings ── -->
@@ -94,6 +94,6 @@
 
     <!-- ── E15 Bridge / Watch Error ── -->
     <string name="pb_evt_bridgeerror_title">Pebble Bridge / Watch Error</string>
-    <string name="pb_evt_bridgeerror_desc">Fires on a bridge error or a detected event gap (after a bridge restart or dropped events).</string>
+    <string name="pb_evt_bridgeerror_desc">Fires on a bridge error. Leave the type blank to catch any error. A reconnect/boot \"gap\" (when missed one-shot events can\'t be replayed) is NOT treated as an error — set the type to \"gap\" if you want to be notified of those too. Your state conditions re-sync automatically on reconnect.</string>
 
 </resources>

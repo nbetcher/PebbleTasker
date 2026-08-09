@@ -3,6 +3,7 @@ package com.nickbether.pebbletasker.bridge
 import android.content.Context
 import com.nickbether.pebbletasker.cache.CachedEvent
 import com.nickbether.pebbletasker.cache.EventCache
+import com.nickbether.pebbletasker.log.PLog
 import coredevices.coreapp.automation.IBridgeEventListener
 import kotlinx.coroutines.channels.Channel
 
@@ -41,13 +42,24 @@ class BridgeListener(
 
     override fun onEvents(eventBatchJson: String?) {
         // Decode + ingest, no blocking. Any parse failure is swallowed (untrusted-ish input).
-        val batch = BridgeCodec.decodeBatch(eventBatchJson).valueOrNull() ?: return
+        val batch = BridgeCodec.decodeBatch(eventBatchJson).valueOrNull()
+        if (batch == null) {
+            PLog.w { "listener: onEvents undecodable batch (len=${eventBatchJson?.length ?: 0})" }
+            return
+        }
 
         // Drop batches from a stale boot (we re-handshake and re-seed on boot change separately).
         val live = currentBootId()
-        if (live != null && batch.bootId != live) return
+        if (live != null && batch.bootId != live) {
+            PLog.w { "listener: dropping stale-boot batch (batch=${batch.bootId} live=$live)" }
+            return
+        }
 
         val routed = cache.putBatch(batch.events)
+        PLog.i {
+            "listener: onEvents bootId=${batch.bootId} in=${batch.events.size} new=${routed.size}" +
+                (if (routed.isNotEmpty()) " types=${routed.map { it.type }.distinct()}" else "")
+        }
         if (routed.isNotEmpty()) {
             // Hand the exact new-event set to the app-scope drainer (honors no-work-on-Binder rule).
             routedChannel.trySend(routed)
@@ -55,6 +67,7 @@ class BridgeListener(
     }
 
     override fun onBridgeGoodbye(reasonJson: String?) {
+        PLog.w { "listener: onBridgeGoodbye reason=$reasonJson" }
         onGoodbye(reasonJson)
     }
 }

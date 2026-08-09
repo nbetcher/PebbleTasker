@@ -5,6 +5,7 @@ import com.joaomgcd.taskerpluginlibrary.condition.TaskerPluginRunnerConditionSta
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultCondition
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknown
+import com.nickbether.pebbletasker.log.PLog
 import com.nickbether.pebbletasker.ui.BridgeWarning
 
 /**
@@ -34,11 +35,20 @@ abstract class PebbleStateRunner<TInput : Any, TOutput : Any> :
         context: Context,
         input: TaskerInput<TInput>,
         update: Unit?,
-    ): TaskerPluginResultCondition<TOutput> = try {
-        // Warn (throttled notification) if Tasker is polling this state while we're not bridged.
-        BridgeWarning.warnIfUsedWhileUnbridged(context)
-        evaluate(context, input.regular)
-    } catch (t: Throwable) {
-        TaskerPluginResultConditionUnknown()
+    ): TaskerPluginResultCondition<TOutput> {
+        val name = this::class.simpleName
+        PLog.d { "state[$name]: query" }
+        return try {
+            // Warn (throttled notification) if Tasker is polling this state while we're not bridged.
+            BridgeWarning.warnIfUsedWhileUnbridged(context)
+            evaluate(context, input.regular).also { r ->
+                // Log the resolved condition (Satisfied / Unsatisfied / Unknown) — the single most
+                // useful line for the "state rarely fires" diagnosis.
+                PLog.i { "state[$name]: -> ${r::class.simpleName?.removePrefix("TaskerPluginResultCondition")}" }
+            }
+        } catch (t: Throwable) {
+            PLog.e(t) { "state[$name]: threw -> Unknown" }
+            TaskerPluginResultConditionUnknown()
+        }
     }
 }

@@ -15,6 +15,7 @@ import com.nickbether.pebbletasker.tasker.action.common.ActionHelper
 import com.nickbether.pebbletasker.tasker.action.common.ActionOutputs
 import com.nickbether.pebbletasker.tasker.action.common.ActionSend
 import com.nickbether.pebbletasker.tasker.action.common.GenericFieldsActionActivity
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
@@ -89,7 +90,7 @@ class MuteAppActivity :
     override val descRes = R.string.act_mute_desc
     override val fields = listOf(
         FieldSpec(R.string.lbl_serial, isSerial = true),
-        FieldSpec(R.string.lbl_pkg),
+        FieldSpec(R.string.lbl_pkg, lookup = CriteriaDropdown.Source.APP_PACKAGE),
         FieldSpec(R.string.lbl_duration),
     )
     override fun getNewHelper(config: TaskerPluginConfig<MuteAppInput>) = MuteAppHelper(config)

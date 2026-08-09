@@ -7,6 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultCondition
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknown
 import com.nickbether.pebbletasker.cache.CachedEvent
 import com.nickbether.pebbletasker.cache.EventCache
+import com.nickbether.pebbletasker.log.PLog
 import com.nickbether.pebbletasker.ui.BridgeWarning
 
 /**
@@ -49,13 +50,18 @@ abstract class PebbleEventRunner<TInput : Any, TOutput : Any> :
         input: TaskerInput<TInput>,
         update: TOutput?,
     ): TaskerPluginResultCondition<TOutput> {
+        val name = this::class.simpleName
         // Warn (throttled notification) if this event condition is evaluated while we're not bridged.
         BridgeWarning.warnIfUsedWhileUnbridged(context)
         val cached = runCatching { EventCache.get(context).latest(eventType) }.getOrNull()
+        PLog.d { "event[$name]: query type=$eventType cached=${cached != null}" }
         return try {
-            evaluate(context, input.regular, cached, update)
+            evaluate(context, input.regular, cached, update).also { r ->
+                PLog.i { "event[$name]: -> ${r::class.simpleName?.removePrefix("TaskerPluginResultCondition")}" }
+            }
         } catch (t: Throwable) {
             // Never throw out of a condition runner; Unknown keeps the context from flapping.
+            PLog.e(t) { "event[$name]: threw -> Unknown" }
             TaskerPluginResultConditionUnknown()
         }
     }

@@ -8,6 +8,7 @@ import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfigHelper
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginRunner
 import com.nickbether.pebbletasker.databinding.ActivityActionGenericBinding
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 
 /**
  * Config-activity base for actions whose inputs are 1–4 plain %var-capable text fields
@@ -31,6 +32,11 @@ abstract class GenericFieldsActionActivity<
         val hintRes: Int,
         val isSerial: Boolean = false,
         val multiline: Boolean = false,
+        /**
+         * Source-of-truth lookup: a live dropdown (installed package, locker app/face UUID, or watch
+         * serial) + non-blocking neon-yellow validation. Takes precedence over [isSerial].
+         */
+        val lookup: CriteriaDropdown.Source? = null,
     )
 
     protected abstract val titleRes: Int
@@ -81,7 +87,10 @@ abstract class GenericFieldsActionActivity<
                 es[i].minLines = 2
                 es[i].gravity = android.view.Gravity.TOP or android.view.Gravity.START
             }
-            if (spec.isSerial) wireWatchBrowse(ls[i])
+            when {
+                spec.lookup != null -> CriteriaDropdown.attach(ls[i], spec.lookup)
+                spec.isSerial -> wireWatchBrowse(ls[i])
+            }
         }
     }
 

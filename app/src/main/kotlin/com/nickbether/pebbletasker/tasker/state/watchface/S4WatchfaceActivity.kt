@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfig
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.nickbether.pebbletasker.databinding.ActivityStateWatchfaceBinding
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleConfigActivity
 
 /**
@@ -22,6 +23,12 @@ class S4WatchfaceActivity : PebbleConfigActivity<
         ActivityStateWatchfaceBinding.inflate(inflater)
 
     override fun getNewHelper(config: TaskerPluginConfig<S4WatchfaceInput>) = S4WatchfaceHelper(config)
+
+    override fun onConfigCreated(binding: ActivityStateWatchfaceBinding) {
+        super.onConfigCreated(binding)
+        // The active-watchface filter is a face UUID — offer the locker's faces + validate.
+        CriteriaDropdown.attach(binding.pbFieldUuid, CriteriaDropdown.Source.LOCKER_FACE)
+    }
 
     override fun assignFromInput(input: TaskerInput<S4WatchfaceInput>) {
         binding?.pbInputUuid?.setText(input.regular.uuid.orEmpty())

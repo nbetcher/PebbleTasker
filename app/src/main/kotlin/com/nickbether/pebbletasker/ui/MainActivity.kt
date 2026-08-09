@@ -12,6 +12,7 @@ import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.bridge.BridgeClient
 import com.nickbether.pebbletasker.bridge.BridgeClient.ConnectionStatus
 import com.nickbether.pebbletasker.databinding.ActivityMainBinding
+import com.nickbether.pebbletasker.setup.SetupState
 import com.nickbether.pebbletasker.util.applyContentInsets
 import kotlinx.coroutines.launch
 
@@ -89,6 +90,12 @@ class MainActivity : AppCompatActivity() {
             status is ConnectionStatus.ConsentPending ||
             status is ConnectionStatus.CertMismatch
         binding.btnOpenPebble.visibility = if (showOpen) View.VISIBLE else View.GONE
+
+        // Once setup is complete, the "Set up access" button is just noise — hide it. (Diagnostics and
+        // the getting-started recap stay available.) Treat either the persisted flag or a live Ready
+        // status as "done" so it disappears the moment the connection succeeds.
+        val setUp = SetupState.isSetupComplete(this) || status is ConnectionStatus.Ready
+        binding.btnSetup.visibility = if (setUp) View.GONE else View.VISIBLE
     }
 
     private fun openPebbleApp() {

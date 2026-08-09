@@ -17,6 +17,7 @@ import com.nickbether.pebbletasker.tasker.action.common.ActionConfigActivity
 import com.nickbether.pebbletasker.tasker.action.common.ActionHelper
 import com.nickbether.pebbletasker.tasker.action.common.ActionOutputs
 import com.nickbether.pebbletasker.tasker.action.common.ActionSend
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 import org.json.JSONObject
@@ -129,6 +130,7 @@ class AppMessageActivity :
     override fun onConfigCreated(binding: ActivityActionAppmessageBinding) {
         super.onConfigCreated(binding)
         wireWatchBrowse(binding.layoutSerial)
+        CriteriaDropdown.attach(binding.layoutUuid, CriteriaDropdown.Source.LOCKER_ANY)
     }
 
     override fun assignFromInput(input: TaskerInput<AppMessageInput>) {

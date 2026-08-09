@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tag id used by CriteriaDropdown to associate a field's neon-yellow "nothing matches" bubble. -->
+    <item name="pb_warn_bubble" type="id" />
+</resources>

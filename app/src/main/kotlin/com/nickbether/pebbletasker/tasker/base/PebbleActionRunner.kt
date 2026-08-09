@@ -6,7 +6,10 @@ import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResult
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultError
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultSucess
+import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.bridge.BridgeResult
+import com.nickbether.pebbletasker.log.PLog
+import com.nickbether.pebbletasker.setup.SetupState
 import com.nickbether.pebbletasker.tasker.ErrCodes
 import com.nickbether.pebbletasker.ui.BridgeWarning
 
@@ -62,9 +65,29 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
 
     @Suppress("UNCHECKED_CAST")
     final override fun run(context: Context, input: TaskerInput<TInput>): TaskerPluginResult<TOutput> {
+        val name = this::class.simpleName
+        PLog.d { "action[$name]: run" }
+        // Never set up on this device (e.g. Tasker config restored onto a new phone with no Pebble-app
+        // authorization): fail HARD so Tasker surfaces %err via its own notification — the plugin itself
+        // may lack POST_NOTIFICATIONS, but Tasker doesn't. This is the restore-safety bubble-up.
+        if (!SetupState.isSetupComplete(context)) {
+            PLog.w { "action[$name]: NOT SET UP -> hard error (finish setup in the Pebble Tasker app)" }
+            BridgeWarning.warnIfUsedWhileUnbridged(context)
+            return TaskerPluginResultError(
+                ErrCodes.NOT_SET_UP,
+                context.getString(R.string.error_not_set_up),
+            ) as TaskerPluginResult<TOutput>
+        }
         // Warn (throttled notification) if this action is run while we're not bridged to the Pebble app.
         BridgeWarning.warnIfUsedWhileUnbridged(context)
         val bridgeResult = execute(context, input)
+        when (bridgeResult) {
+            is BridgeResult.Ok -> PLog.i { "action[$name]: ok (${bridgeResult.value.size} field(s))" }
+            is BridgeResult.Err -> PLog.w {
+                "action[$name]: err code=${bridgeResult.code} msg=${bridgeResult.message} " +
+                    "hard=${isHardFailure(bridgeResult.code)}"
+            }
+        }
         return when (bridgeResult) {
             is BridgeResult.Ok -> {
                 val out = buildOutput(
@@ -98,5 +121,6 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
     protected open fun isHardFailure(code: Int): Boolean =
         code == ErrCodes.TIMEOUT ||
             code == ErrCodes.BRIDGE_UNREACHABLE ||
-            code == ErrCodes.INTERNAL
+            code == ErrCodes.INTERNAL ||
+            code == ErrCodes.NOT_SET_UP
 }

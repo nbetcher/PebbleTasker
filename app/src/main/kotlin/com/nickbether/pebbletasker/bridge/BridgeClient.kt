@@ -9,6 +9,8 @@ import com.nickbether.pebbletasker.bridge.dto.ResultEnvelope
 import com.nickbether.pebbletasker.bridge.dto.StateResult
 import com.nickbether.pebbletasker.cache.EventCache
 import com.nickbether.pebbletasker.cache.EventRouter
+import com.nickbether.pebbletasker.log.PLog
+import com.nickbether.pebbletasker.setup.SetupState
 import com.nickbether.pebbletasker.tasker.ErrCodes
 import coredevices.coreapp.automation.IBridgeService
 import kotlinx.coroutines.CoroutineScope
@@ -85,8 +87,22 @@ class BridgeClient private constructor(private val appContext: Context) {
 
     // --- lifecycle ---
 
-    /** Start sticky binding and drain the routed-event channel. Idempotent. */
+    @Volatile private var started = false
+
+    /**
+     * Start sticky binding and drain the routed-event channel. Idempotent: the drain loop is launched
+     * exactly once even if called again (e.g. from KeepAliveService on a tether bind) — a second loop
+     * would fan-out-split the single routedChannel and drop events. Repeat calls just (re)ensure a bind.
+     */
+    @Synchronized
     fun start() {
+        if (started) {
+            PLog.d { "client: start() again — ensureBound only" }
+            connection.ensureBound()
+            return
+        }
+        started = true
+        PLog.i { "client: start() — draining routed events, ensureBound" }
         // Drain routed events off the Binder thread and dispatch to Tasker.
         scope.launch {
             for (routed in listener.routedChannel) {
@@ -106,18 +122,21 @@ class BridgeClient private constructor(private val appContext: Context) {
     // --- connect / handshake / register (runs on bridgeDispatcher) ---
 
     private fun onConnected(svc: IBridgeService) {
+        PLog.i { "client: bound; starting handshake" }
         scope.launch(bridgeDispatcher) {
             handshakeAndRegister(svc)
         }
     }
 
     private fun onDisconnected() {
+        PLog.w { "client: disconnected; session cleared" }
         session = null
         _status.value = ConnectionStatus.Disconnected
     }
 
     private fun onGoodbye() {
         // Revocation/shutdown: clear session and proactively rebind (events have stopped).
+        PLog.w { "client: bridge goodbye (revoke/shutdown); clearing session + proactive rebind" }
         session = null
         _status.value = ConnectionStatus.Disconnected
         scope.launch { delay(BridgeConnection.MIN_BACKOFF_MS); connection.ensureBound() }
@@ -129,16 +148,20 @@ class BridgeClient private constructor(private val appContext: Context) {
      */
     private suspend fun handshakeAndRegister(svc: IBridgeService) {
         // 1. TOFU cert check BEFORE trusting anything.
-        when (certPinner.verify()) {
+        when (val pin = certPinner.verify()) {
             CertPinner.PinResult.MISMATCH -> {
+                PLog.w { "handshake: cert MISMATCH (bridge cert changed since pin); sha=${certPinner.currentSha()}" }
                 _status.value = ConnectionStatus.CertMismatch(certPinner.currentSha())
                 return
             }
             CertPinner.PinResult.APP_ABSENT -> {
+                PLog.w { "handshake: bridge app ABSENT" }
                 _status.value = ConnectionStatus.AppAbsent
                 return
             }
-            CertPinner.PinResult.PINNED, CertPinner.PinResult.OK -> Unit
+            CertPinner.PinResult.PINNED, CertPinner.PinResult.OK -> {
+                PLog.d { "handshake: cert ok ($pin)" }
+            }
         }
 
         // 2. Handshake (envelope-aware decode).
@@ -149,10 +172,12 @@ class BridgeClient private constructor(private val appContext: Context) {
                 wants = WANTS,
             ),
         )
+        PLog.d { "handshake: sending ClientHello (proto=$CLIENT_PROTOCOL wants=$WANTS)" }
         val helloResult = callBridge { BridgeCodec.decodeHello(svc.handshake(helloJson)) }
         val hello: BridgeHello = when (helloResult) {
             is BridgeResult.Ok -> helloResult.value
             is BridgeResult.Err -> {
+                PLog.w { "handshake: BridgeHello ERR code=${helloResult.code} msg=${helloResult.message}" }
                 _status.value = ConnectionStatus.fromError(helloResult)
                 maybeScheduleConsentPoll(helloResult)
                 return
@@ -161,12 +186,17 @@ class BridgeClient private constructor(private val appContext: Context) {
 
         val sess = BridgeSession.from(hello)
         session = sess
+        PLog.i {
+            "handshake: BridgeHello ok bootId=${sess.bootId} proto=${sess.protocolVersion} " +
+                "appVersion=${sess.appVersion} latestSeq=${sess.latestSeq} caps=${sess.capabilities}"
+        }
 
         // 3. Seed the event-cache high-water from BridgeHello.latestSeq (NOT an empty batch).
         cache.seedFromHandshake(sess.bootId, sess.latestSeq)
 
         // 4. Register the listener with the FRESH token at our current high-water for this boot.
         val fromSeq = cache.highWaterSeqFor(sess.bootId).let { if (it < 0) sess.latestSeq else it }
+        PLog.d { "handshake: registerEventListener fromSeq=$fromSeq (probing with getEventsSince)" }
         val registered = callBridge {
             svc.registerEventListener(sess.clientToken, listener, fromSeq)
             // registerEventListener is void + fails SILENTLY on a stale token; no ack exists.
@@ -178,7 +208,14 @@ class BridgeClient private constructor(private val appContext: Context) {
                 // Ingest any replay the probe returned (deduped by EventCache).
                 val routed = cache.putBatch(registered.value.events)
                 if (routed.isNotEmpty()) listener.routedChannel.trySend(routed)
+                PLog.i {
+                    "handshake: REGISTERED, status=Ready. probe replayed ${registered.value.events.size} " +
+                        "event(s), routed ${routed.size} new. requestQueryAll now."
+                }
                 _status.value = ConnectionStatus.Ready(sess)
+                // Durable "this plugin has been authorized on this device" mark (survives process death;
+                // false on a fresh install / Tasker restore). Gates config-save + the run-time setup error.
+                SetupState.markSetupComplete(appContext)
                 // Freshly (re)connected: re-query every registered condition so Tasker states/events
                 // reflect the CURRENT bridge snapshot now — even when the triggering connect/disconnect
                 // happened before this session existed (so no event would ever push them).
@@ -186,6 +223,7 @@ class BridgeClient private constructor(private val appContext: Context) {
             }
             is BridgeResult.Err -> {
                 // Probe failed -> registration likely dropped; surface and let backoff re-handshake.
+                PLog.w { "handshake: register probe ERR code=${registered.code} msg=${registered.message}" }
                 _status.value = ConnectionStatus.fromError(registered)
             }
         }
@@ -194,6 +232,7 @@ class BridgeClient private constructor(private val appContext: Context) {
     /** If the error is CONSENT_PENDING, poll handshake with its own backoff until resolved. */
     private fun maybeScheduleConsentPoll(err: BridgeResult.Err) {
         if (err.code != ErrCodes.CONSENT_PENDING) return
+        PLog.i { "client: CONSENT_PENDING — awaiting in-app approval; polling handshake" }
         scope.launch {
             var wait = CONSENT_POLL_MIN_MS
             while (status.value is ConnectionStatus.ConsentPending) {
@@ -210,8 +249,16 @@ class BridgeClient private constructor(private val appContext: Context) {
     /** Snapshot query. queryJson is ignored by the bridge; we pass "{}". 9s timeout. */
     suspend fun getState(): BridgeResult<StateResult> {
         val svc = connection.serviceOrNull()
-            ?: return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "not bound")
-        return callBridgeTimed { BridgeCodec.decodeState(svc.getState("{}")) }
+        if (svc == null) {
+            PLog.w { "getState: NOT BOUND -> BRIDGE_UNREACHABLE (runner will map to Unknown)" }
+            return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "not bound")
+        }
+        val result = callBridgeTimed { BridgeCodec.decodeState(svc.getState("{}")) }
+        when (result) {
+            is BridgeResult.Ok -> PLog.i { "getState: ok — ${result.value.data.watches.size} connected watch(es)" }
+            is BridgeResult.Err -> PLog.w { "getState: ERR code=${result.code} msg=${result.message}" }
+        }
+        return result
     }
 
     /**
@@ -225,14 +272,24 @@ class BridgeClient private constructor(private val appContext: Context) {
      */
     suspend fun execute(cmd: CommandEnvelope): BridgeResult<ResultEnvelope> {
         val sess = session
-            ?: return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "no session")
+        if (sess == null) {
+            PLog.w { "execute(${cmd.type}): no session -> BRIDGE_UNREACHABLE" }
+            return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "no session")
+        }
         if (!sess.has(BridgeSession.CAP_COMMANDS_CORE)) {
+            PLog.w { "execute(${cmd.type}): bridge lacks commands.core -> UNSUPPORTED_COMMAND" }
             return BridgeResult.err(ErrCodes.UNSUPPORTED_COMMAND, "bridge does not support commands yet")
         }
         val svc = connection.serviceOrNull()
             ?: return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "not bound")
         val json = BridgeCodec.encodeCommand(cmd)
-        return callBridgeTimed { BridgeCodec.decodeResult(svc.execute(sess.clientToken, json)) }
+        PLog.d { "execute(${cmd.type}): sending" }
+        val result = callBridgeTimed { BridgeCodec.decodeResult(svc.execute(sess.clientToken, json)) }
+        when (result) {
+            is BridgeResult.Ok -> PLog.i { "execute(${cmd.type}): ok=${result.value.ok}" }
+            is BridgeResult.Err -> PLog.w { "execute(${cmd.type}): ERR code=${result.code} msg=${result.message}" }
+        }
+        return result
     }
 
     /** Force a fresh bind + handshake (e.g. after the user flips the master switch or re-trusts). */

@@ -15,6 +15,7 @@ import com.nickbether.pebbletasker.tasker.action.common.ActionHelper
 import com.nickbether.pebbletasker.tasker.action.common.ActionOutputs
 import com.nickbether.pebbletasker.tasker.action.common.ActionSend
 import com.nickbether.pebbletasker.tasker.action.common.GenericFieldsActionActivity
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
@@ -99,7 +100,7 @@ class QuickLaunchActivity :
         FieldSpec(R.string.lbl_serial, isSerial = true),
         FieldSpec(R.string.lbl_button),
         FieldSpec(R.string.lbl_press),
-        FieldSpec(R.string.lbl_uuid),
+        FieldSpec(R.string.lbl_uuid, lookup = CriteriaDropdown.Source.LOCKER_ANY),
     )
     override fun getNewHelper(config: TaskerPluginConfig<QuickLaunchInput>) = QuickLaunchHelper(config)
     override fun makeInput(values: List<String?>) = QuickLaunchInput(

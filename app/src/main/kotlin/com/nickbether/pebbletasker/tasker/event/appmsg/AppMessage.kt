@@ -13,6 +13,7 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknow
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnsatisfied
 import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.bridge.BridgeClient
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.bridge.dto.CommandEnvelope
 import com.nickbether.pebbletasker.cache.CachedEvent
 import com.nickbether.pebbletasker.tasker.base.PebbleEventHelper
@@ -139,7 +140,7 @@ class AppMessageActivity :
     override val descRes = R.string.pb_evt_appmsg_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("uuid", getString(R.string.pb_evt_lbl_uuid)),
+        FieldSpec("uuid", getString(R.string.pb_evt_lbl_uuid), lookup = CriteriaDropdown.Source.LOCKER_ANY),
         FieldSpec("key", getString(R.string.pb_lbl_key)),
     )
 

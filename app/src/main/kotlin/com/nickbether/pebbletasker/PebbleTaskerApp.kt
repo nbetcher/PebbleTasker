@@ -2,6 +2,7 @@ package com.nickbether.pebbletasker
 
 import android.app.Application
 import com.nickbether.pebbletasker.bridge.BridgeClient
+import com.nickbether.pebbletasker.log.PLog
 import com.nickbether.pebbletasker.tasker.event.EventRouting
 import com.nickbether.pebbletasker.tasker.state.StateRegistrations
 import com.nickbether.pebbletasker.ui.BridgeWarning
@@ -22,6 +23,7 @@ class PebbleTaskerApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        PLog.i { "app: onCreate — warming BridgeClient + registering event/state routes" }
         // Single ServiceConnection on a 1-thread bridge dispatcher; sticky bind + 1s..60s backoff,
         // TOFU cert pin, handshake, listener registration, routed-event fan-out (FINAL DESIGN §3).
         BridgeClient.init(this)

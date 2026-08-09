@@ -151,7 +151,20 @@
     <string name="opt_vibe_none">None</string>
     <string name="opt_vibe_short">Short</string>
     <string name="opt_vibe_long">Long</string>
-    <string name="opt_vibe_double">Double</string>
+    <string name="opt_vibe_custom">Custom</string>
+
+    <!-- ════════════ Custom vibration builder ════════════ -->
+    <string name="vibe_custom_hint">on,off,on,… in milliseconds. Tap Build to tap out a pattern.</string>
+    <string name="vibe_build">Build</string>
+    <string name="vibe_build_cd">Open the vibration pattern builder</string>
+    <string name="vibe_builder_title">Tap out a vibration</string>
+    <string name="vibe_builder_help">Press and hold the pad to buzz; let go to pause. Tap rhythmically to build a pattern — then fine-tune the numbers below.</string>
+    <string name="vibe_builder_pad">Hold to buzz</string>
+    <string name="vibe_builder_pattern_label">Pattern (ms)</string>
+    <string name="vibe_preview">Preview</string>
+    <string name="vibe_clear">Clear</string>
+    <string name="vibe_save">Use pattern</string>
+    <string name="vibe_no_vibrator">This device has no vibrator to preview with.</string>
     <string name="opt_button_up">Up</string>
     <string name="opt_button_down">Down</string>
     <string name="opt_press_short">Short</string>

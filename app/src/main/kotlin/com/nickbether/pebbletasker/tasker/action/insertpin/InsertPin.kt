@@ -15,6 +15,7 @@ import com.nickbether.pebbletasker.tasker.action.common.ActionHelper
 import com.nickbether.pebbletasker.tasker.action.common.ActionOutputs
 import com.nickbether.pebbletasker.tasker.action.common.ActionSend
 import com.nickbether.pebbletasker.tasker.action.common.GenericFieldsActionActivity
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
@@ -95,7 +96,7 @@ class InsertPinActivity :
     override val fields = listOf(
         FieldSpec(R.string.lbl_serial, isSerial = true),
         FieldSpec(R.string.lbl_pin_json, multiline = true),
-        FieldSpec(R.string.lbl_pin_uuid),
+        FieldSpec(R.string.lbl_pin_uuid, lookup = CriteriaDropdown.Source.LOCKER_ANY),
     )
     override fun getNewHelper(config: TaskerPluginConfig<InsertPinInput>) = InsertPinHelper(config)
     override fun makeInput(values: List<String?>) =

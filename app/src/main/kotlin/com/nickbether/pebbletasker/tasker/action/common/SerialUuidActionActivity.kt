@@ -5,13 +5,15 @@ import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfigHelper
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginRunner
 import com.nickbether.pebbletasker.databinding.ActivityActionSerialUuidBinding
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 
 /**
  * Reusable config-activity base for actions taking watch `serial` + an app/watchface `uuid`
  * (Launch App, Set Watchface — FINAL DESIGN §2.3).
  *
  * Both fields are %var-capable (variable end-icon from PebbleConfigActivity); serial also gets the
- * watch browse-picker start-icon.
+ * watch browse-picker start-icon, and uuid gets a locker dropdown + non-blocking validation
+ * ([uuidLookup], any app/face by default; Set Watchface narrows it to faces).
  */
 abstract class SerialUuidActionActivity<
     TInput : Any,
@@ -22,6 +24,9 @@ abstract class SerialUuidActionActivity<
 
     protected abstract val titleRes: Int
     protected abstract val descRes: Int
+
+    /** Locker source for the uuid field's dropdown + validation. Default: any app/face. */
+    protected open val uuidLookup: CriteriaDropdown.Source = CriteriaDropdown.Source.LOCKER_ANY
 
     protected abstract fun makeInput(serial: String?, uuid: String?): TInput
     protected abstract fun serialOf(input: TInput): String?
@@ -35,6 +40,7 @@ abstract class SerialUuidActionActivity<
         binding.txtTitle.setText(titleRes)
         binding.txtDesc.setText(descRes)
         wireWatchBrowse(binding.layoutSerial)
+        CriteriaDropdown.attach(binding.layoutUuid, uuidLookup)
     }
 
     override fun assignFromInput(input: TaskerInput<TInput>) {

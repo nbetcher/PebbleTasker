@@ -13,6 +13,7 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnknow
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultConditionUnsatisfied
 import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.cache.CachedEvent
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleEventHelper
 import com.nickbether.pebbletasker.tasker.base.PebbleEventRunner
 import com.nickbether.pebbletasker.tasker.event.BaseEventOutput
@@ -141,7 +142,7 @@ class NotifSentActivity :
     override val descRes = R.string.pb_evt_notifsent_desc
 
     override fun buildFields() = listOf(
-        FieldSpec("pkg", getString(R.string.pb_lbl_pkg)),
+        FieldSpec("pkg", getString(R.string.pb_lbl_pkg), lookup = CriteriaDropdown.Source.APP_PACKAGE),
         FieldSpec("app_name", getString(R.string.pb_lbl_app_name)),
         FieldSpec("text_contains", getString(R.string.pb_lbl_text_contains)),
     )

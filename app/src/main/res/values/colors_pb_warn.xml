@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Neon-yellow/gold palette for the non-blocking "nothing matches" validation bubble. Defined locally
+  (not via the NeonGrid theme module) so the plugin stays self-contained. Base hue is ng_yellow
+  (#FFDD00); the fill/stroke are translucent so the pill reads as a neon glow on the dark config UI.
+-->
+<resources>
+    <color name="pb_warn_text">#FFFFDD00</color>
+    <color name="pb_warn_fill">#22FFDD00</color>
+    <color name="pb_warn_stroke">#66FFDD00</color>
+</resources>

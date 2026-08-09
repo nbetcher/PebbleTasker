@@ -29,6 +29,13 @@ object ErrCodes {
     /** Optional: only if the bridge later adds a RATE_LIMITED ErrorCode. */
     const val RATE_LIMITED = 22
 
+    /**
+     * Plugin has never been set up on this device (never authorized against the Pebble app) — e.g. a
+     * Tasker config restored onto a new phone. A hard failure so Tasker surfaces %err at run time
+     * telling the user to finish setup. See [com.nickbether.pebbletasker.setup.SetupState].
+     */
+    const val NOT_SET_UP = 23
+
     /** Fallback for any unrecognized future bridge code. */
     const val UNKNOWN = 99
 

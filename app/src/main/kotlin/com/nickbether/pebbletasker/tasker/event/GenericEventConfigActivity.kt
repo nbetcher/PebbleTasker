@@ -7,6 +7,7 @@ import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfigHelper
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginRunner
 import com.nickbether.pebbletasker.databinding.ActivityConfigEventGenericBinding
+import com.nickbether.pebbletasker.tasker.base.CriteriaDropdown
 import com.nickbether.pebbletasker.tasker.base.PebbleConfigActivity
 
 /**
@@ -41,6 +42,12 @@ abstract class GenericEventConfigActivity<
          * states). The field stays editable so a %variable still works.
          */
         val options: List<Pair<String, String>>? = null,
+        /**
+         * Source-of-truth lookup for this field: a live dropdown (watch serial, installed package, or
+         * locker app/face UUID) plus a non-blocking neon-yellow "nothing matches" validation bubble.
+         * Takes precedence over [isWatchSerial]/[options].
+         */
+        val lookup: CriteriaDropdown.Source? = null,
     )
 
     /** Title/description string resource ids. */
@@ -77,6 +84,7 @@ abstract class GenericEventConfigActivity<
                 numeric = spec.numeric,
                 options = spec.options,
                 watchSerial = spec.isWatchSerial,
+                lookup = spec.lookup,
             )
             if (spec.default.isNotEmpty()) edit.setText(spec.default)
             edits[spec.key] = edit

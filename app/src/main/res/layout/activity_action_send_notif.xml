@@ -173,33 +173,76 @@
                         android:text="@string/opt_vibe_long" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnVibeDouble"
+                        android:id="@+id/btnVibeCustom"
                         style="@style/Widget.NeonGrid.Button.Segmented"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/opt_vibe_double" />
+                        android:text="@string/opt_vibe_custom" />
 
                 </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layoutVibe"
-                    style="@style/Widget.NeonGrid.TextInputLayout"
+                <!-- Custom pattern editor: only shown when "Custom" is selected (toggled in code). -->
+                <LinearLayout
+                    android:id="@+id/customVibeSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:hint="@string/lbl_vibe">
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editVibe"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:imeOptions="actionNext"
-                        android:inputType="text"
-                        android:maxLines="1" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutVibe"
+                            style="@style/Widget.NeonGrid.TextInputLayout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/lbl_vibe">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editVibe"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="monospace"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:maxLines="1" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnVibeBuild"
+                            style="@style/Widget.NeonGrid.Button.Tonal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:contentDescription="@string/vibe_build_cd"
+                            android:text="@string/vibe_build"
+                            app:icon="@drawable/ic_vibe_build" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/vibe_custom_hint"
+                        android:textAppearance="@style/TextAppearance.NeonGrid.LabelSmall"
+                        android:textColor="@color/ng_text_dim" />
+
+                    <com.nickbether.pebbletasker.ui.widget.VibrationPatternView
+                        android:id="@+id/vibePreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="6dp" />
+
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutActions"

@@ -121,37 +121,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Availability card -->
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.NeonGrid.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/main_caps_heading"
-                    android:textAppearance="@style/TextAppearance.NeonGrid.TitleMedium"
-                    android:textColor="@color/ng_text" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="@string/main_caps_body"
-                    android:textAppearance="@style/TextAppearance.NeonGrid.BodyMedium"
-                    android:textColor="@color/ng_text_secondary" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
         <!-- Navigation -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_setup"

@@ -1,5 +1,6 @@
 package com.nickbether.pebbletasker.tasker.base
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,10 +26,13 @@ import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginRunner
 import com.nickbether.pebbletasker.R
 import com.nickbether.pebbletasker.bridge.BridgeClient
+import com.nickbether.pebbletasker.setup.SetupState
 import com.nickbether.pebbletasker.tasker.vars.RelevantVars
 import com.nickbether.pebbletasker.tasker.vars.VariableFieldBinder
 import com.nickbether.pebbletasker.ui.BridgeWarning
 import com.nickbether.pebbletasker.ui.ConsentGuidanceActivity
+import com.nickbether.pebbletasker.ui.OnboardingActivity
+import com.nickbether.pebbletasker.ui.UiSupport
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -116,10 +120,15 @@ abstract class PebbleConfigActivity<
         }
 
         // Save-on-back for gesture / predictive back (onKeyDown(KEYCODE_BACK) does NOT fire there).
+        // When setup isn't complete there is nothing valid to persist, so back simply leaves (discard)
+        // instead of popping the block dialog — otherwise back would be swallowed and the user trapped.
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() = acceptConfig()
+                override fun handleOnBackPressed() {
+                    if (!SetupState.isSetupComplete(this@PebbleConfigActivity)) discardConfig()
+                    else acceptConfig()
+                }
             },
         )
 
@@ -139,15 +148,15 @@ abstract class PebbleConfigActivity<
         // Nudge a (re)bind so a transient disconnect clears while the user is configuring.
         BridgeClient.get(this).retryHandshake()
 
-        // One-shot advisory popup when a plugin component is opened while the bridge isn't connected:
-        // a dismissible Neon-Grid dialog with a "Set up" shortcut. Only on first creation (not rotation),
-        // and after a short grace so a transient (re)bind isn't mistaken for "not working".
-        if (savedInstanceState == null) {
+        // One-shot advisory popup when a plugin component is opened before setup is complete: a
+        // dismissible dialog that offers to open the Pebble app to finish setup. Gated on
+        // SetupState (NOT just "currently disconnected"), so an already-set-up user whose watch is
+        // merely off isn't nagged — the inline banner covers transient disconnects. First creation only.
+        if (savedInstanceState == null && !SetupState.isSetupComplete(this)) {
             lifecycleScope.launch {
                 delay(1200)
-                val current = BridgeClient.get(this@PebbleConfigActivity).status.value
-                if (current !is BridgeClient.ConnectionStatus.Ready && !isFinishing && !isDestroyed) {
-                    showBridgeWarningDialog(current)
+                if (!SetupState.isSetupComplete(this@PebbleConfigActivity) && !isFinishing && !isDestroyed) {
+                    showNotSetUpDialog()
                 }
             }
         }
@@ -180,6 +189,14 @@ abstract class PebbleConfigActivity<
      * the user can fix it (or hit ✗ to bail).
      */
     protected fun acceptConfig() {
+        // Refuse to persist a config the plugin can never honor: if setup was never completed on this
+        // device (Pebble app not authorized), saving would create a Tasker profile that silently does
+        // nothing. Block it and route the user to setup instead. (An already-set-up user whose watch is
+        // just off still saves fine — SetupState stays true through transient disconnects.)
+        if (!SetupState.isSetupComplete(this)) {
+            showNotSetUpDialog(blockingSave = true)
+            return
+        }
         val result = taskerHelper.onBackPressed()
         if (result is SimpleResultError) onInvalidConfig(result.message)
         // On success the helper has already finished the activity for Tasker (config persisted).
@@ -191,15 +208,33 @@ abstract class PebbleConfigActivity<
         finish()
     }
 
-    /** Dismissible Neon-Grid popup advising the bridge isn't connected, with a "Set up" shortcut. */
-    private fun showBridgeWarningDialog(status: BridgeClient.ConnectionStatus) {
-        val msg = BridgeWarning.messageFor(status) ?: return
+    /**
+     * "Not set up yet" popup. Offers to open the Pebble app (fastest path to Automation access) or the
+     * in-app setup guide. When [blockingSave] is true it was raised because the user tried to save an
+     * unusable config, so the copy says the config wasn't saved.
+     */
+    private fun showNotSetUpDialog(blockingSave: Boolean = false) {
+        val body = if (blockingSave) {
+            getString(R.string.config_not_setup_block_body)
+        } else {
+            getString(R.string.config_not_setup_body)
+        }
         MaterialAlertDialogBuilder(this)
-            .setTitle("Pebble isn't connected")
-            .setMessage("$msg\n\nThis won't do anything until the connection is set up.")
-            .setPositiveButton("Set up") { _, _ -> startActivity(ConsentGuidanceActivity.intentFor(this)) }
-            .setNegativeButton("Dismiss", null)
+            .setTitle(R.string.config_not_setup_title)
+            .setMessage(body)
+            .setPositiveButton(R.string.action_open_pebble_app) { _, _ -> openPebbleAppOrGuide() }
+            .setNeutralButton(R.string.config_not_setup_guide) { _, _ ->
+                startActivity(Intent(this, OnboardingActivity::class.java))
+            }
+            .setNegativeButton(R.string.action_close, null)
             .show()
+    }
+
+    /** Launch the Pebble app so the user can enable Automation access; fall back to the setup guide. */
+    private fun openPebbleAppOrGuide() {
+        val intent = UiSupport.pebbleLaunchIntent(this)
+        if (intent != null) startActivity(intent)
+        else startActivity(Intent(this, OnboardingActivity::class.java))
     }
 
     /** Surface a validation error. Default shows a short toast; subclasses may override for a dialog. */

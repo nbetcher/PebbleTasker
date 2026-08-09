@@ -3,6 +3,7 @@ package com.nickbether.pebbletasker.cache
 import android.app.Activity
 import android.content.Context
 import com.joaomgcd.taskerpluginlibrary.extensions.requestQuery
+import com.nickbether.pebbletasker.log.PLog
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -58,9 +59,15 @@ object EventRouter {
 
     /** Trigger a query for every config activity registered against [eventType]. */
     fun route(context: Context, eventType: String) {
-        val consumers = routes[eventType] ?: return
+        val consumers = routes[eventType]
+        if (consumers.isNullOrEmpty()) {
+            PLog.d { "router: no consumers for '$eventType'" }
+            return
+        }
+        PLog.i { "router: requestQuery '$eventType' -> ${consumers.size} consumer(s): ${consumers.map { it.simpleName }}" }
         for (activity in consumers) {
             runCatching { activity.requestQuery(context) }
+                .onFailure { PLog.w(it) { "router: requestQuery failed for ${activity.simpleName}" } }
         }
     }
 
@@ -72,8 +79,10 @@ object EventRouter {
      */
     fun requestQueryAll(context: Context) {
         val activities = routes.values.flatten().toHashSet()
+        PLog.i { "router: requestQueryAll -> ${activities.size} distinct condition(s): ${activities.map { it.simpleName }}" }
         for (activity in activities) {
             runCatching { activity.requestQuery(context) }
+                .onFailure { PLog.w(it) { "router: requestQueryAll failed for ${activity.simpleName}" } }
         }
     }
 }

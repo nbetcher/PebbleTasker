@@ -110,7 +110,7 @@ Set these repository Actions secrets before running a release build:
 - `APP_KEY_ALIAS`: signing alias.
 - `APP_KEY_PASSWORD`: optional; defaults to the keystore password.
 
-Pushes to `main` run both builds. A `v0.9.0` tag, or a manual run with **publish** enabled, publishes a release after both builds pass. The workflow checks the tag against the application version. Release assets contain the optimized signed APK and its checksum; debug APKs remain available from the workflow artifacts. Both CI variants use the release keystore, so missing signing secrets fail either build explicitly.
+Pushes to `main` run both builds and publish a release if the current application version has not yet been published (or update assets if re-run on the same commit). Pushing a version tag (e.g. `v0.9.0`), or a manual run with **publish** enabled, also publishes a release after both builds pass. The workflow checks tags against the application version. Release assets contain the optimized signed APK and its checksum; debug APKs remain available from the workflow artifacts. Both CI variants use the release keystore, so missing signing secrets fail either build explicitly.
 
 ## Help and feedback
 

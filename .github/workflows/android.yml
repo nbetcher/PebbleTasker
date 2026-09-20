@@ -97,7 +97,7 @@ jobs:
           retention-days: 30
   publish:
     needs: build
-    if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && (inputs.publish == true || inputs.publish == 'true'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,7 +118,15 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then exit 1; fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             EXISTING="$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)"
-            test "$EXISTING" = "$GITHUB_SHA" || { echo '::error::Bump the version before replacing a published release'; exit 1; }
+            if [ "$EXISTING" != "$GITHUB_SHA" ]; then
+              if [ "$GITHUB_REF_TYPE" = tag ]; then
+                echo '::error::Bump the version before replacing a published release'
+                exit 1
+              else
+                echo "Release $TAG already exists for commit $EXISTING. Skipping release publication for unbumped commit on branch $GITHUB_REF_NAME."
+                exit 0
+              fi
+            fi
             gh release upload "$TAG" dist/* --clobber
           else
             printf '%s\n' "PebbleTasker $VERSION" '' 'Install the release APK with the matching companion fork:' 'https://github.com/nbetcher/mobileapp/releases' '' 'Setup and features: https://github.com/nbetcher/PebbleTasker#readme' '' 'Support development: https://buymeacoffee.com/nbetcher' > release-notes.md

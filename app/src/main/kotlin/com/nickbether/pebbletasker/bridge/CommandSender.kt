@@ -26,7 +26,7 @@ class CommandSender(private val appContext: Context) {
 
     /** Convenience builder. */
     fun command(type: String, watch: String? = null, args: Map<String, String> = emptyMap()): CommandEnvelope =
-        CommandEnvelope(type = type, watch = watch?.ifBlank { null }, args = args.filterValues { it.isNotEmpty() })
+        CommandEnvelope(type = type, watch = watch?.ifBlank { null }, args = args)
 
     /** FROZEN command type allowlist (bridge §6 mapping). */
     object Type {

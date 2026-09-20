@@ -85,7 +85,8 @@ abstract class PebbleConfigActivity<
         val b = inflateBinding(layoutInflater)
         binding = b
         if (!isConfigurable) {
-            taskerHelper.finishForTasker()
+            val result = taskerHelper.finishForTasker()
+            if (result is SimpleResultError) { onInvalidConfig(result.message); discardConfig() }
             return
         }
 
@@ -139,7 +140,7 @@ abstract class PebbleConfigActivity<
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 BridgeClient.get(this@PebbleConfigActivity).status.collect { status ->
-                    val warn = BridgeWarning.messageFor(status)
+                    val warn = BridgeWarning.messageFor(status) ?: FeatureSupport.reason(taskerHelper.runnerClass, BridgeClient.get(this@PebbleConfigActivity).currentSession?.capabilities)
                     warningBanner.text = warn
                     warningBanner.visibility = if (warn == null) View.GONE else View.VISIBLE
                 }
@@ -188,7 +189,7 @@ abstract class PebbleConfigActivity<
      * On a validation error the helper returns [SimpleResultError]; we surface it and stay on screen so
      * the user can fix it (or hit ✗ to bail).
      */
-    protected fun acceptConfig() {
+    protected open fun acceptConfig() {
         // Refuse to persist a config the plugin can never honor: if setup was never completed on this
         // device (Pebble app not authorized), saving would create a Tasker profile that silently does
         // nothing. Block it and route the user to setup instead. (An already-set-up user whose watch is

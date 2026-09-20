@@ -20,17 +20,19 @@ import java.security.MessageDigest
  * pins THIS plugin's cert with exact contentEquals and NO rotation lineage, which is why the plugin
  * must never rotate its own signing key without re-consent (FINAL DESIGN §3.6 / FIX D2).
  *
- * Pin storage is delegated to [PinStore] so the persistence mechanism (SharedPreferences/DataStore)
- * is swappable; a process-memory default is provided for the scaffold.
+ * The default pin store is an atomic private file excluded from device backups. First use pins the
+ * installed host once so consent can be requested immediately. Replacement needs explicit re-trust.
  */
 class CertPinner(
     private val context: Context,
-    private val store: PinStore = PinStore.inMemory(),
+    private val store: PinStore = PinStore.durable(context),
     private val targetPackage: String = BRIDGE_PACKAGE,
 ) {
     enum class PinResult {
-        /** First-ever success: the current digest was just stored. Trust established. */
+        /** The installed host was pinned on first use. Subsequent verification is durable. */
         PINNED,
+        /** No approved host fingerprint exists yet. */
+        UNTRUSTED,
 
         /** Current signer matches the stored pin (directly or via the app's rotation lineage). */
         OK,
@@ -49,7 +51,7 @@ class CertPinner(
     }
 
     /**
-     * Verify (and, on first run, establish) the pin. Call before every handshake.
+     * Verify the durable pin, establishing it once on first use. Call before every handshake.
      */
     fun verify(): PinResult {
         val current = currentSha() ?: return PinResult.APP_ABSENT
@@ -144,6 +146,23 @@ class CertPinner(
         fun clear()
 
         companion object {
+            fun durable(context: Context): PinStore = object : PinStore {
+                // noBackupFilesDir deliberately prevents device/profile restore from transferring trust.
+                private val file = java.io.File(context.applicationContext.noBackupFilesDir, "pb_host_pin")
+                override fun read(): String? = synchronized(lock) {
+                    try {
+                        android.util.AtomicFile(file).openRead().bufferedReader().use { it.readText().trim().takeIf(String::isNotBlank) }
+                    } catch (_: java.io.FileNotFoundException) { null }
+                }
+                override fun write(sha: String) = synchronized(lock) {
+                    val atomic = android.util.AtomicFile(file)
+                    val stream = atomic.startWrite()
+                    try { stream.write(sha.toByteArray(Charsets.UTF_8)); atomic.finishWrite(stream) }
+                    catch (t: Throwable) { atomic.failWrite(stream); throw t }
+                }
+                override fun clear() { synchronized(lock) { android.util.AtomicFile(file).delete() } }
+            }
+            private val lock = Any()
             fun inMemory(): PinStore = object : PinStore {
                 @Volatile private var v: String? = null
                 override fun read() = v

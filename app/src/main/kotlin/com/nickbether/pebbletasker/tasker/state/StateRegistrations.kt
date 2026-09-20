@@ -30,31 +30,33 @@ import com.nickbether.pebbletasker.tasker.state.watchface.S4WatchfaceActivity
 object StateRegistrations {
 
     fun registerAll() {
-        EventRouter.register(
+        EventRouter.registerState(
             S1WatchConnectedActivity::class.java,
             StateSupport.TYPE_WATCH_CONNECTED,
             StateSupport.TYPE_WATCH_DISCONNECTED,
             StateSupport.TYPE_WATCH_STATE,
         )
-        EventRouter.register(
+        EventRouter.registerState(
             S2DndActivity::class.java,
             StateSupport.TYPE_WATCH_CONNECTED,
             StateSupport.TYPE_WATCH_DISCONNECTED,
         )
-        EventRouter.register(
+        EventRouter.registerState(
             S3DevConnectionActivity::class.java,
             StateSupport.TYPE_DEV_STATE,
+            StateSupport.TYPE_WATCH_DISCONNECTED,
         )
-        EventRouter.register(
+        EventRouter.registerState(
             S4WatchfaceActivity::class.java,
             StateSupport.TYPE_APPS_RUN_STATE,
             StateSupport.TYPE_WATCH_CONNECTED,
         )
-        EventRouter.register(
+        EventRouter.registerState(
             S5FirmwareUpdatingActivity::class.java,
             StateSupport.TYPE_FW_STATUS,
+            StateSupport.TYPE_WATCH_DISCONNECTED,
         )
-        EventRouter.register(
+        EventRouter.registerState(
             S6BluetoothActivity::class.java,
             StateSupport.TYPE_BT_STATE,
         )

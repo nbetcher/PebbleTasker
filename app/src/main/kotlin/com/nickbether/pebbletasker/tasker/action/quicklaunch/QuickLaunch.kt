@@ -96,6 +96,7 @@ class QuickLaunchActivity :
     override val titleRes = R.string.act_quick_launch_title
     override val descRes = R.string.act_quick_launch_desc
     override val hintRes = R.string.hint_uuid_required
+    override val globalCommand = true
     override val fields = listOf(
         FieldSpec(R.string.lbl_serial, isSerial = true),
         FieldSpec(R.string.lbl_button),

@@ -52,7 +52,7 @@
 			</Bundle>
 			<!-- arg1 = plugin package, arg2 = config activity (FQCN) -->
 			<Str sr="arg1" ve="3">com.nickbether.pebbletasker</Str>
-			<Str sr="arg2" ve="3">com.nickbether.pebbletasker.tasker.event.disconnected.WatchDisconnectedActivity</Str>
+			<Str sr="arg2" ve="3">com.nickbether.pebbletasker.tasker.event.disconnected.DisconnectedActivity</Str>
 		</Event>
 	</Profile>
 

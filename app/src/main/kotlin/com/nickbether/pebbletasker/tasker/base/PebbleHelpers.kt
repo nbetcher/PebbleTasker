@@ -24,20 +24,33 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginRunner
 abstract class PebbleActionHelper<TInput : Any, TOutput : Any, TRunner : TaskerPluginRunner<TInput, TOutput>>(
     config: TaskerPluginConfig<TInput>,
 ) : TaskerPluginConfigHelper<TInput, TOutput, TRunner>(config) {
-    override val timeoutSeconds: Int = PLUGIN_TIMEOUT_SECONDS
+    override fun isInputValid(input: com.joaomgcd.taskerpluginlibrary.input.TaskerInput<TInput>): com.joaomgcd.taskerpluginlibrary.SimpleResult {
+        val reason = FeatureSupport.inputReason(input.regular) ?: FeatureSupport.reason(runnerClass, com.nickbether.pebbletasker.bridge.BridgeClient.get(config.context).currentSession?.capabilities)
+        return if (reason == null) super.isInputValid(input) else com.joaomgcd.taskerpluginlibrary.SimpleResultError(reason)
+    }
+    override val timeoutSeconds: Int = 30
 }
 
 abstract class PebbleEventHelper<TInput : Any, TOutput : Any, TRunner : TaskerPluginRunner<TInput, TOutput>>(
     config: TaskerPluginConfig<TInput>,
 ) : TaskerPluginConfigHelper<TInput, TOutput, TRunner>(config) {
+    override fun isInputValid(input: com.joaomgcd.taskerpluginlibrary.input.TaskerInput<TInput>): com.joaomgcd.taskerpluginlibrary.SimpleResult {
+        if (!hostCapabilities.event.supportsPassThroughData) return com.joaomgcd.taskerpluginlibrary.SimpleResultError("This host does not support immutable event pass-through data. Use a current Tasker version.")
+        val reason = FeatureSupport.reason(runnerClass, com.nickbether.pebbletasker.bridge.BridgeClient.get(config.context).currentSession?.capabilities)
+        return if (reason == null) super.isInputValid(input) else com.joaomgcd.taskerpluginlibrary.SimpleResultError(reason)
+    }
     override val timeoutSeconds: Int = PLUGIN_TIMEOUT_SECONDS
 }
 
 abstract class PebbleStateHelper<TInput : Any, TOutput : Any, TRunner : TaskerPluginRunner<TInput, TOutput>>(
     config: TaskerPluginConfig<TInput>,
 ) : TaskerPluginConfigHelper<TInput, TOutput, TRunner>(config) {
+    override fun isInputValid(input: com.joaomgcd.taskerpluginlibrary.input.TaskerInput<TInput>): com.joaomgcd.taskerpluginlibrary.SimpleResult {
+        val reason = FeatureSupport.reason(runnerClass, com.nickbether.pebbletasker.bridge.BridgeClient.get(config.context).currentSession?.capabilities)
+        return if (reason == null) super.isInputValid(input) else com.joaomgcd.taskerpluginlibrary.SimpleResultError(reason)
+    }
     override val timeoutSeconds: Int = PLUGIN_TIMEOUT_SECONDS
 }
 
-/** Tasker host timeout is 10s; the bridge is ~7s; the plugin sits at 9s in between (FIX B4). */
+/** Condition timeout requested from the host; action helpers request 30 seconds. */
 const val PLUGIN_TIMEOUT_SECONDS = 9

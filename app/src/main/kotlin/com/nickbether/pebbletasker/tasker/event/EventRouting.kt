@@ -75,6 +75,7 @@ object EventRouting {
             BridgeErrorActivity::class.java,
             TYPE_SYSTEM_ERROR,
             CachedEvent.TYPE_GAP,
+            "plugin.access",
         )
     }
 }

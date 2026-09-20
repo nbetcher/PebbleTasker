@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import com.nickbether.pebbletasker.tasker.ErrCodes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -27,8 +28,8 @@ import kotlinx.coroutines.launch
  *     showing the new SHA-256 so the user can compare. Never auto-retries.
  *   - AppAbsent -> open the Pebble app (install).
  *
- * Because CONSENT_PENDING auto-resolves (BridgeClient polls handshake), this screen flips to the
- * "All set" state on its own once approval lands — no user refresh needed.
+ * Returning from Pebble or pressing Retry requests one shared readiness check. Pending consent
+ * never starts a polling loop; a denied decision requires the deliberate review/check action.
  */
 class ConsentGuidanceActivity : AppCompatActivity() {
 
@@ -42,7 +43,11 @@ class ConsentGuidanceActivity : AppCompatActivity() {
         setContentView(binding.root)
         applyContentInsets()
 
-        binding.btnRetry.setOnClickListener { bridge.retryHandshake() }
+        binding.btnRetry.setOnClickListener {
+            val state = bridge.status.value
+            if (state is ConnectionStatus.Error && state.code == ErrCodes.ACCESS_DENIED) bridge.reconsiderAccess()
+            else bridge.retryHandshake()
+        }
         binding.btnClose.setOnClickListener { finish() }
         binding.btnRetrust.setOnClickListener {
             bridge.retrustCert()
@@ -65,6 +70,7 @@ class ConsentGuidanceActivity : AppCompatActivity() {
         binding.statusChip.text = getString(UiSupport.statusLabel(status))
         UiSupport.styleStatusChip(binding.statusChip, status)
 
+        binding.btnRetry.text = if (status is ConnectionStatus.Error && status.code == ErrCodes.ACCESS_DENIED) "Check decision after review" else getString(R.string.action_retry)
         // Defaults; each branch overrides what it needs.
         binding.certLabel.visibility = View.GONE
         binding.certValue.visibility = View.GONE
@@ -73,6 +79,7 @@ class ConsentGuidanceActivity : AppCompatActivity() {
         when (status) {
             is ConnectionStatus.NotAuthorized -> {
                 setText(R.string.consent_not_authorized_heading, R.string.consent_not_authorized_body)
+                if (status.message.isNotBlank()) binding.guidanceBody.text = status.message
                 primaryOpensPebble()
             }
             is ConnectionStatus.ConsentPending -> {
@@ -80,7 +87,8 @@ class ConsentGuidanceActivity : AppCompatActivity() {
                 primaryOpensPebble()
             }
             is ConnectionStatus.CertMismatch -> {
-                setText(R.string.consent_cert_mismatch_heading, R.string.consent_cert_mismatch_body)
+                binding.guidanceHeading.text = "Trust the Pebble app signature"
+                binding.guidanceBody.text = "Confirm that this fingerprint belongs to the Pebble app you installed. Trust is saved only on this device."
                 binding.certLabel.visibility = View.VISIBLE
                 binding.certValue.visibility = View.VISIBLE
                 binding.certValue.text = status.currentSha ?: getString(R.string.value_unknown)
@@ -92,8 +100,10 @@ class ConsentGuidanceActivity : AppCompatActivity() {
                 primaryOpensPebble()
             }
             is ConnectionStatus.Error -> {
-                setText(R.string.consent_error_heading, R.string.consent_error_body)
-                primaryRetries()
+                binding.guidanceHeading.text = if (status.code == ErrCodes.ACCESS_DENIED) BridgeClient.DENIED_MESSAGE else "Pebble connection needs attention"
+                binding.guidanceBody.text = BridgeWarning.messageFor(status)
+                if (status.code == ErrCodes.ACCESS_DENIED || status.code == ErrCodes.CERT_MISMATCH) primaryOpensPebble()
+                else primaryRetries()
             }
             is ConnectionStatus.Ready -> {
                 setText(R.string.consent_ok_heading, R.string.consent_ok_body)

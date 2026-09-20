@@ -44,6 +44,8 @@ abstract class GenericFieldsActionActivity<
     protected open val hintRes: Int? = null
 
     /** 1..4 field specs, in display order. */
+    protected open val globalCommand = false
+
     protected abstract val fields: List<FieldSpec>
 
     /** Build the plugin input from the (up to 4) field values (index 0..3; null when absent/blank). */
@@ -73,12 +75,12 @@ abstract class GenericFieldsActionActivity<
         val es = edits(binding)
         for (i in 0 until 4) {
             val spec = fields.getOrNull(i)
-            if (spec == null) {
+            if (spec == null || (globalCommand && spec.isSerial && es[i].text.isNullOrBlank())) {
                 ls[i].visibility = View.GONE
                 continue
             }
             ls[i].visibility = View.VISIBLE
-            ls[i].hint = getString(spec.hintRes)
+            ls[i].hint = if (globalCommand && spec.isSerial) "Global command: clear old watch selector" else getString(spec.hintRes)
             if (spec.multiline) {
                 es[i].inputType =
                     android.text.InputType.TYPE_CLASS_TEXT or

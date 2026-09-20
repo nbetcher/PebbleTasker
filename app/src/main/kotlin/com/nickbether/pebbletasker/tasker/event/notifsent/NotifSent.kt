@@ -23,14 +23,8 @@ import com.nickbether.pebbletasker.tasker.event.FilterMatch
 import com.nickbether.pebbletasker.tasker.event.GenericEventConfigActivity
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
-/**
- * E5 — Pebble Notification Sent (COLLECTOR + consent). Capability-gated until the bridge emits
- * notif.sent.
- *
- * REDACTION GATE (FINAL DESIGN FIX A5): today's bridge hardcodes contentRedacted = true, so title/
- * text are NOT available. When redacted, the runner emits "(redacted)" for %pbl_title/%pbl_text rather
- * than blank, so a user task can tell "redacted" apart from "empty". On a future bridge that sets
- * contentRedacted = false (carried in the event data as `redacted`), the real content flows through.
+/** Canonical notification payload: pkg/title/text/redacted. Missing redaction defaults to safe.
+ * App-name/channel/action metadata has no producer and is not advertised as a Tasker output.
  */
 @TaskerInputRoot
 class NotifSentFilter @JvmOverloads constructor(
@@ -48,7 +42,6 @@ class NotifSentOutput @JvmOverloads constructor(
     @get:TaskerOutputVariable(PbVars.PKG)
     @field:TaskerInputField("pb_pkg")
     var pbPkg: String? = null,
-    @get:TaskerOutputVariable(PbVars.APP_NAME)
     @field:TaskerInputField("pb_app_name")
     var pbAppName: String? = null,
     @get:TaskerOutputVariable(PbVars.TITLE)
@@ -57,13 +50,10 @@ class NotifSentOutput @JvmOverloads constructor(
     @get:TaskerOutputVariable(PbVars.TEXT)
     @field:TaskerInputField("pb_text")
     var pbText: String? = null,
-    @get:TaskerOutputVariable(PbVars.CHANNEL_ID)
     @field:TaskerInputField("pb_channel_id")
     var pbChannelId: String? = null,
-    @get:TaskerOutputVariable(PbVars.ACTIONS)
     @field:TaskerInputField("pb_actions")
     var pbActions: Array<String>? = null,
-    @get:TaskerOutputVariable(PbVars.ACTIONS_COUNT)
     @field:TaskerInputField("pb_actions_count")
     var pbActionsCount: String? = null,
 ) : BaseEventOutput()
@@ -77,11 +67,18 @@ class NotifSentRunner : PebbleEventRunner<NotifSentFilter, NotifSentOutput>() {
         cached: CachedEvent?,
         update: NotifSentOutput?,
     ): TaskerPluginResultCondition<NotifSentOutput> {
+        if (!filter.appName.isNullOrBlank()) {
+            com.nickbether.pebbletasker.tasker.base.ConditionAccess.report(context, com.nickbether.pebbletasker.bridge.BridgeResult.err(
+                com.nickbether.pebbletasker.tasker.ErrCodes.UNSUPPORTED_COMMAND, "App-name filtering is unsupported. Edit this profile and use Package instead.",
+            ))
+            return TaskerPluginResultConditionUnknown()
+        }
         val e = cached ?: return TaskerPluginResultConditionUnknown()
         val pkg = e.str("pkg")
         val appName = e.str("app_name")
         val redacted = e.bool("redacted") ?: true
-        val title = if (redacted) "(redacted)" else e.str("title").orEmpty()
+        val titleShared = e.bool("title_shared") ?: !redacted
+        val title = if (!titleShared) "(redacted)" else e.str("title").orEmpty()
         val text = if (redacted) "(redacted)" else e.str("text").orEmpty()
 
         if (!FilterMatch.eq(filter.pkg, pkg)) return TaskerPluginResultConditionUnsatisfied()
@@ -108,7 +105,8 @@ class NotifSentRunner : PebbleEventRunner<NotifSentFilter, NotifSentOutput>() {
             pbActions = actions,
             pbActionsCount = actions.size.toString(),
         ).fillBase<NotifSentOutput>(
-            e,
+            e.copy(data = e.data - (if (redacted) setOf("text", "body") else emptySet()) -
+                (if (!titleShared) setOf("title") else emptySet())),
             buildMap {
                 pkg?.let { put("pkg", it) }
                 appName?.let { put("app_name", it) }
@@ -123,14 +121,18 @@ class NotifSentRunner : PebbleEventRunner<NotifSentFilter, NotifSentOutput>() {
 
 class NotifSentHelper(config: TaskerPluginConfig<NotifSentFilter>) :
     PebbleEventHelper<NotifSentFilter, NotifSentOutput, NotifSentRunner>(config) {
+    override fun isInputValid(input: TaskerInput<NotifSentFilter>): com.joaomgcd.taskerpluginlibrary.SimpleResult {
+        if (!input.regular.appName.isNullOrBlank()) return com.joaomgcd.taskerpluginlibrary.SimpleResultError("App-name filtering is unsupported. Clear App name and use Package instead.")
+        return super.isInputValid(input)
+    }
     override val inputClass = NotifSentFilter::class.java
     override val outputClass = NotifSentOutput::class.java
     override val runnerClass = NotifSentRunner::class.java
 
     override fun addToStringBlurb(input: TaskerInput<NotifSentFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when a notification is sent to the watch.")
-            .append("\nOutputs: %pbl_pkg %pbl_app_name %pbl_title %pbl_text %pbl_channel_id")
-            .append(" %pbl_actions() %pbl_actions_count + %pbl_json.")
+            .append("\nOutputs: %pbl_pkg %pbl_title %pbl_text")
+            .append(" + %pbl_json.")
             .append("\nNote: title/text are \"(redacted)\" unless the Pebble app allows content.")
     }
 }
@@ -143,7 +145,7 @@ class NotifSentActivity :
 
     override fun buildFields() = listOf(
         FieldSpec("pkg", getString(R.string.pb_lbl_pkg), lookup = CriteriaDropdown.Source.APP_PACKAGE),
-        FieldSpec("app_name", getString(R.string.pb_lbl_app_name)),
+        FieldSpec("app_name", "App name (unsupported; use Package)"),
         FieldSpec("text_contains", getString(R.string.pb_lbl_text_contains)),
     )
 

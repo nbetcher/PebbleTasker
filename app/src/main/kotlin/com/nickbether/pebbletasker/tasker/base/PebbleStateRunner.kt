@@ -40,7 +40,12 @@ abstract class PebbleStateRunner<TInput : Any, TOutput : Any> :
         PLog.d { "state[$name]: query" }
         return try {
             // Warn (throttled notification) if Tasker is polling this state while we're not bridged.
-            BridgeWarning.warnIfUsedWhileUnbridged(context)
+            if (!ConditionAccess.ready(context)) return TaskerPluginResultConditionUnknown()
+            val supported = FeatureSupport.reason(this::class.java, com.nickbether.pebbletasker.bridge.BridgeClient.get(context).currentSession?.capabilities)
+            if (supported != null) {
+                ConditionAccess.report(context, com.nickbether.pebbletasker.bridge.BridgeResult.err(com.nickbether.pebbletasker.tasker.ErrCodes.UNSUPPORTED_COMMAND, supported))
+                return TaskerPluginResultConditionUnknown()
+            }
             evaluate(context, input.regular).also { r ->
                 // Log the resolved condition (Satisfied / Unsatisfied / Unknown) — the single most
                 // useful line for the "state rarely fires" diagnosis.

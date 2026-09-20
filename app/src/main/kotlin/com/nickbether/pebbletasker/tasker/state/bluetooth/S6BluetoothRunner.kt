@@ -22,10 +22,9 @@ class S6BluetoothRunner : PebbleStateRunner<S6BluetoothInput, S6BluetoothOutput>
         context: Context,
         input: S6BluetoothInput,
     ): TaskerPluginResultCondition<S6BluetoothOutput> {
-        val e = StateSupport.cached(context, StateSupport.TYPE_BT_STATE)
-            ?: return TaskerPluginResultConditionUnknown()
-        val enabled = e.bool("enabled") ?: e.bool("bt_enabled")
-            ?: return TaskerPluginResultConditionUnknown()
+        val snapshot = StateSupport.queryState(context).valueOrNull() ?: return TaskerPluginResultConditionUnknown()
+        com.nickbether.pebbletasker.cache.EventCache.get(context).seedState(snapshot)
+        val enabled = snapshot.data.bluetoothEnabled ?: return TaskerPluginResultConditionUnknown()
         return if (enabled) {
             TaskerPluginResultConditionSatisfied(
                 context,

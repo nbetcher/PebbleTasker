@@ -91,6 +91,7 @@ class SetPrefActivity :
     override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
     override val titleRes = R.string.act_set_pref_title
     override val descRes = R.string.act_set_pref_desc
+    override val globalCommand = true
     override val fields = listOf(
         FieldSpec(R.string.lbl_serial, isSerial = true),
         FieldSpec(R.string.lbl_pref_key),

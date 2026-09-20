@@ -69,16 +69,39 @@ internal object BridgeCodec {
     }
 
     /** handshake() -> BridgeHello, or error envelope (CONSENT_PENDING / NOT_AUTHORIZED / ...). */
-    fun decodeHello(raw: String?): BridgeResult<BridgeHello> =
-        decode(raw) { json.decodeFromString(BridgeHello.serializer(), it) }
+    fun decodeHello(raw: String?): BridgeResult<BridgeHello> {
+        val result = decode(raw) { json.decodeFromString(BridgeHello.serializer(), it) }
+        if (result is BridgeResult.Ok) {
+            val hello = result.value
+            if (hello.v != 1 || hello.kind != "hello" || hello.protocolVersion != 1)
+                return BridgeResult.err(ErrCodes.UNSUPPORTED_VERSION, "Update both Pebble apps: unsupported bridge protocol")
+            if (hello.bootId.isBlank() || hello.clientToken.isBlank() || hello.appVersion.isBlank() || hello.latestSeq < 0)
+                return BridgeResult.err(ErrCodes.INTERNAL, "Invalid bridge identity")
+        }
+        return result
+    }
 
     /** getState() -> StateResult, or error envelope (NOT_AUTHORIZED on master-off session). */
-    fun decodeState(raw: String?): BridgeResult<StateResult> =
-        decode(raw) { json.decodeFromString(StateResult.serializer(), it) }
+    fun decodeState(raw: String?): BridgeResult<StateResult> {
+        val result = decode(raw) { json.decodeFromString(StateResult.serializer(), it) }
+        if (result is BridgeResult.Ok && (result.value.v != 1 || result.value.kind != "state"))
+            return BridgeResult.err(ErrCodes.UNSUPPORTED_VERSION, "Unsupported state envelope")
+        return result
+    }
 
     /** getEventsSince() -> EventBatch, or error envelope. */
-    fun decodeBatch(raw: String?): BridgeResult<EventBatch> =
-        decode(raw) { json.decodeFromString(EventBatch.serializer(), it) }
+    fun decodeBatch(raw: String?): BridgeResult<EventBatch> {
+        val result = decode(raw) { json.decodeFromString(EventBatch.serializer(), it) }
+        if (result is BridgeResult.Ok) {
+            val batch = result.value
+            if (batch.v != 1 || batch.kind != "batch")
+                return BridgeResult.err(ErrCodes.UNSUPPORTED_VERSION, "Unsupported event envelope")
+            if (batch.bootId.isBlank() || (batch.cursor != null && batch.cursor < 0) ||
+                batch.events.any { it.v != 1 || it.kind != "event" || it.bootId != batch.bootId || it.seq < 0 })
+                return BridgeResult.err(ErrCodes.INTERNAL, "Invalid event batch identity")
+        }
+        return result
+    }
 
     /**
      * execute() -> ResultEnvelope (success OR error). Unlike the others, the SUCCESS type here is

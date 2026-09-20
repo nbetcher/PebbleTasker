@@ -124,7 +124,8 @@ class SendNotifActivity :
 
     override fun onConfigCreated(binding: ActivityActionSendNotifBinding) {
         super.onConfigCreated(binding)
-        wireWatchBrowse(binding.layoutSerial)
+        if (binding.editSerial.text.isNullOrBlank()) binding.layoutSerial.visibility = android.view.View.GONE
+        else binding.layoutSerial.helperText = "Global command: clear this old watch selector before saving."
         binding.vibePreview.compact = true
 
         binding.toggleVibe.addOnButtonCheckedListener { _, checkedId, isChecked ->

@@ -22,14 +22,8 @@ import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 import org.json.JSONObject
 
-/**
- * A7 — Send AppMessage (FINAL DESIGN §2.3, normal tier, SENSITIVE config UI).
- *
- * Sends `appmessage.send`. The bridge contract encodes the dict as `d.<int>=<value>` args (value
- * parsed Int else String). The user supplies a JSON object keyed by integer AppMessage keys; this
- * runner flattens it into the d.* args. uuid is required.
- *
- * Bridge success `data`: uuid, acked ("true"/"false") -> surfaced as %pbl_uuid and %pbl_delivered.
+/** Send typed AppMessage JSON without flattening or coercing strings. The bridge validates tuple
+ * types again and preserves empty strings, unsigned integers and byte arrays.
  */
 
 @TaskerInputRoot
@@ -76,22 +70,13 @@ class AppMessageRunner : PebbleActionRunner<AppMessageInput, AppMessageOutput>()
             val parsed = runCatching { flattenDict(dict) }.getOrElse {
                 return BridgeResult.err(ErrCodes.INVALID_ARGS, "dict_json is not a valid JSON object")
             }
-            args.putAll(parsed)
+            args["dict_json"] = parsed
         }
         return ActionSend.send(context, CommandSender.Type.APPMESSAGE_SEND, watch = input.regular.serial, args = args)
     }
 
-    /** {"<int>": value, ...} -> {"d.<int>": "value", ...} (values stringified; bridge re-parses). */
-    private fun flattenDict(json: String): Map<String, String> {
-        val obj = JSONObject(json)
-        val out = HashMap<String, String>()
-        val keys = obj.keys()
-        while (keys.hasNext()) {
-            val k = keys.next()
-            out["d.$k"] = obj.get(k).toString()
-        }
-        return out
-    }
+    /** Validate typed tuples without coercing numeric strings, empty strings, uints or byte arrays. */
+    internal fun flattenDict(json: String): String = TypedAppMessage.validate(json)
 
     override fun buildOutput(input: TaskerInput<AppMessageInput>, result: CommandResult): AppMessageOutput =
         AppMessageOutput(

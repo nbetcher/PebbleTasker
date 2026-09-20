@@ -6,7 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.SystemClock
+import com.nickbether.pebbletasker.tasker.ErrCodes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.nickbether.pebbletasker.R
@@ -39,13 +39,17 @@ object BridgeWarning {
         is ConnectionStatus.AppAbsent ->
             "The Pebble app isn't installed. Pebble events, states, and actions won't work until it is."
         is ConnectionStatus.NotAuthorized ->
-            "Automation access is off in the Pebble app. Open it and turn it on for this plugin."
+            status.message
         is ConnectionStatus.ConsentPending ->
             "Waiting for you to approve this plugin in the Pebble app."
         is ConnectionStatus.CertMismatch ->
-            "The Pebble app's signature changed — re-trust this plugin to reconnect."
+            "Review the Pebble app fingerprint and explicitly trust it to connect."
         is ConnectionStatus.Error ->
-            "Can't reach the Pebble app right now — Pebble automations may not work."
+            when (status.code) {
+                ErrCodes.ACCESS_DENIED -> BridgeClient.DENIED_MESSAGE
+                ErrCodes.CERT_MISMATCH -> "Pebble rejected this plugin's signature. Review this plugin identity in Pebble."
+                else -> status.message
+            }
         ConnectionStatus.Idle, ConnectionStatus.Disconnected ->
             "Not connected to the Pebble app. Open it and enable automation access for this plugin."
     }
@@ -55,7 +59,8 @@ object BridgeWarning {
      * and return true; otherwise cancel any existing warning and return false.
      */
     fun warnIfUsedWhileUnbridged(context: Context): Boolean {
-        val status = BridgeClient.get(context).status.value
+        val client = BridgeClient.get(context)
+        val status = client.status.value
         if (status is ConnectionStatus.Ready) {
             cancel(context)
             return false
@@ -80,23 +85,29 @@ object BridgeWarning {
 
     /** Remove the warning (the bridge is Ready again). */
     fun cancel(context: Context) {
-        lastNotifiedElapsed = 0L
+        context.getSharedPreferences("pb_bridge_diagnostic", Context.MODE_PRIVATE).edit().clear().apply()
         runCatching { NotificationManagerCompat.from(context).cancel(NOTIF_ID) }
     }
 
-    @Volatile private var lastNotifiedElapsed = 0L
+    /** Retains the actionable reason even when Android blocks notifications. Configuration and
+     * guidance use the live status; this persisted text is available for diagnostic/support screens. */
+    fun lastDiagnostic(context: Context): String? =
+        context.getSharedPreferences("pb_bridge_diagnostic", Context.MODE_PRIVATE).getString("message", null)
 
-    private fun maybeNotify(appCtx: Context, status: ConnectionStatus) {
-        val now = SystemClock.elapsedRealtime()
-        // The same-id notification persists until tapped or bridged; re-warn at most every 30 min so a
-        // frequently-polled state condition can't spam the shade.
-        if (lastNotifiedElapsed != 0L && now - lastNotifiedElapsed < COOLDOWN_MS) return
-        lastNotifiedElapsed = now
-        post(appCtx, status)
+    @Synchronized private fun maybeNotify(appCtx: Context, status: ConnectionStatus) {
+        val message = messageFor(status) ?: return
+        val prefs = appCtx.getSharedPreferences("pb_bridge_diagnostic", Context.MODE_PRIVATE)
+        prefs.edit().putString("message", message).apply()
+        if (prefs.getString("notified", null) == message) return
+        ensureChannel(appCtx)
+        val manager = NotificationManagerCompat.from(appCtx)
+        if (!manager.areNotificationsEnabled()) return
+        val channel = appCtx.getSystemService(NotificationManager::class.java)?.getNotificationChannel(CHANNEL_ID)
+        if (channel?.importance == NotificationManager.IMPORTANCE_NONE) return
+        if (post(appCtx, status)) prefs.edit().putString("notified", message).apply()
     }
-
-    private fun post(appCtx: Context, status: ConnectionStatus) {
-        val text = messageFor(status) ?: return
+    private fun post(appCtx: Context, status: ConnectionStatus): Boolean {
+        val text = messageFor(status) ?: return false
         ensureChannel(appCtx)
         val tap = PendingIntent.getActivity(
             appCtx,
@@ -112,13 +123,14 @@ object BridgeWarning {
             .setContentIntent(tap)
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
+            .setSilent(status is ConnectionStatus.ConsentPending)
             .setCategory(NotificationCompat.CATEGORY_ERROR)
             .build()
         // Best-effort: no-ops if the user hasn't granted POST_NOTIFICATIONS (the config banner still warns).
-        runCatching { NotificationManagerCompat.from(appCtx).notify(NOTIF_ID, notif) }
+        return runCatching { NotificationManagerCompat.from(appCtx).notify(NOTIF_ID, notif) }.isSuccess
     }
 
     private const val CHANNEL_ID = "pb_bridge_warning"
     private const val NOTIF_ID = 0x9B01
-    private const val COOLDOWN_MS = 30 * 60 * 1000L
+
 }

@@ -21,6 +21,7 @@ object ErrCodes {
     const val UNSUPPORTED_VERSION = 6
     const val INVALID_ARGS = 7
     const val INTERNAL = 8
+    const val ACCESS_DENIED = 9
 
     // --- plugin-local infrastructure failures ---
     const val BRIDGE_UNREACHABLE = 20
@@ -41,6 +42,7 @@ object ErrCodes {
 
     private val byName: Map<String, Int> = mapOf(
         "NOT_AUTHORIZED" to NOT_AUTHORIZED,
+        "COMMAND_NOT_AUTHORIZED" to NOT_AUTHORIZED,
         "CONSENT_PENDING" to CONSENT_PENDING,
         "CERT_MISMATCH" to CERT_MISMATCH,
         "CATEGORY_DISABLED" to CATEGORY_DISABLED,
@@ -48,6 +50,7 @@ object ErrCodes {
         "UNSUPPORTED_VERSION" to UNSUPPORTED_VERSION,
         "INVALID_ARGS" to INVALID_ARGS,
         "INTERNAL" to INTERNAL,
+        "ACCESS_DENIED" to ACCESS_DENIED,
         "BRIDGE_UNREACHABLE" to BRIDGE_UNREACHABLE,
         "TIMEOUT" to TIMEOUT,
         "RATE_LIMITED" to RATE_LIMITED,

@@ -4,16 +4,7 @@ import com.nickbether.pebbletasker.bridge.dto.EventEnvelope
 import com.nickbether.pebbletasker.bridge.dto.WatchRef
 import kotlinx.serialization.Serializable
 
-/**
- * Serializable snapshot of the LATEST event of a given `type`, persisted by [EventCache].
- *
- * This is deliberately NOT a history record — only the most recent event per type is retained
- * (privacy + bounded storage). Event runners read this as their source of truth (the Tasker
- * pass-through `update` is treated as an unreliable hint).
- *
- * `data` carries the bridge's flat string map verbatim (e.g. battery uses data["level"]). Runners
- * pull typed values out of it.
- */
+/** Immutable event value used both as a per-watch snapshot and as an SDK delivery payload. */
 @Serializable
 data class CachedEvent(
     val type: String,
@@ -28,7 +19,7 @@ data class CachedEvent(
     fun str(key: String): String? = data[key]
     fun int(key: String): Int? = data[key]?.toIntOrNull()
     fun long(key: String): Long? = data[key]?.toLongOrNull()
-    fun bool(key: String): Boolean? = data[key]?.let { it == "true" || it == "1" }
+    fun bool(key: String): Boolean? = when (data[key]) { "true", "1" -> true; "false", "0" -> false; else -> null }
 
     companion object {
         fun from(e: EventEnvelope): CachedEvent = CachedEvent(
@@ -38,7 +29,7 @@ data class CachedEvent(
             ts = e.ts,
             category = e.category,
             watch = e.watch,
-            data = e.data,
+            data = e.data.toMap(),
         )
 
         /** Synthetic client-side event types (not emitted by the bridge). */

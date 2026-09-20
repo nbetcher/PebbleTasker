@@ -21,7 +21,12 @@ data class BridgeSession(
     val appVersion: String,
     val capabilities: Set<String>,
     val grants: Grants,
+    val authorityId: String? = null,
 ) {
+    init {
+        require(protocolVersion == 1 && bootId.isNotBlank() && clientToken.isNotBlank() && appVersion.isNotBlank() && latestSeq >= 0)
+    }
+
     /** True if the bridge advertised [capability] in this handshake. Unknown caps are treated absent. */
     fun has(capability: String): Boolean = capability in capabilities
 
@@ -40,14 +45,18 @@ data class BridgeSession(
         const val CAP_SCREENSHOT = "screenshot"
         const val CAP_STATE_EXTENDED = "state.extended"
 
-        fun from(hello: BridgeHello): BridgeSession = BridgeSession(
-            clientToken = hello.clientToken,
-            bootId = hello.bootId,
-            protocolVersion = hello.protocolVersion,
-            latestSeq = hello.latestSeq,
-            appVersion = hello.appVersion,
-            capabilities = hello.capabilities.toSet(),
-            grants = hello.grants,
-        )
+        fun from(hello: BridgeHello): BridgeSession {
+            require(hello.v == 1 && hello.kind == "hello")
+            return BridgeSession(
+                clientToken = hello.clientToken,
+                bootId = hello.bootId,
+                protocolVersion = hello.protocolVersion,
+                latestSeq = hello.latestSeq,
+                appVersion = hello.appVersion,
+                capabilities = hello.capabilities.toSet(),
+                grants = hello.grants,
+                authorityId = hello.authorityId,
+            )
+        }
     }
 }

@@ -41,7 +41,6 @@ class DevConnOutput @JvmOverloads constructor(
     @get:TaskerOutputVariable(PbVars.DEV_ENABLED)
     @field:TaskerInputField("pb_dev_enabled")
     var pbDevEnabled: String? = null,
-    @get:TaskerOutputVariable(PbVars.TRANSPORT)
     @field:TaskerInputField("pb_transport")
     var pbTransport: String? = null,
 ) : BaseEventOutput()
@@ -55,6 +54,12 @@ class DevConnRunner : PebbleEventRunner<DevConnFilter, DevConnOutput>() {
         cached: CachedEvent?,
         update: DevConnOutput?,
     ): TaskerPluginResultCondition<DevConnOutput> {
+        if (!filter.transport.isNullOrBlank()) {
+            com.nickbether.pebbletasker.tasker.base.ConditionAccess.report(context, com.nickbether.pebbletasker.bridge.BridgeResult.err(
+                com.nickbether.pebbletasker.tasker.ErrCodes.UNSUPPORTED_COMMAND, "Developer transport filtering is unsupported. Edit this profile and clear Transport.",
+            ))
+            return TaskerPluginResultConditionUnknown()
+        }
         val e = cached ?: return TaskerPluginResultConditionUnknown()
         val enabled = e.str("dev_enabled") ?: e.bool("enabled")?.toString()
         val transport = e.str("transport")
@@ -76,13 +81,17 @@ class DevConnRunner : PebbleEventRunner<DevConnFilter, DevConnOutput>() {
 
 class DevConnHelper(config: TaskerPluginConfig<DevConnFilter>) :
     PebbleEventHelper<DevConnFilter, DevConnOutput, DevConnRunner>(config) {
+    override fun isInputValid(input: TaskerInput<DevConnFilter>): com.joaomgcd.taskerpluginlibrary.SimpleResult {
+        if (!input.regular.transport.isNullOrBlank()) return com.joaomgcd.taskerpluginlibrary.SimpleResultError("Transport selection/filtering is unsupported. Clear Transport to continue.")
+        return super.isInputValid(input)
+    }
     override val inputClass = DevConnFilter::class.java
     override val outputClass = DevConnOutput::class.java
     override val runnerClass = DevConnRunner::class.java
 
     override fun addToStringBlurb(input: TaskerInput<DevConnFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when the developer connection state changes.")
-            .append("\nOutputs: %pbl_dev_enabled %pbl_transport + %pbl_json.")
+            .append("\nOutputs: %pbl_dev_enabled + %pbl_json.")
     }
 }
 
@@ -100,7 +109,7 @@ class DevConnActivity :
             getString(R.string.pb_evt_lbl_dev_enabled),
             options = listOf("Enabled" to "true", "Disabled" to "false"),
         ),
-        FieldSpec("transport", getString(R.string.pb_evt_lbl_transport)),
+        FieldSpec("transport", "Transport (unsupported; leave blank)"),
     )
 
     override fun getNewHelper(config: TaskerPluginConfig<DevConnFilter>) = DevConnHelper(config)

@@ -37,6 +37,17 @@ object SetupState {
         }
     }
 
+    /** Local terminal decision cache. Never copied by Android backup or Tasker profile restore. */
+    fun isAccessDenied(context: Context): Boolean = java.io.File(context.noBackupFilesDir, "pb_denied").exists()
+
+    fun setAccessDenied(context: Context, denied: Boolean) {
+        val file = android.util.AtomicFile(java.io.File(context.noBackupFilesDir, "pb_denied"))
+        if (!denied) { file.delete(); return }
+        val stream = file.startWrite()
+        try { stream.write(1); file.finishWrite(stream) }
+        catch (t: Throwable) { file.failWrite(stream); throw t }
+    }
+
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }

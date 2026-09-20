@@ -44,8 +44,8 @@ internal object StateSupport {
         BridgeClient.get(context).getStateBlocking()
 
     /** Latest cached event of [type], or null if the bridge never reported it this boot. */
-    fun cached(context: Context, type: String): CachedEvent? =
-        runCatching { EventCache.get(context).latest(type) }.getOrNull()
+    fun cached(context: Context, type: String, serial: String? = null): CachedEvent? =
+        runCatching { EventCache.get(context).latestForSerial(type, serial) }.getOrNull()
 
     /**
      * Find the watch in a [StateResult] matching [serial] (matches WatchRef.serial OR address). When

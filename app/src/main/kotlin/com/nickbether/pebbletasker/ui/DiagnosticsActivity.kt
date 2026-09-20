@@ -60,6 +60,18 @@ class DiagnosticsActivity : AppCompatActivity() {
         applyContentInsets()
 
         binding.btnSelftest.setOnClickListener { runSelfTest() }
+        binding.btnClearSubscriptions.setOnClickListener {
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Clear AppMessage subscriptions?")
+                .setMessage("Delete unused profiles in Tasker first. Active profiles may request their subscriptions again.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Clear") { _, _ -> lifecycleScope.launch {
+                    val subscriptions = com.nickbether.pebbletasker.tasker.event.appmsg.AppMessageSubscriptions
+                    subscriptions.clear(this@DiagnosticsActivity)
+                    val applied = subscriptions.restore(this@DiagnosticsActivity)
+                    Toast.makeText(this@DiagnosticsActivity, if (applied) "Subscriptions cleared" else "Saved subscriptions cleared; Pebble will be updated after reconnecting", Toast.LENGTH_LONG).show()
+                } }.show()
+        }
         binding.btnRefresh.setOnClickListener { refreshAll() }
         binding.btnCopy.setOnClickListener { copyReport() }
 
@@ -86,7 +98,9 @@ class DiagnosticsActivity : AppCompatActivity() {
     private fun renderStatus(status: ConnectionStatus) {
         binding.statusChip.text = getString(UiSupport.statusLabel(status))
         UiSupport.styleStatusChip(binding.statusChip, status)
-        binding.statusDetail.text = UiSupport.statusDetail(this, status)
+        binding.statusDetail.text = listOfNotNull(UiSupport.statusDetail(this, status),
+            com.nickbether.pebbletasker.tasker.base.ConditionAccess.lastMessage(this)?.let { "Last condition decision: $it" },
+        ).joinToString("\n")
         // Handshake fields can appear/disappear with status changes.
         renderHandshake(bridge.currentSession)
         renderCapabilities(bridge.currentSession)

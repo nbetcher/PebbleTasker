@@ -69,14 +69,14 @@ class AppChangedRunner : PebbleEventRunner<AppChangedFilter, AppChangedOutput>()
             pbUuid = uuid,
             pbAppName = e.str("app_name"),
             pbAppType = appType,
-            pbPrevUuid = e.str("prev_uuid"),
+            pbPrevUuid = e.str("previous_uuid"),
         ).fillBase<AppChangedOutput>(
             e,
             buildMap {
                 uuid?.let { put("uuid", it) }
                 e.str("app_name")?.let { put("app_name", it) }
                 appType?.let { put("app_type", it) }
-                e.str("prev_uuid")?.let { put("prev_uuid", it) }
+                e.str("previous_uuid")?.let { put("prev_uuid", it) }
             },
         )
         return TaskerPluginResultConditionSatisfied(context, out)
@@ -91,7 +91,7 @@ class AppChangedHelper(config: TaskerPluginConfig<AppChangedFilter>) :
 
     override fun addToStringBlurb(input: TaskerInput<AppChangedFilter>, blurbBuilder: StringBuilder) {
         blurbBuilder.append("Fires when the foreground watch app/watchface changes.")
-            .append("\nOutputs: %pbl_uuid %pbl_app_name %pbl_app_type %pbl_prev_uuid + %pbl_json.")
+            .append("\nOutputs: %pbl_uuid %pbl_app_name %pbl_app_type + %pbl_json.")
     }
 }
 

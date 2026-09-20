@@ -1,116 +1,137 @@
 package com.nickbether.pebbletasker.cache
 
+import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import com.nickbether.pebbletasker.bridge.dto.EventEnvelope
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import com.nickbether.pebbletasker.bridge.dto.*
+import kotlinx.coroutines.*
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-/**
- * Delivery-logic tests for [EventCache]. Instances are constructed directly (never [EventCache.get])
- * so nothing is warmed from DataStore and each test starts from clean in-memory state.
- */
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class, sdk = [34])
 class EventCacheTest {
-
-    private fun newCache() = EventCache(ApplicationProvider.getApplicationContext())
-
-    private fun event(seq: Long, type: String = "watch.connected", boot: String = BOOT) = EventEnvelope(
-        v = 1,
-        bootId = boot,
-        seq = seq,
-        ts = seq,
-        category = "connectivity",
-        type = type,
-        watch = null,
-        data = emptyMap(),
+    private fun cache() = EventCache(ApplicationProvider.getApplicationContext(), writeSnapshot = {})
+    private fun event(seq: Long, watch: String = "A", type: String = "watch.battery", boot: String = "boot") = EventEnvelope(
+        bootId = boot, seq = seq, ts = seq, type = type, watch = WatchRef(watch, watch), data = mapOf("level" to seq.toString()),
     )
-
-    /**
-     * REGRESSION: re-handshaking within the same boot must NOT advance the high-water.
-     *
-     * The caller derives its replay cursor from the high-water immediately after seeding, so raising
-     * it to latestSeq here made the bridge replay nothing and silently discarded every event that
-     * arrived while this process was dead — precisely the window the reverse-bind tether revives us
-     * to collect.
-     */
-    @Test
-    fun `seed does not advance high-water within the same boot`() {
-        val cache = newCache()
-        cache.seedFromHandshake(BOOT, latestSeq = 100)
-        assertEquals(100L, cache.currentHighWater)
-
-        // Process died; 50 more events accumulated on the bridge; we re-handshake on the SAME boot.
-        val gap = cache.seedFromHandshake(BOOT, latestSeq = 150)
-
-        assertNull("same boot is not a gap", gap)
-        assertEquals("high-water must stay put so 101..150 are replayed", 100L, cache.currentHighWater)
-        assertEquals(100L, cache.highWaterSeqFor(BOOT))
+    @Test fun `first install skips history but a configured recovery replays new boot`() {
+        val c = cache()
+        c.seedFromHandshake("boot", 30)
+        assertEquals(30L, c.currentHighWater)
+        c.seedFromHandshake("new", 7, recover = true)
+        assertEquals(-1L, c.currentHighWater)
+        assertEquals(listOf(1L, 7L), c.putBatch(listOf(event(7, boot = "new"), event(1, boot = "new"))).map { it.seq })
     }
-
-    @Test
-    fun `seed resets high-water and synthesizes a gap on a new boot`() {
-        val cache = newCache()
-        cache.seedFromHandshake(BOOT, latestSeq = 100)
-
-        val gap = cache.seedFromHandshake("boot-2", latestSeq = 5)
-
-        assertNotNull("bridge restarted; prior seqs are void", gap)
-        assertEquals(CachedEvent.TYPE_GAP, gap!!.type)
-        assertEquals(5L, cache.currentHighWater)
-        assertEquals(-1L, cache.highWaterSeqFor(BOOT))
+    @Test fun `same boot handshake never advances replay cursor`() {
+        val c = cache(); c.seedFromHandshake("boot", 10); c.seedFromHandshake("boot", 90)
+        assertEquals(10L, c.currentHighWater)
+        assertEquals(1, c.put(event(11)).size)
     }
-
-    @Test
-    fun `first seed on a fresh install adopts latestSeq without replaying history`() {
-        val cache = newCache()
-        val gap = cache.seedFromHandshake(BOOT, latestSeq = 42)
-
-        assertNull(gap)
-        assertEquals(42L, cache.currentHighWater)
+    @Test fun `repeated same-type events preserve payloads and per-watch snapshots`() {
+        val c = cache(); c.seedFromHandshake("boot", 0)
+        val delivery = c.putBatch(listOf(event(1), event(2, "B"), event(3)))
+        assertEquals(listOf("1", "2", "3"), delivery.map { it.str("level") })
+        assertEquals("3", c.latestForSerial("watch.battery", "A")?.str("level"))
+        assertEquals("2", c.latestForSerial("watch.battery", "B")?.str("level"))
     }
-
-    /** After the fix, the events the bridge replays are actually ingested and routed. */
-    @Test
-    fun `events after the cursor are routed once and deduped thereafter`() {
-        val cache = newCache()
-        cache.seedFromHandshake(BOOT, latestSeq = 100)
-
-        val routed = cache.putBatch(listOf(event(101), event(102)))
-        assertEquals(listOf(101L, 102L), routed.map { it.seq })
-        assertEquals(102L, cache.currentHighWater)
-
-        assertTrue("already-seen seqs must not route again", cache.putBatch(listOf(event(102))).isEmpty())
+    @Test fun `duplicates within and across batches never route again`() {
+        val c = cache(); c.seedFromHandshake("boot", 0)
+        assertEquals(1, c.putBatch(listOf(event(1), event(1))).size)
+        assertTrue(c.put(event(1)).isEmpty())
     }
-
-    @Test
-    fun `a seq discontinuity synthesizes a gap`() {
-        val cache = newCache()
-        cache.seedFromHandshake(BOOT, latestSeq = 100)
-
-        val routed = cache.putBatch(listOf(event(160)))
-
-        val gap = routed.firstOrNull { it.type == CachedEvent.TYPE_GAP }
-        assertNotNull("events 101..159 were lost; the user must be told", gap)
-        assertEquals("100", gap!!.data["gap_from"])
-        assertEquals("160", gap.data["gap_to"])
+    @Test fun `filtered cursor holes are not inferred history loss`() {
+        val c = cache(); c.seedFromHandshake("boot", 5)
+        val r = c.ingestBatch(EventBatch(bootId = "boot", events = listOf(event(99)), cursor = 100))
+        assertEquals(listOf("watch.battery"), r.map { it.type })
+        assertEquals(100L, c.currentHighWater)
+        assertTrue(c.put(event(99)).isEmpty())
     }
-
-    @Test
-    fun `latest returns the most recent event of a type`() {
-        val cache = newCache()
-        cache.seedFromHandshake(BOOT, latestSeq = 0)
-        cache.putBatch(listOf(event(1, "watch.battery"), event(2, "watch.battery")))
-
-        assertEquals(2L, cache.latest("watch.battery")?.seq)
-        assertNull(cache.latest("watch.connected"))
+    @Test fun `empty batch cursor and explicit historyLost are respected once`() {
+        val c = cache(); c.seedFromHandshake("boot", 5)
+        val batch = EventBatch(bootId = "boot", cursor = 50, historyLost = true)
+        assertEquals(CachedEvent.TYPE_GAP, c.ingestBatch(batch).single().type)
+        assertEquals(50L, c.currentHighWater)
+        assertTrue(c.ingestBatch(batch).isEmpty())
     }
-
-    private companion object {
-        const val BOOT = "boot-1"
+    @Test fun `stale boot and mixed boot callbacks cannot regress cache`() {
+        val c = cache(); c.seedFromHandshake("boot", 5)
+        assertTrue(c.put(event(6, boot = "old")).isEmpty())
+        assertTrue(c.ingestBatch(EventBatch(bootId = "boot", events = listOf(event(6), event(7, boot = "old")))).isEmpty())
+        assertEquals("boot", c.currentBootId); assertEquals(5L, c.currentHighWater)
+    }
+    @Test fun `disconnect resets only its watch developer and firmware snapshot`() {
+        val c = cache(); c.seedFromHandshake("boot", 0)
+        c.seedState(StateResult(data = StateData(watches = listOf(WatchRef("A","A",devEnabled=true,fwStatus="in_progress"), WatchRef("B","B",devEnabled=true)))))
+        c.put(event(1, "A", "watch.disconnected"))
+        assertEquals(false, c.latestForSerial("dev.state", "A")?.bool("enabled"))
+        assertEquals(true, c.latestForSerial("dev.state", "B")?.bool("enabled"))
+        assertEquals("unavailable", c.latestForSerial("fw.status", "A")?.str("status"))
+    }
+    @Test fun `snapshot hydration produces no edges and preserves cursor`() {
+        val c = cache(); c.seedFromHandshake("boot", 4)
+        c.seedState(StateResult(data = StateData(bluetoothEnabled = false)))
+        assertEquals(4L, c.currentHighWater); assertEquals(false, c.latest("bt.state")?.bool("enabled"))
+        c.seedState(StateResult(data = StateData()))
+        assertNull(c.latest("bt.state"))
+    }
+    @Test fun `authority invalidation clears content and rotates payload epoch without losing cursor`() {
+        val c = cache(); c.seedFromHandshake("boot", 0); c.put(event(1))
+        val epoch = c.deliveryEpoch
+        c.invalidateAuthority()
+        assertNull(c.latest("watch.battery")); assertEquals(1L, c.currentHighWater)
+        assertNotEquals(epoch, c.deliveryEpoch)
+    }
+    @Test fun `one persistence writer cannot overtake blocked older snapshot`() = runBlocking {
+        val entered = CompletableDeferred<Unit>(); val release = CompletableDeferred<Unit>()
+        val stored = mutableListOf<Long>()
+        val c = EventCache(ApplicationProvider.getApplicationContext(), writeSnapshot = {
+            if (it.highWater == 0L) { entered.complete(Unit); release.await() }
+            stored += it.highWater
+        })
+        c.seedFromHandshake("boot", 0); entered.await(); c.put(event(1)); c.put(event(2))
+        assertTrue(stored.isEmpty())
+        release.complete(Unit); c.awaitPersistence()
+        assertEquals(listOf(0L, 2L), stored)
+    }
+    @Test fun `invalidation persistence follows earlier sensitive writes`() = runBlocking {
+        val stored = mutableListOf<EventCache.Snapshot>()
+        val c = EventCache(ApplicationProvider.getApplicationContext(), writeSnapshot = { stored += it })
+        c.seedFromHandshake("boot", 0); c.put(event(1)); c.invalidateAuthority(); c.awaitPersistence()
+        assertTrue(stored.last().events.isEmpty()); assertEquals(1L, stored.last().highWater)
+    }
+    @Test fun `failed persistence is reported and the next snapshot can recover`() = runBlocking {
+        var failWrite = true
+        val c = EventCache(ApplicationProvider.getApplicationContext(), writeSnapshot = {
+            if (failWrite) throw java.io.IOException("disk unavailable")
+        })
+        c.seedFromHandshake("boot", 0)
+        try {
+            c.awaitPersistence()
+            fail("A failed write must not be reported as persisted")
+        } catch (expected: java.io.IOException) {
+            assertEquals("disk unavailable", expected.message)
+        }
+        failWrite = false
+        c.put(event(1))
+        c.awaitPersistence()
+        assertEquals(1L, c.currentHighWater)
+    }
+    @Test fun `slow disk coalesces a burst without dropping the final cursor or revocation`() = runBlocking {
+        val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        val stored=mutableListOf<EventCache.Snapshot>()
+        val c=EventCache(ApplicationProvider.getApplicationContext(),writeSnapshot={
+            if(it.highWater==0L){entered.complete(Unit);release.await()}
+            stored+=it
+        })
+        c.seedFromHandshake("boot",0);entered.await()
+        repeat(1000){c.put(event(it+1L))}
+        c.invalidateAuthority()
+        release.complete(Unit);c.awaitPersistence()
+        assertEquals(2,stored.size)
+        assertEquals(1000L,stored.last().highWater)
+        assertTrue(stored.last().events.isEmpty())
     }
 }

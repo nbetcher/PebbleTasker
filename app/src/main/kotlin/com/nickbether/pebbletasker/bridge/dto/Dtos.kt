@@ -43,6 +43,7 @@ data class BridgeHello(
     val latestSeq: Long,
     val appVersion: String,
     val clientToken: String,
+    val authorityId: String? = null,
 )
 
 /**
@@ -89,6 +90,9 @@ data class EventBatch(
     val bootId: String,
     val events: List<EventEnvelope> = emptyList(),
     val more: Boolean = false,
+    val cursor: Long? = null,
+    val historyLost: Boolean = false,
+    val subscriptionToken: String? = null,
 )
 
 /** One automation event. Mirrors EventEnvelope. `data` is a flat string map (today's bridge). */
@@ -115,10 +119,18 @@ data class WatchRef(
     val fw: String? = null,
     val battery: Int? = null,
     val address: String? = null,
+    val devEnabled: Boolean? = null,
+    val fwStatus: String? = null,
+    val fwProgress: Int? = null,
+    val currentAppUuid: String? = null,
 )
 
 @Serializable
-data class StateData(val watches: List<WatchRef> = emptyList())
+data class StateData(
+    val watches: List<WatchRef> = emptyList(),
+    val bluetoothEnabled: Boolean? = null,
+    val capabilities: List<String> = emptyList(),
+)
 
 /** State query response. Mirrors StateResult. */
 @Serializable

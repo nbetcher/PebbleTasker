@@ -13,25 +13,8 @@ import com.nickbether.pebbletasker.setup.SetupState
 import com.nickbether.pebbletasker.tasker.ErrCodes
 import com.nickbether.pebbletasker.ui.BridgeWarning
 
-/**
- * Base for ALL action plugins (FINAL DESIGN §2.3 / §4.2, FIX C5/C6).
- *
- * RESULT MODEL — success-with-ok=false:
- *   - Bridge SUCCESS and bridge-returned ERRORS (NOT_AUTHORIZED, INVALID_ARGS, ...) BOTH return
- *     TaskerPluginResultSucess(output). The output carries %pbl_ok / %pbl_err / %pbl_errmsg / %pbl_json,
- *     because outputs are NOT delivered on the TaskerPluginResultError path — so error detail would
- *     be invisible to the user's task otherwise.
- *   - HARD infrastructure failure ONLY (not bound, timeout, RemoteException) returns
- *     TaskerPluginResultError(code, message), which auto-sets Tasker's %err / %errmsg.
- *
- * Note the class name is the library's misspelling: TaskerPluginResultSucess.
- *
- * Subclasses implement [execute] returning a [BridgeResult] plus a function that builds the typed
- * output for both branches. The library already wraps run() in try/catch -> TaskerPluginResultError,
- * so an uncaught throw becomes a hard error automatically.
- *
- * @param TInput  the @TaskerInputRoot input class
- * @param TOutput the @TaskerInputRoot @TaskerOutputObject output class
+/** All actions resolve current readiness first. Consent failures use native Tasker errors, preserving
+ * the authoritative code/message. Other bridge command failures retain the pbl_ok output contract.
  */
 abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
     TaskerPluginRunnerAction<TInput, TOutput>() {
@@ -67,19 +50,8 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
     final override fun run(context: Context, input: TaskerInput<TInput>): TaskerPluginResult<TOutput> {
         val name = this::class.simpleName
         PLog.d { "action[$name]: run" }
-        // Never set up on this device (e.g. Tasker config restored onto a new phone with no Pebble-app
-        // authorization): fail HARD so Tasker surfaces %err via its own notification — the plugin itself
-        // may lack POST_NOTIFICATIONS, but Tasker doesn't. This is the restore-safety bubble-up.
-        if (!SetupState.isSetupComplete(context)) {
-            PLog.w { "action[$name]: NOT SET UP -> hard error (finish setup in the Pebble Tasker app)" }
-            BridgeWarning.warnIfUsedWhileUnbridged(context)
-            return TaskerPluginResultError(
-                ErrCodes.NOT_SET_UP,
-                context.getString(R.string.error_not_set_up),
-            ) as TaskerPluginResult<TOutput>
-        }
-        // Warn (throttled notification) if this action is run while we're not bridged to the Pebble app.
-        BridgeWarning.warnIfUsedWhileUnbridged(context)
+        // BridgeClient.execute owns the complete readiness + IPC deadline. No setup flag may
+        // replace its authoritative pending/denied result after a Tasker restore.
         val bridgeResult = execute(context, input)
         when (bridgeResult) {
             is BridgeResult.Ok -> PLog.i { "action[$name]: ok (${bridgeResult.value.size} field(s))" }
@@ -119,7 +91,11 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
 
     /** Codes that warrant Tasker's hard-failure %err (infra), vs. the success-with-ok=false model. */
     protected open fun isHardFailure(code: Int): Boolean =
-        code == ErrCodes.TIMEOUT ||
+        code == ErrCodes.ACCESS_DENIED ||
+            code == ErrCodes.NOT_AUTHORIZED ||
+            code == ErrCodes.CONSENT_PENDING ||
+            code == ErrCodes.CERT_MISMATCH ||
+            code == ErrCodes.TIMEOUT ||
             code == ErrCodes.BRIDGE_UNREACHABLE ||
             code == ErrCodes.INTERNAL ||
             code == ErrCodes.NOT_SET_UP

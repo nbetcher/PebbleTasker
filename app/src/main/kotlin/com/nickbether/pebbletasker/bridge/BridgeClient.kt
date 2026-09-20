@@ -2,399 +2,376 @@ package com.nickbether.pebbletasker.bridge
 
 import android.content.Context
 import android.os.RemoteException
-import com.nickbether.pebbletasker.bridge.dto.BridgeHello
-import com.nickbether.pebbletasker.bridge.dto.ClientHello
-import com.nickbether.pebbletasker.bridge.dto.CommandEnvelope
-import com.nickbether.pebbletasker.bridge.dto.ResultEnvelope
-import com.nickbether.pebbletasker.bridge.dto.StateResult
+import com.nickbether.pebbletasker.bridge.dto.*
 import com.nickbether.pebbletasker.cache.EventCache
 import com.nickbether.pebbletasker.cache.EventRouter
-import com.nickbether.pebbletasker.log.PLog
 import com.nickbether.pebbletasker.setup.SetupState
 import com.nickbether.pebbletasker.tasker.ErrCodes
 import coredevices.coreapp.automation.IBridgeService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
-import java.util.concurrent.Executors
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import java.util.concurrent.RejectedExecutionException
 
-/**
- * Process-singleton facade over the bound bridge AIDL service (FINAL DESIGN §3).
- *
- * Responsibilities:
- *  - own the [BridgeConnection] (sticky bind + backoff);
- *  - on every (re)connect: TOFU cert-pin check -> handshake -> register the event listener
- *    (always re-handshaking, never reusing a token — FIX A1);
- *  - serialize ALL cross-process AIDL on a single-thread [bridgeDispatcher] (every AIDL call is
- *    blocking and must never touch the main thread);
- *  - expose suspend [getState] / [execute] with staggered 9s timeouts (bridge ~7s, Tasker 10s);
- *  - surface consent/trust state ([ConnectionStatus]) so the UI can guide the user through
- *    NOT_AUTHORIZED / CONSENT_PENDING / CERT_MISMATCH (FIX D1);
- *  - drain the listener's routed-event channel and hand it to [EventRouter] off the Binder thread.
- *
- * USAGE (feature implementers):
- *   - Call [init] once from PebbleTaskerApp.onCreate.
- *   - In a state runner: `BridgeClient.get(ctx).getStateBlocking()` (runner threads aren't coroutines)
- *     or `runBlocking { getState() }`; map BridgeResult.Err -> ConditionUnknown.
- *   - In an action runner: `BridgeClient.get(ctx).executeBlocking(cmd)`; map per the
- *     success-with-ok=false model.
- *   - Observe [status] for onboarding/diagnostics.
- */
-class BridgeClient private constructor(private val appContext: Context) {
-
-    // Single-threaded dispatcher: serializes every blocking AIDL call.
-    private val bridgeExecutor = Executors.newSingleThreadExecutor { r ->
-        Thread(r, "pb-bridge-ipc").apply { isDaemon = true }
-    }
-    private val bridgeDispatcher = bridgeExecutor.asCoroutineDispatcher()
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    private val certPinner = CertPinner(appContext)
+/** Shared demand-driven readiness. Binding, handshake and registration are a single bounded attempt.
+ * A Binder worker never publishes state: the cancellable owner checks its generation on completion. */
+class BridgeClient internal constructor(
+    private val appContext: Context,
+    private val certPinner: CertPinner = CertPinner(appContext),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val calls: BinderCalls = BinderCalls(),
+) {
+    private val lock = Any()
+    private val bound = MutableStateFlow<IBridgeService?>(null)
     private val cache get() = EventCache.get(appContext)
-
-    @Volatile private var session: BridgeSession? = null
-
-    private val listener = BridgeListener(
-        appContext = appContext,
-        currentBootId = { session?.bootId },
-        onGoodbye = { onGoodbye() },
-    )
-
-    private val connection: BridgeConnection = BridgeConnection(
-        appContext = appContext,
-        onConnected = { svc -> onConnected(svc) },
-        onDisconnected = { onDisconnected() },
-        scheduleRebind = { delayMs -> scope.launch { delay(delayMs); connection.ensureBound() } },
-    )
-
-    private val _status = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Idle)
-
-    /** Observable connection/consent status for UI (onboarding, diagnostics, consent guidance). */
-    val status: StateFlow<ConnectionStatus> = _status.asStateFlow()
-
-    /** The live session snapshot, or null if not handshaken. Exposes caps/grants for capability gating. */
-    val currentSession: BridgeSession? get() = session
-
-    // --- lifecycle ---
-
+    @Volatile private var generation = 0L
     @Volatile private var started = false
+    @Volatile private var session: BridgeSession? = null
+    private var listener: BridgeListener? = null
+    private var attempt: Deferred<BridgeResult<BridgeSession>>? = null
+    private var rebindJob: Job? = null
+    private var recoveryAttempts = 0
+    private val _status = MutableStateFlow<ConnectionStatus>(
+        if (SetupState.isAccessDenied(appContext)) ConnectionStatus.Error(ErrCodes.ACCESS_DENIED, DENIED_MESSAGE)
+        else ConnectionStatus.Idle)
+    val status: StateFlow<ConnectionStatus> = _status.asStateFlow()
+    val currentSession: BridgeSession? get() = session.takeIf { status.value is ConnectionStatus.Ready && bound.value != null }
 
-    /**
-     * Start sticky binding and drain the routed-event channel. Idempotent: the drain loop is launched
-     * exactly once even if called again (e.g. from KeepAliveService on a tether bind) — a second loop
-     * would fan-out-split the single routedChannel and drop events. Repeat calls just (re)ensure a bind.
-     */
-    @Synchronized
-    fun start() {
-        if (started) {
-            PLog.d { "client: start() again — ensureBound only" }
-            connection.ensureBound()
-            return
-        }
-        started = true
-        PLog.i { "client: start() — draining routed events, ensureBound" }
-        // Drain routed events off the Binder thread and dispatch to Tasker.
-        scope.launch {
-            for (routed in listener.routedChannel) {
-                runCatching { EventRouter.routeAll(appContext, routed) }
-            }
-        }
-        connection.ensureBound()
+    private val connection = BridgeConnection(appContext,
+        onConnected = { bound.value = it },
+        onDisconnected = { connectionDropped() },
+        scheduleRebind = { delayMs -> scheduleRecovery(delayMs) })
+
+    fun start() { retryHandshake() }
+
+    private fun connectionDropped() {
+        val reason = connection.lastFailure ?: "Disconnected from Pebble"
+        // Retire while the old Binder is still available for best-effort token cleanup.
+        invalidate(BridgeResult.err(if (reason.startsWith("Timed out")) ErrCodes.TIMEOUT else ErrCodes.BRIDGE_UNREACHABLE, reason))
+        bound.value = null
     }
 
     fun stop() {
-        runCatching { unregisterQuietly() }
+        val old = synchronized(lock) {
+            started = false
+            rebindJob?.cancel(); rebindJob = null
+            retireLocked()
+        }
+        cleanup(old)
         connection.unbind()
-        session = null
-        _status.value = ConnectionStatus.Idle
+        bound.value = null
+        synchronized(lock) { if (!isDenied()) _status.value = ConnectionStatus.Idle }
     }
 
-    // --- connect / handshake / register (runs on bridgeDispatcher) ---
-
-    private fun onConnected(svc: IBridgeService) {
-        PLog.i { "client: bound; starting handshake" }
-        scope.launch(bridgeDispatcher) {
-            handshakeAndRegister(svc)
-        }
-    }
-
-    private fun onDisconnected() {
-        PLog.w { "client: disconnected; session cleared" }
-        session = null
-        _status.value = ConnectionStatus.Disconnected
-    }
-
-    private fun onGoodbye() {
-        // Revocation/shutdown: clear session and proactively rebind (events have stopped).
-        PLog.w { "client: bridge goodbye (revoke/shutdown); clearing session + proactive rebind" }
-        session = null
-        _status.value = ConnectionStatus.Disconnected
-        scope.launch { delay(BridgeConnection.MIN_BACKOFF_MS); connection.ensureBound() }
-    }
-
-    /**
-     * The full connect sequence. ALWAYS re-handshakes (fresh token) and re-checks the cert pin first.
-     * Surfaces consent/trust errors to [status] for the UI.
-     */
-    private suspend fun handshakeAndRegister(svc: IBridgeService) {
-        // 1. TOFU cert check BEFORE trusting anything.
-        when (val pin = certPinner.verify()) {
-            CertPinner.PinResult.MISMATCH -> {
-                PLog.w { "handshake: cert MISMATCH (bridge cert changed since pin); sha=${certPinner.currentSha()}" }
-                _status.value = ConnectionStatus.CertMismatch(certPinner.currentSha())
-                return
-            }
-            CertPinner.PinResult.APP_ABSENT -> {
-                PLog.w { "handshake: bridge app ABSENT" }
-                _status.value = ConnectionStatus.AppAbsent
-                return
-            }
-            CertPinner.PinResult.PINNED, CertPinner.PinResult.OK -> {
-                PLog.d { "handshake: cert ok ($pin)" }
-            }
-        }
-
-        // 2. Handshake (envelope-aware decode).
-        val helloJson = BridgeCodec.encodeHello(
-            ClientHello(
-                clientLabel = CLIENT_LABEL,
-                clientProtocol = CLIENT_PROTOCOL,
-                wants = WANTS,
-            ),
-        )
-        PLog.d { "handshake: sending ClientHello (proto=$CLIENT_PROTOCOL wants=$WANTS)" }
-        val helloResult = callBridge { BridgeCodec.decodeHello(svc.handshake(helloJson)) }
-        val hello: BridgeHello = when (helloResult) {
-            is BridgeResult.Ok -> helloResult.value
-            is BridgeResult.Err -> {
-                PLog.w { "handshake: BridgeHello ERR code=${helloResult.code} msg=${helloResult.message}" }
-                _status.value = ConnectionStatus.fromError(helloResult)
-                maybeScheduleConsentPoll(helloResult)
-                return
-            }
-        }
-
-        val sess = BridgeSession.from(hello)
-        session = sess
-        PLog.i {
-            "handshake: BridgeHello ok bootId=${sess.bootId} proto=${sess.protocolVersion} " +
-                "appVersion=${sess.appVersion} latestSeq=${sess.latestSeq} caps=${sess.capabilities}"
-        }
-
-        // 3. Seed the event-cache high-water from BridgeHello.latestSeq (NOT an empty batch).
-        cache.seedFromHandshake(sess.bootId, sess.latestSeq)
-
-        // 4. Register the listener with the FRESH token at our current high-water for this boot.
-        val fromSeq = cache.highWaterSeqFor(sess.bootId).let { if (it < 0) sess.latestSeq else it }
-        PLog.d { "handshake: registerEventListener fromSeq=$fromSeq (probing with getEventsSince)" }
-        val registered = callBridge {
-            svc.registerEventListener(sess.clientToken, listener, fromSeq)
-            // registerEventListener is void + fails SILENTLY on a stale token; no ack exists.
-            // Liveness-probe via getEventsSince to confirm registration took.
-            BridgeCodec.decodeBatch(svc.getEventsSince(fromSeq, sess.bootId))
-        }
-        when (registered) {
-            is BridgeResult.Ok -> {
-                // Ingest any replay the probe returned (deduped by EventCache).
-                val routed = cache.putBatch(registered.value.events)
-                if (routed.isNotEmpty()) listener.routedChannel.trySend(routed)
-                PLog.i {
-                    "handshake: REGISTERED, status=Ready. probe replayed ${registered.value.events.size} " +
-                        "event(s), routed ${routed.size} new. requestQueryAll now."
-                }
-                _status.value = ConnectionStatus.Ready(sess)
-                // Durable "this plugin has been authorized on this device" mark (survives process death;
-                // false on a fresh install / Tasker restore). Gates config-save + the run-time setup error.
-                SetupState.markSetupComplete(appContext)
-                // Freshly (re)connected: re-query every registered condition so Tasker states/events
-                // reflect the CURRENT bridge snapshot now — even when the triggering connect/disconnect
-                // happened before this session existed (so no event would ever push them).
-                EventRouter.requestQueryAll(appContext)
-            }
-            is BridgeResult.Err -> {
-                // Probe failed -> registration likely dropped; surface and let backoff re-handshake.
-                PLog.w { "handshake: register probe ERR code=${registered.code} msg=${registered.message}" }
-                _status.value = ConnectionStatus.fromError(registered)
-            }
-        }
-    }
-
-    /** If the error is CONSENT_PENDING, poll handshake with its own backoff until resolved. */
-    private fun maybeScheduleConsentPoll(err: BridgeResult.Err) {
-        if (err.code != ErrCodes.CONSENT_PENDING) return
-        PLog.i { "client: CONSENT_PENDING — awaiting in-app approval; polling handshake" }
-        scope.launch {
-            var wait = CONSENT_POLL_MIN_MS
-            while (status.value is ConnectionStatus.ConsentPending) {
-                delay(wait)
-                wait = (wait * 2).coerceAtMost(CONSENT_POLL_MAX_MS)
-                val svc = connection.serviceOrNull() ?: break
-                withContext(bridgeDispatcher) { handshakeAndRegister(svc) }
-            }
-        }
-    }
-
-    // --- public AIDL surface (suspend) ---
-
-    /** Snapshot query. queryJson is ignored by the bridge; we pass "{}". 9s timeout. */
-    suspend fun getState(): BridgeResult<StateResult> {
-        val svc = connection.serviceOrNull()
-        if (svc == null) {
-            PLog.w { "getState: NOT BOUND -> BRIDGE_UNREACHABLE (runner will map to Unknown)" }
-            return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "not bound")
-        }
-        val result = callBridgeTimed { BridgeCodec.decodeState(svc.getState("{}")) }
-        when (result) {
-            is BridgeResult.Ok -> PLog.i { "getState: ok — ${result.value.data.watches.size} connected watch(es)" }
-            is BridgeResult.Err -> PLog.w { "getState: ERR code=${result.code} msg=${result.message}" }
-        }
-        return result
-    }
-
-    /**
-     * Execute a command on the watch/app. Gated behind the `commands.core` capability (the bridge
-     * does not advertise it yet -> UNSUPPORTED_COMMAND). 9s timeout; RemoteException (old bridge with
-     * no execute() transaction) is mapped to UNSUPPORTED_COMMAND.
-     *
-     * NOTE: execute() is the planned bridge AIDL addition (txn code 6). The AIDL stub in this app
-     * declares it, so this compiles; against a running bridge that lacks it, the call throws
-     * RemoteException, handled below.
-     */
-    suspend fun execute(cmd: CommandEnvelope): BridgeResult<ResultEnvelope> {
-        val sess = session
-        if (sess == null) {
-            PLog.w { "execute(${cmd.type}): no session -> BRIDGE_UNREACHABLE" }
-            return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "no session")
-        }
-        if (!sess.has(BridgeSession.CAP_COMMANDS_CORE)) {
-            PLog.w { "execute(${cmd.type}): bridge lacks commands.core -> UNSUPPORTED_COMMAND" }
-            return BridgeResult.err(ErrCodes.UNSUPPORTED_COMMAND, "bridge does not support commands yet")
-        }
-        val svc = connection.serviceOrNull()
-            ?: return BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "not bound")
-        val json = BridgeCodec.encodeCommand(cmd)
-        PLog.d { "execute(${cmd.type}): sending" }
-        val result = callBridgeTimed { BridgeCodec.decodeResult(svc.execute(sess.clientToken, json)) }
-        when (result) {
-            is BridgeResult.Ok -> PLog.i { "execute(${cmd.type}): ok=${result.value.ok}" }
-            is BridgeResult.Err -> PLog.w { "execute(${cmd.type}): ERR code=${result.code} msg=${result.message}" }
-        }
-        return result
-    }
-
-    /** Force a fresh bind + handshake (e.g. after the user flips the master switch or re-trusts). */
+    /** Ordinary demand never resets an explicit denial and never creates an approval polling loop. */
     fun retryHandshake() {
-        when (connection.state) {
-            BridgeConnection.State.BOUND -> connection.serviceOrNull()?.let { onConnected(it) }
-            else -> connection.ensureBound()
+        val shared = synchronized(lock) {
+            if (isDenied() || currentSession != null) return
+            requestAttemptLocked()
         }
+        shared.start()
     }
 
-    /** User-confirmed re-pin after CERT_MISMATCH, then re-handshake. */
-    fun retrustCert() {
-        certPinner.repinToCurrent()
+    /** Deliberate UI action after reviewing the plugin identity/decision in Pebble. */
+    fun reconsiderAccess() {
+        synchronized(lock) {
+            SetupState.setAccessDenied(appContext, false)
+            if (isDenied()) _status.value = ConnectionStatus.Idle
+        }
         retryHandshake()
     }
 
-    // --- blocking convenience for runner threads (NOT coroutines) ---
+    /** Only the fingerprint-confirmation button may establish or replace the durable host pin. */
+    fun retrustCert() {
+        if (status.value !is ConnectionStatus.CertMismatch) return
+        if (certPinner.repinToCurrent() != null) retryHandshake()
+    }
 
-    /** Blocking getState for use on a Tasker runner's IntentService thread. */
-    fun getStateBlocking(): BridgeResult<StateResult> =
-        kotlinx.coroutines.runBlocking { getState() }
-
-    /** Blocking execute for use on a Tasker runner's IntentService thread. */
-    fun executeBlocking(cmd: CommandEnvelope): BridgeResult<ResultEnvelope> =
-        kotlinx.coroutines.runBlocking { execute(cmd) }
-
-    // --- internals ---
-
-    /** Run a blocking AIDL block on the bridge dispatcher, mapping RemoteException to an Err. */
-    private suspend fun <T> callBridge(block: () -> BridgeResult<T>): BridgeResult<T> =
-        withContext(bridgeDispatcher) {
-            try {
-                block()
-            } catch (e: RemoteException) {
-                BridgeResult.err(ErrCodes.UNSUPPORTED_COMMAND, "remote call failed: ${e.message}")
-            } catch (t: Throwable) {
-                BridgeResult.err(ErrCodes.INTERNAL, t.message ?: "bridge call failed")
-            }
+    suspend fun awaitReady(timeoutMs: Long = READY_TIMEOUT_MS): BridgeResult<BridgeSession> {
+        currentCoroutineContext().ensureActive()
+        if (timeoutMs <= 0) return timeout()
+        val shared = synchronized(lock) {
+            if (isDenied()) return denied()
+            currentSession?.let { return BridgeResult.Ok(it) }
+            requestAttemptLocked()
         }
-
-    /** Like [callBridge] but wrapped in the plugin-side 9s timeout (staggered below Tasker's 10s). */
-    private suspend fun <T> callBridgeTimed(block: () -> BridgeResult<T>): BridgeResult<T> =
-        try {
-            withTimeout(PLUGIN_TIMEOUT_MS) { callBridge(block) }
-        } catch (e: TimeoutCancellationException) {
-            BridgeResult.err(ErrCodes.TIMEOUT, "bridge timed out")
-        }
-
-    private fun unregisterQuietly() {
-        val sess = session ?: return
-        val svc = connection.serviceOrNull() ?: return
-        scope.launch(bridgeDispatcher) {
-            runCatching { svc.unregisterEventListener(sess.clientToken) }
+        shared.start()
+        return try {
+            withTimeout(timeoutMs) { shared.await() }
+        } catch (_: TimeoutCancellationException) { timeout() }
+        catch (e: CancellationException) {
+            currentCoroutineContext().ensureActive()
+            readinessError()
         }
     }
 
-    /** High-level connection status for UI. */
+    /** Called with lock held, so stop can always find and cancel even a not-yet-started owner. */
+    private fun requestAttemptLocked(): Deferred<BridgeResult<BridgeSession>> {
+        started = true
+        return attempt?.takeIf { !it.isCompleted } ?: run {
+            val epoch = ++generation
+            scope.async(start = CoroutineStart.LAZY) { establish(epoch) }.also { attempt = it }
+        }
+    }
+
+    private suspend fun establish(epoch: Long): BridgeResult<BridgeSession> {
+        var candidate: Pair<IBridgeService, BridgeSession>? = null
+        try {
+            return withTimeout(READY_TIMEOUT_MS) {
+                synchronized(lock) {
+                    ensureCurrent(epoch)
+                    // A process may have missed revocation while dead. Retained content is not a
+                    // grant: keep replay progress, but require fresh authorized snapshots/delivery.
+                    cache.suspendAuthority()
+                }
+                when (certPinner.verify()) {
+                    CertPinner.PinResult.APP_ABSENT -> return@withTimeout fail(epoch, BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "Pebble app is not installed"), ConnectionStatus.AppAbsent)
+                    CertPinner.PinResult.MISMATCH, CertPinner.PinResult.UNTRUSTED -> return@withTimeout fail(epoch,
+                        BridgeResult.err(ErrCodes.CERT_MISMATCH, "Review and trust the Pebble app signature"),
+                        ConnectionStatus.CertMismatch(certPinner.currentSha()))
+                    CertPinner.PinResult.PINNED, CertPinner.PinResult.OK -> Unit
+                }
+                ensureCurrent(epoch)
+                connection.ensureBound()
+                val svc = withTimeout(BridgeConnection.BIND_TIMEOUT_MS + 250) { bound.filterNotNull().first() }
+                ensureCurrent(epoch)
+                val hello = ipc(HANDSHAKE_TIMEOUT_MS) {
+                    BridgeCodec.decodeHello(svc.handshake(BridgeCodec.encodeHello(ClientHello(
+                        clientLabel = CLIENT_LABEL, clientProtocol = CLIENT_PROTOCOL, wants = WANTS))))
+                }
+                if (hello is BridgeResult.Err) return@withTimeout fail(epoch, hello)
+                val sess = BridgeSession.from((hello as BridgeResult.Ok).value)
+                candidate = svc to sess
+                ensureCurrent(epoch, svc)
+                synchronized(lock) {
+                    ensureCurrent(epoch, svc)
+                    cache.acceptAuthority(sess.bootId, sess.authorityId)
+                    cache.seedFromHandshake(sess.bootId, sess.latestSeq, recover = SetupState.isSetupComplete(appContext))
+                }
+                val fresh = BridgeListener(sess.bootId, sess.clientToken,
+                    isCurrent = { started && generation == epoch && bound.value === svc },
+                    onGoodbye = { raw ->
+                        val err = BridgeCodec.decodeResult(raw) as? BridgeResult.Err
+                            ?: BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "Pebble ended this session")
+                        invalidate(err, epoch)
+                        if (err.code != ErrCodes.ACCESS_DENIED) scheduleRecovery(BridgeConnection.MIN_BACKOFF_MS)
+                    })
+                synchronized(lock) { ensureCurrent(epoch, svc); listener = fresh }
+                val from = cache.highWaterSeqFor(sess.bootId).coerceAtLeast(0)
+                val registered = ipc(HANDSHAKE_TIMEOUT_MS) {
+                    ensureCurrent(epoch, svc)
+                    svc.registerEventListener(sess.clientToken, fresh, from)
+                    ensureCurrent(epoch, svc)
+                    BridgeCodec.decodeBatch(svc.getEventsSince(if (sess.has("events.registration_ack_only")) Long.MAX_VALUE else from, sess.bootId))
+                }
+                if (registered is BridgeResult.Err) return@withTimeout fail(epoch, registered)
+                val proof = (registered as BridgeResult.Ok).value
+                if (proof.bootId != sess.bootId || proof.subscriptionToken != sess.clientToken)
+                    return@withTimeout fail(epoch, BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "Pebble did not acknowledge this listener registration"))
+                synchronized(lock) {
+                    ensureCurrent(epoch, svc)
+                    session = sess
+                    SetupState.markSetupComplete(appContext)
+                    recoveryAttempts = 0
+                    _status.value = ConnectionStatus.Ready(sess)
+                }
+                // The probe is proof only. Ingesting its replay could overtake earlier queued listener
+                // callbacks. The server sends replay and live batches through one ordered worker.
+                scope.launch {
+                    for (batch in fresh.batches) {
+                        synchronized(lock) {
+                            if (generation != epoch || session !== sess || bound.value !== svc) return@launch
+                            val routed = cache.ingestBatch(batch)
+                            EventRouter.routeAll(appContext, routed)
+                        }
+                    }
+                }
+                EventRouter.requestQueryAll(appContext) // states only; never replay event profiles
+                com.nickbether.pebbletasker.ui.BridgeWarning.cancel(appContext)
+                scope.launch { com.nickbether.pebbletasker.tasker.event.appmsg.AppMessageSubscriptions.restore(appContext) }
+                candidate = null
+                BridgeResult.Ok(sess)
+            }
+        } catch (_: TimeoutCancellationException) {
+            return fail(epoch, timeout())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (t: Exception) {
+            return fail(epoch, BridgeResult.err(ErrCodes.INTERNAL, t.message ?: "Bridge readiness failed"))
+        } finally {
+            candidate?.let(::cleanup)
+        }
+    }
+
+    suspend fun getState(timeoutMs: Long = STATE_TIMEOUT_MS): BridgeResult<StateResult> = try {
+        withTimeout(timeoutMs) {
+            val ready = awaitReady()
+            if (ready is BridgeResult.Err) return@withTimeout ready
+            val sess = (ready as BridgeResult.Ok).value
+            verifiedCall(sess) { svc -> BridgeCodec.decodeState(svc.getState("{}")) }.also { result ->
+                if (result is BridgeResult.Ok) synchronized(lock) {
+                    if (session === sess) cache.seedState(result.value)
+                }
+            }
+        }
+    } catch (_: TimeoutCancellationException) { timeout() }
+
+    suspend fun execute(cmd: CommandEnvelope): BridgeResult<ResultEnvelope> = try {
+        withTimeout(PLUGIN_TIMEOUT_MS) {
+            val ready = awaitReady()
+            if (ready is BridgeResult.Err) return@withTimeout ready
+            val sess = (ready as BridgeResult.Ok).value
+            if (!sess.has("command.${cmd.type}")) return@withTimeout BridgeResult.err(
+                ErrCodes.UNSUPPORTED_COMMAND, "Pebble does not advertise command ${cmd.type}")
+            verifiedCall(sess) { svc -> BridgeCodec.decodeResult(svc.execute(sess.clientToken, BridgeCodec.encodeCommand(cmd))) }
+        }
+    } catch (_: TimeoutCancellationException) { timeout() }
+
+    private suspend fun <T> verifiedCall(sess: BridgeSession, block: (IBridgeService) -> BridgeResult<T>): BridgeResult<T> {
+        val svc: IBridgeService
+        val epoch: Long
+        synchronized(lock) {
+            if (currentSession !== sess) return readinessError()
+            svc = bound.value ?: return readinessError()
+            epoch = generation
+        }
+        val result = ipc(EXECUTE_TIMEOUT_MS) {
+            val current = synchronized(lock) { started && generation == epoch && currentSession === sess && bound.value === svc }
+            if (current) block(svc) else readinessError()
+        }
+        synchronized(lock) {
+            if (generation != epoch || currentSession !== sess || bound.value !== svc) return readinessError()
+        }
+        if (result is BridgeResult.Err && result.bridgeCode != "COMMAND_NOT_AUTHORIZED" &&
+            !(result.code == ErrCodes.TIMEOUT && result.bridgeCode == "TIMEOUT") &&
+            result.code in setOf(ErrCodes.ACCESS_DENIED, ErrCodes.NOT_AUTHORIZED, ErrCodes.CONSENT_PENDING,
+                ErrCodes.CERT_MISMATCH, ErrCodes.BRIDGE_UNREACHABLE, ErrCodes.TIMEOUT)) {
+            invalidate(result, epoch)
+            if (result.code in setOf(ErrCodes.NOT_AUTHORIZED, ErrCodes.BRIDGE_UNREACHABLE, ErrCodes.TIMEOUT))
+                scheduleRecovery(BridgeConnection.MIN_BACKOFF_MS)
+        }
+        return result
+    }
+
+    private suspend fun <T> ipc(timeoutMs: Long, block: () -> BridgeResult<T>): BridgeResult<T> = try {
+        calls.call(timeoutMs, block)
+    } catch (_: TimeoutCancellationException) { timeout() }
+    catch (e: CancellationException) { throw e }
+    catch (_: RejectedExecutionException) { BridgeResult.err(ErrCodes.TIMEOUT, "Pebble IPC workers are busy; retry after recovery") }
+    catch (_: RemoteException) { BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "Pebble transport disconnected") }
+    catch (e: Exception) { BridgeResult.err(ErrCodes.INTERNAL, e.message ?: "Bridge call failed") }
+
+    private fun ensureCurrent(epoch: Long, svc: IBridgeService? = null) {
+        if (!started || generation != epoch || (svc != null && bound.value !== svc)) throw CancellationException("Obsolete bridge generation")
+    }
+
+    private fun fail(epoch: Long, err: BridgeResult.Err, status: ConnectionStatus = ConnectionStatus.fromError(err)): BridgeResult.Err {
+        synchronized(lock) {
+            if (generation != epoch || !started) return readinessError()
+            session = null
+            if (err.code in setOf(ErrCodes.ACCESS_DENIED, ErrCodes.CERT_MISMATCH, ErrCodes.CONSENT_PENDING)) cache.invalidateAuthority()
+            else cache.suspendAuthority()
+            listener?.close(); listener = null
+            if (err.code == ErrCodes.ACCESS_DENIED) SetupState.setAccessDenied(appContext, true)
+            _status.value = status
+        }
+        return if (err.code == ErrCodes.ACCESS_DENIED) denied() else err
+    }
+
+    private fun invalidate(err: BridgeResult.Err, expected: Long? = null) {
+        val old = synchronized(lock) {
+            if (expected != null && expected != generation) return
+            val previous = retireLocked(preserveAuthority = err.code !in setOf(ErrCodes.ACCESS_DENIED, ErrCodes.CERT_MISMATCH, ErrCodes.CONSENT_PENDING))
+            if (err.code == ErrCodes.ACCESS_DENIED) SetupState.setAccessDenied(appContext, true)
+            if (!isDenied()) _status.value = ConnectionStatus.fromError(err)
+            else _status.value = ConnectionStatus.Error(ErrCodes.ACCESS_DENIED, DENIED_MESSAGE)
+            previous
+        }
+        cleanup(old)
+    }
+
+    private fun retireLocked(preserveAuthority: Boolean = true): Pair<IBridgeService, BridgeSession>? {
+        ++generation
+        attempt?.cancel(); attempt = null
+        val old = session?.let { sess -> bound.value?.let { it to sess } }
+        session = null
+        if (preserveAuthority) cache.suspendAuthority() else cache.invalidateAuthority()
+        listener?.close(); listener = null
+        return old
+    }
+
+    private fun cleanup(old: Pair<IBridgeService, BridgeSession>?) {
+        old ?: return
+        scope.launch { ipc(1_000) { old.first.unregisterEventListener(old.second.clientToken); BridgeResult.Ok(Unit) } }
+    }
+
+    private fun scheduleRecovery(delayMs: Long) {
+        synchronized(lock) {
+            if (!started || isDenied() || recoveryAttempts >= 3 || rebindJob?.isActive == true) return
+            recoveryAttempts++
+            rebindJob = scope.launch {
+                delay(delayMs)
+                synchronized(lock) { rebindJob = null }
+                val result = awaitReady()
+                if (result is BridgeResult.Err && result.code in setOf(ErrCodes.BRIDGE_UNREACHABLE, ErrCodes.TIMEOUT))
+                    scheduleRecovery(delayMs * 2)
+            }
+        }
+    }
+
+    private fun isDenied() = (_status.value as? ConnectionStatus.Error)?.code == ErrCodes.ACCESS_DENIED || SetupState.isAccessDenied(appContext)
+    fun readinessError(): BridgeResult.Err = synchronized(lock) {
+        when (val state = _status.value) {
+            is ConnectionStatus.Error -> if (state.code == ErrCodes.ACCESS_DENIED) denied() else BridgeResult.Err(state.code, state.message, state.bridgeCode)
+            is ConnectionStatus.ConsentPending -> BridgeResult.Err(ErrCodes.CONSENT_PENDING, state.message, "CONSENT_PENDING")
+            is ConnectionStatus.NotAuthorized -> BridgeResult.Err(ErrCodes.NOT_AUTHORIZED, state.message, "NOT_AUTHORIZED")
+            is ConnectionStatus.CertMismatch -> BridgeResult.err(ErrCodes.CERT_MISMATCH, "Review and trust the Pebble app signature")
+            ConnectionStatus.AppAbsent -> BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "Pebble app is not installed")
+            else -> BridgeResult.err(ErrCodes.BRIDGE_UNREACHABLE, "Disconnected from Pebble")
+        }
+    }
+
+    fun awaitReadyBlocking(timeoutMs: Long = READY_TIMEOUT_MS): BridgeResult<BridgeSession> = runBlocking { awaitReady(timeoutMs) }
+    fun getStateBlocking(): BridgeResult<StateResult> {
+        val budget = com.nickbether.pebbletasker.tasker.base.ConditionQueryBudget.remaining(STATE_TIMEOUT_MS)
+        return runBlocking { getState(budget) }
+    }
+    fun executeBlocking(cmd: CommandEnvelope): BridgeResult<ResultEnvelope> = runBlocking { execute(cmd) }
+
     sealed class ConnectionStatus {
         object Idle : ConnectionStatus()
         object Disconnected : ConnectionStatus()
         object AppAbsent : ConnectionStatus()
         data class Ready(val session: BridgeSession) : ConnectionStatus()
-
-        /** Master Automation switch is OFF (default) or access revoked — user must enable in Pebble. */
         data class NotAuthorized(val message: String) : ConnectionStatus()
-
-        /** Master is ON; bridge is awaiting the user's in-app approval. Auto-polls. */
         data class ConsentPending(val message: String) : ConnectionStatus()
-
-        /** Bridge app's signing cert changed since TOFU pin — user must re-trust. */
         data class CertMismatch(val currentSha: String?) : ConnectionStatus()
-
-        /** Any other bridge error. */
-        data class Error(val code: Int, val message: String) : ConnectionStatus()
-
+        data class Error(val code: Int, val message: String, val bridgeCode: String? = null) : ConnectionStatus()
         companion object {
             fun fromError(err: BridgeResult.Err): ConnectionStatus = when (err.code) {
                 ErrCodes.NOT_AUTHORIZED -> NotAuthorized(err.message)
                 ErrCodes.CONSENT_PENDING -> ConsentPending(err.message)
-                ErrCodes.CERT_MISMATCH -> CertMismatch(null)
-                else -> Error(err.code, err.message)
+                // A remote CERT_MISMATCH rejects the plugin identity, never the local host pin.
+                ErrCodes.ACCESS_DENIED -> Error(err.code, DENIED_MESSAGE, "ACCESS_DENIED")
+                else -> Error(err.code, err.message, err.bridgeCode)
             }
         }
     }
-
     companion object {
         const val CLIENT_LABEL = "Pebble Tasker Plugin"
         const val CLIENT_PROTOCOL = 1
-
-        /** Categories the plugin wants at handshake. Today the bridge only grants events.core. */
         val WANTS = listOf(BridgeSession.CAP_EVENTS_CORE)
-
-        const val PLUGIN_TIMEOUT_MS = 9_000L
-        const val CONSENT_POLL_MIN_MS = 3_000L
-        const val CONSENT_POLL_MAX_MS = 30_000L
-
+        const val STATE_TIMEOUT_MS = 4_000L
+        const val PLUGIN_TIMEOUT_MS = 25_000L
+        const val READY_TIMEOUT_MS = 12_000L
+        const val HANDSHAKE_TIMEOUT_MS = 3_000L
+        const val EXECUTE_TIMEOUT_MS = 8_000L
+        const val DENIED_MESSAGE = "Denied in the Pebble app"
+        private fun denied() = BridgeResult.Err(ErrCodes.ACCESS_DENIED, DENIED_MESSAGE, "ACCESS_DENIED")
+        private fun timeout() = BridgeResult.err(ErrCodes.TIMEOUT, "Timed out waiting for Pebble")
         @Volatile private var instance: BridgeClient? = null
-
-        /** Initialize and start the singleton (call once from Application.onCreate). */
         fun init(context: Context): BridgeClient = get(context).also { it.start() }
-
-        /** Get the singleton, creating it if needed. Safe from any thread. */
-        fun get(context: Context): BridgeClient =
-            instance ?: synchronized(this) {
-                instance ?: BridgeClient(context.applicationContext).also { instance = it }
-            }
+        fun get(context: Context): BridgeClient = instance ?: synchronized(this) {
+            instance ?: BridgeClient(context.applicationContext).also { instance = it }
+        }
     }
 }

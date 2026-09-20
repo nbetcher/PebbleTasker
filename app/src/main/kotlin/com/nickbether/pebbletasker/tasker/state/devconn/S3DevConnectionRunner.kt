@@ -22,12 +22,12 @@ class S3DevConnectionRunner : PebbleStateRunner<S3DevConnectionInput, S3DevConne
         context: Context,
         input: S3DevConnectionInput,
     ): TaskerPluginResultCondition<S3DevConnectionOutput> {
-        val e = StateSupport.cached(context, StateSupport.TYPE_DEV_STATE)
-            ?: return TaskerPluginResultConditionUnknown()
-        val enabled = e.bool("enabled") ?: e.bool("dev_enabled")
-            ?: return TaskerPluginResultConditionUnknown()
-        if (!enabled) return TaskerPluginResultConditionUnsatisfied()
-        val transport = e.str("transport")
+        val snapshot = StateSupport.queryState(context).valueOrNull() ?: return TaskerPluginResultConditionUnknown()
+        com.nickbether.pebbletasker.cache.EventCache.get(context).seedState(snapshot)
+        if (snapshot.data.watches.isEmpty()) return TaskerPluginResultConditionUnsatisfied()
+        val enabled = snapshot.data.watches.map { it.devEnabled }
+        if (enabled.none { it == true }) return if (enabled.any { it == null }) TaskerPluginResultConditionUnknown() else TaskerPluginResultConditionUnsatisfied()
+        val transport: String? = null // Framework cannot distinguish LAN from relay.
         return TaskerPluginResultConditionSatisfied(
             context,
             S3DevConnectionOutput(

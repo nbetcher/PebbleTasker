@@ -62,7 +62,7 @@ class CallRunner : PebbleEventRunner<CallFilter, CallOutput>() {
     ): TaskerPluginResultCondition<CallOutput> {
         val e = cached ?: return TaskerPluginResultConditionUnknown()
         val state = e.str("call_state") ?: e.str("state")
-        if (!FilterMatch.eq(filter.callState, state)) return TaskerPluginResultConditionUnsatisfied()
+        if (!FilterMatch.eq(normalizeCallState(filter.callState), normalizeCallState(state))) return TaskerPluginResultConditionUnsatisfied()
         val out = CallOutput(
             pbCallState = state,
             pbCallAction = e.str("call_action"),
@@ -109,11 +109,11 @@ class CallActivity :
             "call_state",
             getString(R.string.pb_lbl_call_state),
             options = listOf(
-                "Ringing" to "RingingCall",
-                "Dialing" to "DialingCall",
-                "Active" to "ActiveCall",
-                "Holding" to "HoldingCall",
-                "Ended" to "Ended",
+                "Ringing" to "ringing",
+                "Dialing" to "dialing",
+                "Active" to "active",
+                "Holding" to "holding",
+                "Ended" to "ended",
             ),
         ),
     )
@@ -124,5 +124,14 @@ class CallActivity :
         CallFilter(callState = values["call_state"])
 
     override fun extractValues(input: CallFilter) =
-        mapOf("call_state" to input.callState.orEmpty())
+        mapOf("call_state" to normalizeCallState(input.callState).orEmpty())
+}
+
+internal fun normalizeCallState(value: String?): String? = when (value?.trim()?.lowercase()) {
+    "ringingcall", "ringing" -> "ringing"
+    "dialingcall", "dialing" -> "dialing"
+    "activecall", "active" -> "active"
+    "holdingcall", "holding" -> "holding"
+    "ended" -> "ended"
+    else -> value
 }

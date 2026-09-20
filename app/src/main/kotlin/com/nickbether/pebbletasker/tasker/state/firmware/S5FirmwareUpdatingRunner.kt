@@ -24,38 +24,31 @@ class S5FirmwareUpdatingRunner :
         context: Context,
         input: S5FirmwareUpdatingInput,
     ): TaskerPluginResultCondition<S5FirmwareUpdatingOutput> {
-        val e = StateSupport.cached(context, StateSupport.TYPE_FW_STATUS)
-            ?: return TaskerPluginResultConditionUnknown()
-
-        val serial = input.serial
-        if (!serial.isNullOrBlank() &&
-            e.watch?.serial != serial && e.watch?.address != serial
-        ) {
-            return TaskerPluginResultConditionUnsatisfied()
-        }
-
-        val status = (e.str("status") ?: e.str("fw_status"))?.lowercase()
-        val updating = status in IN_PROGRESS
-        if (!updating) return TaskerPluginResultConditionUnsatisfied()
-
-        val progress = e.str("progress") ?: e.str("fw_progress")
+        val snapshot = StateSupport.queryState(context).valueOrNull() ?: return TaskerPluginResultConditionUnknown()
+        com.nickbether.pebbletasker.cache.EventCache.get(context).seedState(snapshot)
+        val watches = snapshot.data.watches.filter { input.serial.isNullOrBlank() || it.serial == input.serial || it.address == input.serial }
+        if (watches.isEmpty()) return TaskerPluginResultConditionUnsatisfied()
+        val watch = watches.firstOrNull { it.fwStatus in IN_PROGRESS }
+            ?: return if (watches.any { it.fwStatus == null }) TaskerPluginResultConditionUnknown() else TaskerPluginResultConditionUnsatisfied()
+        val status = watch.fwStatus
+        val progress = watch.fwProgress?.toString()
         return TaskerPluginResultConditionSatisfied(
             context,
             S5FirmwareUpdatingOutput(
                 pbJson = StateJson.obj(
                     "fw_progress" to progress,
                     "fw_status" to status,
-                    "serial" to e.watch?.serial,
+                    "serial" to watch.serial,
                 ),
                 fwProgress = progress,
                 fwStatus = status,
-                serial = e.watch?.serial,
+                serial = watch.serial,
             ),
         )
     }
 
     private companion object {
         /** fw.status phases that mean an update is actively running. */
-        val IN_PROGRESS = setOf("updating", "in_progress", "installing", "downloading", "transferring")
+        val IN_PROGRESS = setOf("waiting", "in_progress", "rebooting")
     }
 }

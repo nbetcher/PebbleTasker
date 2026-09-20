@@ -444,6 +444,17 @@
              IntentServiceCondition (both with specialUse FGS + the action service's canBind meta-data)
              come from the taskerpluginlibrary manifest merge — do NOT hand-declare them here. -->
 
+        <!-- Only the ordered adapters are callable. Retaining the SDK's parallel components
+             would let cached explicit calls bypass ordering and readiness initialization. -->
+        <receiver android:name="com.joaomgcd.taskerpluginlibrary.condition.BroadcastReceiverCondition" tools:node="remove" />
+        <service android:name="com.joaomgcd.taskerpluginlibrary.condition.IntentServiceCondition" tools:node="remove" />
+        <receiver android:name=".tasker.base.ConditionQueryReceiver" android:exported="true">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.QUERY_CONDITION" /></intent-filter>
+        </receiver>
+        <service android:name=".tasker.base.ConditionQueryService" android:exported="true" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="@string/explanation_for_special_use_condition" />
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.QUERY_CONDITION" /></intent-filter>
+        </service>
     </application>
 
 </manifest>

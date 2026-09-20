@@ -22,18 +22,8 @@ import com.nickbether.pebbletasker.tasker.event.FilterMatch
 import com.nickbether.pebbletasker.tasker.event.GenericEventConfigActivity
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
-/**
- * E15 — Pebble Bridge/Watch Error (COLLECTOR + client-synthesized gap).
- *
- * Fires on a real bridge `system.error` event OR the client-side `system.gap` event that EventCache
- * synthesizes on a bootId change / >50-event seq discontinuity (FINAL DESIGN FIX A2). Because this
- * plugin straddles two backing types, the runner reads BOTH from the cache and evaluates the most
- * recent one (the base-passed `cached` is the system.error slot; gap lives under its own type).
- *
- * error_type filter: blank = any REAL bridge error. A reconnect/boot "gap" is NOT an error and does
- * NOT match a blank filter — set error_type = "gap" to opt into gap notices. "error" or a specific
- * bridge error code likewise match real errors only. Gap events carry %pbl_gap_from / %pbl_gap_to;
- * real errors carry %pbl_error_msg.
+/** Real errors, explicit history-loss notices and local access diagnostics use the exact delivered
+ * payload. No latest-cache lookup can replace a pending error. Gaps remain an explicit opt-in.
  */
 @TaskerInputRoot
 class BridgeErrorFilter @JvmOverloads constructor(
@@ -61,6 +51,8 @@ class BridgeErrorOutput @JvmOverloads constructor(
 class BridgeErrorRunner : PebbleEventRunner<BridgeErrorFilter, BridgeErrorOutput>() {
     // Primary backing type for the base's cache read; gap is fetched explicitly below.
     override val eventType: String = EventRouting.TYPE_SYSTEM_ERROR
+    override fun accepts(type: String) = type == eventType || type == CachedEvent.TYPE_GAP || type == "plugin.access"
+    override val isLocalDiagnostic = true
 
     override fun evaluate(
         context: Context,
@@ -68,13 +60,10 @@ class BridgeErrorRunner : PebbleEventRunner<BridgeErrorFilter, BridgeErrorOutput
         cached: CachedEvent?,
         update: BridgeErrorOutput?,
     ): TaskerPluginResultCondition<BridgeErrorOutput> {
-        // Consider both the real error slot (passed in as `cached`) and the synthesized gap slot,
-        // and evaluate whichever is newest.
-        val gap = runCatching { EventCache.get(context).latest(CachedEvent.TYPE_GAP) }.getOrNull()
-        val e = newest(cached, gap) ?: return TaskerPluginResultConditionUnknown()
+        val e = cached ?: return TaskerPluginResultConditionUnknown()
 
         val isGap = e.type == CachedEvent.TYPE_GAP
-        val errorType = if (isGap) "gap" else (e.str("error_type") ?: "error")
+        val errorType = if (isGap) "gap" else ((e.str("error_type") ?: e.str("type")) ?: "error")
         val matches = if (isGap) {
             // A gap is an opt-in RECOVERY notice, not an error: a blank ("any") filter must NOT fire on
             // it. A reconnect/boot gap is expected and would otherwise spam every catch-all error
@@ -88,31 +77,25 @@ class BridgeErrorRunner : PebbleEventRunner<BridgeErrorFilter, BridgeErrorOutput
             // Real errors: blank = any; else match the error_type or a keyword in the code/message.
             FilterMatch.eq(filter.errorType, ERROR_TYPE_ANY) ||
                 FilterMatch.eq(filter.errorType, errorType) ||
-                FilterMatch.contains(filter.errorType, e.str("error_msg"))
+                FilterMatch.contains(filter.errorType, (e.str("error_msg") ?: e.str("message")))
         }
         if (!matches) return TaskerPluginResultConditionUnsatisfied()
 
         val out = BridgeErrorOutput(
             pbErrorType = errorType,
-            pbErrorMsg = e.str("error_msg") ?: e.str("reason"),
+            pbErrorMsg = (e.str("error_msg") ?: e.str("message")) ?: e.str("reason"),
             pbGapFrom = e.str("gap_from"),
             pbGapTo = e.str("gap_to"),
         ).fillBase<BridgeErrorOutput>(
             e,
             buildMap {
                 put("error_type", errorType)
-                e.str("error_msg")?.let { put("error_msg", it) }
+                (e.str("error_msg") ?: e.str("message"))?.let { put("error_msg", it) }
                 e.str("gap_from")?.let { put("gap_from", it) }
                 e.str("gap_to")?.let { put("gap_to", it) }
             },
         )
         return TaskerPluginResultConditionSatisfied(context, out)
-    }
-
-    private fun newest(a: CachedEvent?, b: CachedEvent?): CachedEvent? = when {
-        a == null -> b
-        b == null -> a
-        else -> if (b.ts >= a.ts) b else a
     }
 
     companion object {

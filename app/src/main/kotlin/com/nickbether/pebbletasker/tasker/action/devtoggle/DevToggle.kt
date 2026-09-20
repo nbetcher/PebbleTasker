@@ -64,6 +64,10 @@ class DevToggleOutput @JvmOverloads constructor(
 
 class DevToggleRunner : PebbleActionRunner<DevToggleInput, DevToggleOutput>() {
     override fun execute(context: Context, input: TaskerInput<DevToggleInput>): BridgeResult<Map<String, String>> {
+        if (!input.regular.transport.isNullOrBlank()) return BridgeResult.err(
+            com.nickbether.pebbletasker.tasker.ErrCodes.INVALID_ARGS,
+            "Developer transport selection is unsupported. Edit this action and clear Transport.",
+        )
         val args = HashMap<String, String>()
         input.regular.enable?.trim()?.takeIf { it.isNotEmpty() }?.let { args["enable"] = it }
         input.regular.transport?.trim()?.takeIf { it.isNotEmpty() }?.let { args["transport"] = it }
@@ -87,6 +91,10 @@ class DevToggleRunner : PebbleActionRunner<DevToggleInput, DevToggleOutput>() {
 
 class DevToggleHelper(config: TaskerPluginConfig<DevToggleInput>) :
     ActionHelper<DevToggleInput, DevToggleOutput, DevToggleRunner>(config) {
+    override fun isInputValid(input: TaskerInput<DevToggleInput>): com.joaomgcd.taskerpluginlibrary.SimpleResult {
+        if (!input.regular.transport.isNullOrBlank()) return com.joaomgcd.taskerpluginlibrary.SimpleResultError("Transport selection/filtering is unsupported. Clear Transport to continue.")
+        return super.isInputValid(input)
+    }
     override val inputClass = DevToggleInput::class.java
     override val outputClass = DevToggleOutput::class.java
     override val runnerClass = DevToggleRunner::class.java
@@ -113,6 +121,7 @@ class DevToggleActivity :
     override fun onConfigCreated(binding: ActivityActionDevToggleBinding) {
         super.onConfigCreated(binding)
         wireWatchBrowse(binding.layoutSerial)
+        binding.layoutTransport.helperText = "Unsupported: clear this field; Pebble chooses the connection transport."
         // Segment selection writes a literal into the editable `enable` field (the source of truth).
         binding.toggleEnable.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener

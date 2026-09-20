@@ -21,6 +21,5 @@ class S3DevConnectionOutput @JvmOverloads constructor(
     val devEnabled: String? = null,
 
     @field:TaskerInputField("transport")
-    @get:TaskerOutputVariable(PbVars.TRANSPORT, labelResIdName = "pb_lbl_transport")
     val transport: String? = null,
 )

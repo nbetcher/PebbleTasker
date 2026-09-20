@@ -1,8 +1,10 @@
 # Gradle / Android build artifacts
 .gradle/
+.kotlin/
 build/
 app/build/
 local.properties
+/.theme/
 
 # IDE
 .idea/

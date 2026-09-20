@@ -1,0 +1,124 @@
+name: Android
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a release after both builds pass
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [debug, release]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: nbetcher/neon_grid_theme
+          ref: eb78a5521adf4e7a698d97bfe816d6ac1fa26dab
+          path: .theme
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and test
+        env:
+          VARIANT: ${{ matrix.variant }}
+          APP_KEYSTORE_B64: ${{ secrets.APP_KEYSTORE_B64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+          RELEASE_KEYSTORE_ALIAS: ${{ secrets.APP_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.APP_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f keystore.jks' EXIT
+          if [ "$VARIANT" = release ]; then
+            test -n "$APP_KEYSTORE_B64" && test -n "$RELEASE_KEYSTORE_PASSWORD" && test -n "$RELEASE_KEYSTORE_ALIAS" || {
+              echo '::error::Set APP_KEYSTORE_B64, APP_KEYSTORE_PASSWORD and APP_KEY_ALIAS repository secrets.'
+              exit 1
+            }
+            printf '%s' "$APP_KEYSTORE_B64" | base64 --decode > keystore.jks
+            chmod 600 keystore.jks
+            export RELEASE_KEY_PASSWORD="${RELEASE_KEY_PASSWORD:-$RELEASE_KEYSTORE_PASSWORD}"
+            TASKS=(':app:assembleRelease' ':app:lintRelease')
+          else
+            TASKS=(':app:testDebugUnitTest' ':app:assembleDebug')
+          fi
+          bash gradlew --no-daemon --stacktrace --max-workers=2 "${TASKS[@]}" -PneonGridDir="$GITHUB_WORKSPACE/.theme/android"
+      - name: Verify and package APK
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+          META="app/build/outputs/apk/$VARIANT/output-metadata.json"
+          VERSION="$(jq -r '.elements[0].versionName' "$META")"
+          FILE="$(jq -r '.elements[0].outputFile' "$META")"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo '::error::Tag does not match application version'; exit 1
+          fi
+          APK="PebbleTasker-$VERSION-${GITHUB_SHA:0:8}-$VARIANT.apk"
+          mkdir -p dist
+          cp "app/build/outputs/apk/$VARIANT/$FILE" "dist/$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "dist/$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 "dist/$APK"
+          (cd dist && sha256sum "$APK" > "$APK.sha256")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ matrix.variant }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports-${{ matrix.variant }}
+          path: |
+            app/build/reports/
+            app/build/test-results/
+            app/build/outputs/mapping/release/
+          if-no-files-found: ignore
+          retention-days: 30
+  publish:
+    needs: build
+    if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk-release
+          path: dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)"/\1/p' app/build.gradle.kts)"
+          test -n "$VERSION"
+          TAG="v$VERSION"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then exit 1; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            EXISTING="$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)"
+            test "$EXISTING" = "$GITHUB_SHA" || { echo '::error::Bump the version before replacing a published release'; exit 1; }
+            gh release upload "$TAG" dist/* --clobber
+          else
+            printf '%s\n' "PebbleTasker $VERSION" '' 'Install the release APK with the matching companion fork:' 'https://github.com/nbetcher/mobileapp/releases' '' 'Setup and features: https://github.com/nbetcher/PebbleTasker#readme' '' 'Support development: https://buymeacoffee.com/nbetcher' > release-notes.md
+            gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "PebbleTasker $VERSION" --notes-file release-notes.md
+          fi

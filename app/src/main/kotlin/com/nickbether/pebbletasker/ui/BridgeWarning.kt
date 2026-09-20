@@ -127,7 +127,14 @@ object BridgeWarning {
             .setCategory(NotificationCompat.CATEGORY_ERROR)
             .build()
         // Best-effort: no-ops if the user hasn't granted POST_NOTIFICATIONS (the config banner still warns).
-        return runCatching { NotificationManagerCompat.from(appCtx).notify(NOTIF_ID, notif) }.isSuccess
+        return try {
+            NotificationManagerCompat.from(appCtx).notify(NOTIF_ID, notif)
+            true
+        } catch (_: SecurityException) {
+            false
+        } catch (_: RuntimeException) {
+            false
+        }
     }
 
     private const val CHANNEL_ID = "pb_bridge_warning"

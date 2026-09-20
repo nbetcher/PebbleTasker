@@ -6,7 +6,7 @@ for PebbleTasker releases.
 Resolves commits since the previous release, formats a business/user-facing
 summary using Gemini (gemini-3.8-flash with low reasoning) if GEMINI_API_KEY
 is available, or falls back to a categorized semantic parser.
-Also provides monotonic tag resolution for continuous releases.
+Also provides monotonic tag resolution for continuous releases (-nb0, -nb1, etc.).
 """
 
 import argparse
@@ -38,15 +38,13 @@ def run_cmd(cmd, cwd=None, check=True):
 
 def determine_next_tag(base_version, repo=None):
     """
-    Determine next monotonic tag for base_version (e.g. 0.9.0 -> v0.9.0.1).
-    Inspects existing releases/tags.
-    If v{base_version} or v{base_version}.N exists, finds max N and returns v{base_version}.{max+1}.
-    If none exists, returns v{base_version}.1.
+    Determine next monotonic tag for base_version: v{base_version}-nb{counter}
+    starting at counter=0.
     """
     tags = []
     # 1. Query GitHub releases
     try:
-        gh_cmd = ["gh", "release", "list", "--limit", "50", "--json", "tagName"]
+        gh_cmd = ["gh", "release", "list", "--limit", "100", "--json", "tagName"]
         if repo:
             gh_cmd.extend(["-R", repo])
         out = run_cmd(gh_cmd, check=False)
@@ -56,8 +54,8 @@ def determine_next_tag(base_version, repo=None):
                 t = r.get("tagName", "")
                 if t and t not in tags:
                     tags.append(t)
-    except Exception as e:
-        print(f"Notice: Could not list releases via gh CLI: {e}", file=sys.stderr)
+    except Exception:
+        pass
 
     # 2. Query git tags
     try:
@@ -69,30 +67,26 @@ def determine_next_tag(base_version, repo=None):
     except Exception:
         pass
 
-    prefix = f"v{base_version}"
-    pattern = re.compile(rf"^{re.escape(prefix)}(?:\.(\d+))?$")
+    prefix = f"v{base_version}-nb"
+    pattern = re.compile(rf"^{re.escape(prefix)}(\d+)$")
 
-    max_counter = 0
-    matched = False
+    max_counter = -1
     for t in tags:
         m = pattern.match(t)
         if m:
-            matched = True
-            counter_str = m.group(1)
-            if counter_str is not None:
-                max_counter = max(max_counter, int(counter_str))
+            counter = int(m.group(1))
+            if counter > max_counter:
+                max_counter = counter
 
-    if not matched:
-        return f"{prefix}.1"
-    else:
-        return f"{prefix}.{max_counter + 1}"
+    next_counter = max_counter + 1
+    return f"{prefix}{next_counter}"
 
 
 def get_previous_release_tag(current_tag=None, repo=None):
     """Find the most recent release tag before current_tag."""
     # 1. Try gh CLI if available
     try:
-        gh_cmd = ["gh", "release", "list", "--limit", "20", "--json", "tagName,isDraft,isPrerelease"]
+        gh_cmd = ["gh", "release", "list", "--limit", "50", "--json", "tagName,isDraft,isPrerelease"]
         if repo:
             gh_cmd.extend(["-R", repo])
         out = run_cmd(gh_cmd, check=False)
@@ -126,7 +120,7 @@ def get_previous_release_tag(current_tag=None, repo=None):
 
 
 def get_commits_since(prev_tag=None):
-    """Get commit list since prev_tag up to HEAD."""
+    """Get commit list since prev_tag up to HEAD. If prev_tag is None, returns all commits."""
     rev_range = f"{prev_tag}..HEAD" if prev_tag else "HEAD"
     cmd = [
         "git",
@@ -164,7 +158,7 @@ def get_commits_since(prev_tag=None):
 
 
 def generate_with_gemini(commits, api_key, model=DEFAULT_MODEL):
-    """Generate business changelog using Gemini API with low reasoning."""
+    """Generate consolidated business changelog using Gemini API with low reasoning."""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 
     commit_lines = []
@@ -177,22 +171,27 @@ def generate_with_gemini(commits, api_key, model=DEFAULT_MODEL):
     commit_text = "\n".join(commit_lines)
 
     prompt = (
-        "You are a release manager writing user-facing, business-oriented release notes "
-        "for PebbleTasker (an Android Tasker automation plugin for Pebble smartwatches).\n\n"
-        "Given the following list of git commits since the last release, generate a concise, "
-        "cumulative business-interpretation changelog.\n"
-        "Translate technical developer commits into clear, user-focused value (for example: "
-        "translate Binder sessions, event cache loops, or signing tweaks into connectivity reliability, "
-        "seamless setup, and stability improvements).\n\n"
-        "Guidelines:\n"
-        "- Group items into relevant sections such as:\n"
-        "  ### 🚀 New Features & Capabilities\n"
-        "  ### 🛠️ Improvements & Reliability\n"
-        "  ### 🐛 Bug Fixes\n"
-        "- Only include sections that have entries.\n"
-        "- Write clear, professional bullet points highlighting user/automation benefit.\n"
-        "- Do NOT include raw commit hashes, SHAs, or internal refactoring noise.\n"
-        "- Do NOT wrap your output in triple backtick markdown code blocks.\n\n"
+        "You are a product release manager writing concise, professional, user-facing release notes "
+        "for PebbleTasker (a standalone Android Tasker automation plugin for Pebble smartwatches).\n\n"
+        "Below is the list of git commits representing changes since the last release (or the full project history "
+        "if this is the initial release).\n\n"
+        "TASK:\n"
+        "Produce a high-level, cohesive business-interpretation summary of the features and capabilities delivered.\n\n"
+        "STRICT CONSOLIDATION AND EDITING RULES:\n"
+        "1. Focus on USER and AUTOMATION value (e.g. watch events, state triggers, actions, UI configuration, "
+        "reconnection reliability, companion integration).\n"
+        "2. REMOVE DEVELOPMENT CHURN AND FIXES TO ENHANCEMENTS: When a capability was added and then followed by bug fixes, "
+        "refactors, or adjustments to that same capability (or internal CI/build/signing fixes) during development, "
+        "DO NOT list those fixes or intermediate tweaks separately. Present the capability in its final, working form.\n"
+        "3. KEEP UNNECESSARY VERBOSITY DOWN: Keep bullet points clear, concise, and focused on outcomes. Avoid technical "
+        "implementation minutiae like Binder method names, internal class names, license merges, Gradle wrappers, or CI secrets.\n"
+        "4. Structure into clean markdown sections such as:\n"
+        "   ### 🚀 Features & Capabilities\n"
+        "   ### 🛠️ Reliability & System Enhancements\n"
+        "   (Only create sections that have items; do not create a separate 'Bug Fixes' section if the fixes were merely "
+        "internal fix-ups to features delivered in this release).\n"
+        "5. Do NOT include raw commit hashes, SHAs, author names, or raw commit subjects.\n"
+        "6. Do NOT wrap output in triple backtick markdown code blocks.\n\n"
         f"Commits:\n{commit_text}"
     )
 
@@ -244,43 +243,39 @@ def generate_with_gemini(commits, api_key, model=DEFAULT_MODEL):
 
 
 def generate_fallback_changelog(commits):
-    """Fallback rule-based semantic categorization."""
+    """Fallback rule-based semantic categorization with churn suppression."""
     features = []
-    improvements = []
-    fixes = []
+    enhancements = []
 
-    feat_pattern = re.compile(r'^(feat|add|support|allow|enable|prepare|implement)\b', re.IGNORECASE)
-    fix_pattern = re.compile(r'^(fix|resolve|correct|patch|handle|prevent|avoid|guard)\b', re.IGNORECASE)
+    # Patterns indicating internal churn/fix-ups to suppress
+    churn_patterns = [
+        re.compile(r'(publish on main|executable bit|release signing|signing config|ci debug|preserve.*license|initial commit)', re.I),
+        re.compile(r'(fix config ui|criteria fields|load the event serial|continuous release)', re.I),
+    ]
 
     for c in commits:
         subj = c["subject"]
-        # Strip conventional commit prefixes if present
+        if any(p.search(subj) for p in churn_patterns):
+            continue
+
         clean_subj = re.sub(r'^[a-zA-Z]+(\([^\)]+\))?:\s*', '', subj)
         clean_subj = clean_subj[0].upper() + clean_subj[1:] if clean_subj else subj
 
-        if fix_pattern.search(subj) or "fix" in subj.lower():
-            fixes.append(clean_subj)
-        elif feat_pattern.search(subj):
+        if any(k in subj.lower() for k in ["plugin", "getting-started", "example", "criteria", "output variables", "prepare"]):
             features.append(clean_subj)
         else:
-            improvements.append(clean_subj)
+            enhancements.append(clean_subj)
 
     lines = []
     if features:
-        lines.append("### 🚀 New Features & Capabilities")
+        lines.append("### 🚀 Features & Capabilities")
         for item in features:
             lines.append(f"- {item}")
         lines.append("")
 
-    if improvements:
-        lines.append("### 🛠️ Improvements & Reliability")
-        for item in improvements:
-            lines.append(f"- {item}")
-        lines.append("")
-
-    if fixes:
-        lines.append("### 🐛 Bug Fixes")
-        for item in fixes:
+    if enhancements:
+        lines.append("### 🛠️ Reliability & System Enhancements")
+        for item in enhancements:
             lines.append(f"- {item}")
         lines.append("")
 

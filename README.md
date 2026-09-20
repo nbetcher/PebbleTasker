@@ -111,7 +111,7 @@ Set these repository Actions secrets before running a release build:
 - `APP_KEY_PASSWORD`: optional; defaults to the keystore password.
 - `GEMINI_API_KEY`: optional; Google AI Studio API key used by the changelog generator (`gemini-3.8-flash` with low reasoning) to produce business-oriented release notes.
 
-Successful workflow runs tag and cut a GitHub release with verified APKs and checksums. If no version bump is made in `app/build.gradle.kts`, releases append a monotonic suffix (`v${VERSION}.${COUNTER}`, e.g. `v0.9.0.1`, `v0.9.0.2`), preserving version ordering for Obtainium and Android package managers. Each release includes a cumulative business-interpretation changelog detailing user-facing capabilities, improvements, and fixes since the previous release.
+Successful workflow runs tag and cut a GitHub release with verified APKs and checksums. If no version bump is made in `app/build.gradle.kts`, releases append a monotonic suffix (`v${VERSION}-nb${COUNTER}`, e.g. `v0.9.0-nb0`, `v0.9.0-nb1`), preserving version ordering for Obtainium and Android package managers. Each release includes a cumulative business-interpretation changelog detailing user-facing capabilities, improvements, and fixes since the previous release.
 
 ## Help and feedback
 

@@ -71,7 +71,7 @@ jobs:
           VERSION="$(jq -r '.elements[0].versionName' "$META")"
           FILE="$(jq -r '.elements[0].outputFile' "$META")"
           case "$GITHUB_REF_NAME" in
-            "v$VERSION"|"v$VERSION."*) ;;
+            "v$VERSION"|"v$VERSION-nb"*) ;;
             *)
               if [ "$GITHUB_REF_TYPE" = tag ]; then
                 echo '::error::Tag does not match application version'; exit 1

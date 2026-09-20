@@ -109,8 +109,9 @@ Set these repository Actions secrets before running a release build:
 - `APP_KEYSTORE_PASSWORD`: keystore password.
 - `APP_KEY_ALIAS`: signing alias.
 - `APP_KEY_PASSWORD`: optional; defaults to the keystore password.
+- `GEMINI_API_KEY`: optional; Google AI Studio API key used by the changelog generator (`gemini-3.8-flash` with low reasoning) to produce business-oriented release notes.
 
-Pushes to `main` run both builds and publish a release if the current application version has not yet been published (or update assets if re-run on the same commit). Pushing a version tag (e.g. `v0.9.0`), or a manual run with **publish** enabled, also publishes a release after both builds pass. The workflow checks tags against the application version. Release assets contain the optimized signed APK and its checksum; debug APKs remain available from the workflow artifacts. Both CI variants use the release keystore, so missing signing secrets fail either build explicitly.
+Successful workflow runs tag and cut a GitHub release with verified APKs and checksums. If no version bump is made in `app/build.gradle.kts`, releases append a monotonic suffix (`v${VERSION}.${COUNTER}`, e.g. `v0.9.0.1`, `v0.9.0.2`), preserving version ordering for Obtainium and Android package managers. Each release includes a cumulative business-interpretation changelog detailing user-facing capabilities, improvements, and fixes since the previous release.
 
 ## Help and feedback
 

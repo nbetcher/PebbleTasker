@@ -70,9 +70,14 @@ jobs:
           META="app/build/outputs/apk/$VARIANT/output-metadata.json"
           VERSION="$(jq -r '.elements[0].versionName' "$META")"
           FILE="$(jq -r '.elements[0].outputFile' "$META")"
-          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
-            echo '::error::Tag does not match application version'; exit 1
-          fi
+          case "$GITHUB_REF_NAME" in
+            "v$VERSION"|"v$VERSION."*) ;;
+            *)
+              if [ "$GITHUB_REF_TYPE" = tag ]; then
+                echo '::error::Tag does not match application version'; exit 1
+              fi
+              ;;
+          esac
           APK="PebbleTasker-$VERSION-${GITHUB_SHA:0:8}-$VARIANT.apk"
           mkdir -p dist
           cp "app/build/outputs/apk/$VARIANT/$FILE" "dist/$APK"
@@ -103,6 +108,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           name: apk-release
@@ -110,25 +117,43 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           set -euo pipefail
-          VERSION="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)"/\1/p' app/build.gradle.kts)"
-          test -n "$VERSION"
-          TAG="v$VERSION"
-          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then exit 1; fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            EXISTING="$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)"
-            if [ "$EXISTING" != "$GITHUB_SHA" ]; then
-              if [ "$GITHUB_REF_TYPE" = tag ]; then
-                echo '::error::Bump the version before replacing a published release'
-                exit 1
-              else
-                echo "Release $TAG already exists for commit $EXISTING. Skipping release publication for unbumped commit on branch $GITHUB_REF_NAME."
-                exit 0
-              fi
-            fi
-            gh release upload "$TAG" dist/* --clobber
+          BASE_VERSION="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)"/\1/p' app/build.gradle.kts)"
+          test -n "$BASE_VERSION"
+
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            TAG="$GITHUB_REF_NAME"
           else
-            printf '%s\n' "PebbleTasker $VERSION" '' 'Install the release APK with the matching companion fork:' 'https://github.com/nbetcher/mobileapp/releases' '' 'Setup and features: https://github.com/nbetcher/PebbleTasker#readme' '' 'Support development: https://buymeacoffee.com/nbetcher' > release-notes.md
-            gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "PebbleTasker $VERSION" --notes-file release-notes.md
+            TAG="$(python3 tools/generate_release_notes.py --determine-tag --base-version "$BASE_VERSION")"
+          fi
+
+          RELEASE_VERSION="${TAG#v}"
+          echo "Cutting release: $TAG ($RELEASE_VERSION)"
+
+          # Align APK filenames and checksums with the cut release version
+          if [ "$RELEASE_VERSION" != "$BASE_VERSION" ]; then
+            for f in dist/PebbleTasker-$BASE_VERSION-*; do
+              if [ -f "$f" ]; then
+                mv "$f" "${f/$BASE_VERSION/$RELEASE_VERSION}"
+              fi
+            done
+            (cd dist && rm -f *.sha256 && for apk in *.apk; do sha256sum "$apk" > "$apk.sha256"; done)
+          fi
+
+          # Generate cumulative business-interpretation changelog
+          python3 tools/generate_release_notes.py \
+            --tag "$TAG" \
+            --version-name "$RELEASE_VERSION" \
+            --output release-notes.md
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --title "PebbleTasker $RELEASE_VERSION" --notes-file release-notes.md
+          else
+            gh release create "$TAG" dist/* \
+              --target "$GITHUB_SHA" \
+              --title "PebbleTasker $RELEASE_VERSION" \
+              --notes-file release-notes.md
           fi

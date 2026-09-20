@@ -47,7 +47,7 @@ Update the companion and plugin together. The plugin restores its desired subscr
 
 After deleting obsolete profiles, use **Diagnostics → Clear AppMessage subscriptions**; active profiles can register again. Tasker does not provide a reliable per-profile deletion callback. See [compatibility notes](docs/automation-compatibility.md) for restore behavior, legacy filters, privacy and recovery details.
 
-Install updates signed with the same release key. Debug builds are for development and do not share the release signing identity. A changed plugin certificate requires renewed companion consent. Do not blindly retry an action after a timeout: its remote operation may already have completed.
+Install updates signed with the same release key. CI debug artifacts share the release signing identity so they can replace a release install for testing; ordinary local debug builds use a separate development key. Debug APKs are debuggable and should only be installed for testing. A changed plugin certificate requires renewed companion consent. Do not blindly retry an action after a timeout: its remote operation may already have completed.
 
 ## Architecture
 
@@ -95,6 +95,8 @@ bash gradlew :app:assembleRelease \
 
 The local release command exercises R8 and resource optimization with local signing. Distribution builds use `keystore.jks` and the `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEYSTORE_ALIAS` and `RELEASE_KEY_PASSWORD` environment variables. Keep the signing identity unchanged between releases.
 
+Trusted builds may pass `-PRELEASE_SIGN_DEBUG=true` to sign the debug variant with that same distribution key. This is opt-in; normal local debug builds use the AGP-managed debug keystore. Keep distribution credentials out of untrusted pull-request builds.
+
 Release builds enable R8 full mode, code optimization/obfuscation, resource shrinking and optimized resource shrinking. Keep rules preserve the reflection, serialization and Binder contracts required at runtime. Debug builds remain debuggable and unminified. Neither successful compilation nor unit tests replace testing the optimized APK on a device.
 
 ## Automated builds and releases
@@ -108,7 +110,7 @@ Set these repository Actions secrets before running a release build:
 - `APP_KEY_ALIAS`: signing alias.
 - `APP_KEY_PASSWORD`: optional; defaults to the keystore password.
 
-Pushes to `main` run both builds. A `v0.9.0` tag, or a manual run with **publish** enabled, publishes a release after both builds pass. The workflow checks the tag against the application version. Release assets contain the optimized signed APK and its checksum; debug APKs remain available from the workflow artifacts. Missing signing secrets fail the release build explicitly while allowing the debug build to finish.
+Pushes to `main` run both builds. A `v0.9.0` tag, or a manual run with **publish** enabled, publishes a release after both builds pass. The workflow checks the tag against the application version. Release assets contain the optimized signed APK and its checksum; debug APKs remain available from the workflow artifacts. Both CI variants use the release keystore, so missing signing secrets fail either build explicitly.
 
 ## Help and feedback
 

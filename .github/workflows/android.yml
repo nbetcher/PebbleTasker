@@ -47,19 +47,21 @@ jobs:
         run: |
           set -euo pipefail
           trap 'rm -f keystore.jks' EXIT
+          # Both distributed variants use the same identity. This workflow only
+          # runs trusted repository refs, never pull-request code with secrets.
+          test -n "$APP_KEYSTORE_B64" && test -n "$RELEASE_KEYSTORE_PASSWORD" && test -n "$RELEASE_KEYSTORE_ALIAS" || {
+            echo '::error::Set APP_KEYSTORE_B64, APP_KEYSTORE_PASSWORD and APP_KEY_ALIAS repository secrets.'
+            exit 1
+          }
+          umask 077
+          printf '%s' "$APP_KEYSTORE_B64" | base64 --decode > keystore.jks
+          export RELEASE_KEY_PASSWORD="${RELEASE_KEY_PASSWORD:-$RELEASE_KEYSTORE_PASSWORD}"
           if [ "$VARIANT" = release ]; then
-            test -n "$APP_KEYSTORE_B64" && test -n "$RELEASE_KEYSTORE_PASSWORD" && test -n "$RELEASE_KEYSTORE_ALIAS" || {
-              echo '::error::Set APP_KEYSTORE_B64, APP_KEYSTORE_PASSWORD and APP_KEY_ALIAS repository secrets.'
-              exit 1
-            }
-            printf '%s' "$APP_KEYSTORE_B64" | base64 --decode > keystore.jks
-            chmod 600 keystore.jks
-            export RELEASE_KEY_PASSWORD="${RELEASE_KEY_PASSWORD:-$RELEASE_KEYSTORE_PASSWORD}"
             TASKS=(':app:assembleRelease' ':app:lintRelease')
           else
             TASKS=(':app:testDebugUnitTest' ':app:assembleDebug')
           fi
-          bash gradlew --no-daemon --stacktrace --max-workers=2 "${TASKS[@]}" -PneonGridDir="$GITHUB_WORKSPACE/.theme/android"
+          bash gradlew --no-daemon --stacktrace --max-workers=2 "${TASKS[@]}" -PRELEASE_SIGN_DEBUG=true -PneonGridDir="$GITHUB_WORKSPACE/.theme/android"
       - name: Verify and package APK
         env:
           VARIANT: ${{ matrix.variant }}

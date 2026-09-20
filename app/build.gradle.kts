@@ -7,6 +7,11 @@ plugins {
 // Release builds use the real signing key unless LOCAL_RELEASE_BUILD=true (then debug-signed, so a
 // human can build/verify a release variant without the keystore/env). Mirrors the fork (composeApp).
 val localReleaseBuild = project.findProperty("LOCAL_RELEASE_BUILD")?.toString()?.toBooleanStrictOrNull() ?: false
+// Trusted CI opts in so debug artifacts can replace release installs without a
+// certificate change. Local development never requires the distribution key.
+val releaseSignDebug = providers.gradleProperty("RELEASE_SIGN_DEBUG")
+    .map { it.toBooleanStrictOrNull() ?: throw GradleException("RELEASE_SIGN_DEBUG must be true or false") }
+    .getOrElse(false)
 
 android {
     namespace = "com.nickbether.pebbletasker"
@@ -23,21 +28,13 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
-    // Debug signing config so the standalone project produces an installable debug APK
-    // without external key setup. The plugin is *independently* signed; for release the
+    // AGP owns the default debug keystore location and creates it when needed.
+    // The plugin is *independently* signed; for distribution the
     // signer must NEVER rotate the key without re-consent (the bridge TOFU-pins the
     // plugin cert with exact contentEquals — see FINAL DESIGN §3.6 / FIX D2) and must
     // NOT set android:sharedUserId (consent requires a single-package uid).
     signingConfigs {
-        getByName("debug") {
-            // Standard AGP debug keystore (~/.android/debug.keystore) is used by default;
-            // this block exists so a release-style flow can point at it explicitly if needed.
-            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-        if (!localReleaseBuild) {
+        if (!localReleaseBuild || releaseSignDebug) {
             // Real release key — the SAME cert the host app is signed with, which the bridge
             // TOFU-pins (FINAL DESIGN §3.6 / FIX D2). storeFile is the repo-root keystore.jks
             // (gitignored via *.jks); passwords come from the RELEASE_* env (~/.pebble-signing).
@@ -52,7 +49,7 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (releaseSignDebug) "release" else "debug")
             isMinifyEnabled = false
         }
         release {

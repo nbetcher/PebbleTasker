@@ -61,7 +61,7 @@ object JobAction {
         done.mime?.let { out["mime"] = it }
         done.width?.let { out["width"] = it.toString() }
         done.height?.let { out["height"] = it.toString() }
-        if (!done.ok) return BridgeResult.Err(ErrCodes.JOB_FAILED, "Job ${done.jobId} failed" + (done.error?.let { ": $it" } ?: ""), done.error ?: "JOB_FAILED")
+        if (!done.ok) return BridgeResult.Err(ErrCodes.JOB_FAILED, "Job ${done.jobId} failed" + (done.error?.let { ": $it" } ?: ""), "JOB_FAILED")
         val source = done.uri ?: return BridgeResult.Err(ErrCodes.JOB_FAILED, "Job ${done.jobId} finished without a file", "JOB_FAILED")
         out["source_uri"] = source
         if (!save) { out["uri"] = source; return BridgeResult.Ok(out) }
@@ -114,9 +114,19 @@ abstract class JobActionRunner<TInput : JobInput, TOutput : JobActionOutput> : P
 
 object JobTimeouts {
     const val MAX_S = 3_000
-    /** Tasker waits this long for the action: the job wait plus readiness and the command itself. */
-    fun taskerSeconds(timeoutS: String?, defaultS: Int): Int =
-        ((timeoutS?.trim()?.toIntOrNull() ?: defaultS).coerceIn(5, MAX_S) + 45).coerceAtMost(3_599)
+    /**
+     * Tasker waits this long for the action: the job wait plus readiness and the command itself.
+     * A %variable is resolved only at run time, so it gets the longest allowed wait.
+     */
+    fun taskerSeconds(timeoutS: String?, defaultS: Int): Int {
+        val raw = timeoutS?.trim().orEmpty()
+        val wait = when {
+            raw.isEmpty() -> defaultS
+            raw.contains('%') -> MAX_S
+            else -> raw.toIntOrNull() ?: defaultS
+        }
+        return (wait.coerceIn(5, MAX_S) + 45).coerceAtMost(3_599)
+    }
 }
 
 abstract class JobActionHelper<TInput : JobInput, TOutput : JobActionOutput, TRunner : JobActionRunner<TInput, TOutput>>(

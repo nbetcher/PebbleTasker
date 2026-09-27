@@ -40,7 +40,7 @@ object JobFiles {
     }
 
     fun fileName(kind: Kind, mime: String?, now: Date = Date()): String =
-        "${kind.prefix}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now)}.${extensionFor(mime, kind)}"
+        "${kind.prefix}_${SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(now)}.${extensionFor(mime, kind)}"
 
     fun save(context: Context, bytes: ByteArray, kind: Kind, mime: String?, folder: String?): Saved {
         val dir = sanitizeFolder(folder)
@@ -66,9 +66,15 @@ object JobFiles {
                 runCatching { resolver.delete(uri, null, null) }
                 throw t
             }
+            // MediaStore renames on a name clash; report the name it actually stored.
+            val stored = runCatching {
+                resolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                    if (c.moveToFirst()) c.getString(0) else null
+                }
+            }.getOrNull()?.ifBlank { null } ?: name
             @Suppress("DEPRECATION")
             val root = Environment.getExternalStorageDirectory().absolutePath
-            Saved("$root/$base/$dir/$name", uri.toString())
+            Saved("$root/$base/$dir/$stored", uri.toString())
         } else {
             val base = if (kind == Kind.SCREENSHOT) Environment.DIRECTORY_PICTURES else Environment.DIRECTORY_DOWNLOADS
             val target = File(File(context.getExternalFilesDir(base) ?: context.filesDir, dir), name)

@@ -6,6 +6,7 @@ import com.nickbether.pebbletasker.BuildConfig
 import com.nickbether.pebbletasker.bridge.AndroidBridgePort
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -60,7 +61,8 @@ object DiagnosticsRunner {
         val app = context.applicationContext
         if (_interactive.value.running || !lock.tryLock()) return false
         _interactive.value = State(running = true)
-        job = scope.launch {
+        // ATOMIC: a Stop that lands before the body starts must still reach the finally that unlocks.
+        job = scope.launch(start = CoroutineStart.ATOMIC) {
             val engine = DiagnosticsEngine(AndroidBridgePort(app), ::decodePng, options,
                 onUpdate = { checks -> _interactive.value = _interactive.value.copy(checks = checks) })
             val report = try {

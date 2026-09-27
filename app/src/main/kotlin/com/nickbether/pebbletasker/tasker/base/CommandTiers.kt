@@ -95,7 +95,10 @@ object CommandTiers {
                     else -> "Needs the ${required.label.lowercase()} tier. Check this plugin's grant in the Pebble app."
                 }
             }
-            "CATEGORY_DISABLED" -> "Allow the system event category for this plugin in the Pebble app; job results are delivered as system events."
+            "CATEGORY_DISABLED" ->
+                if (command == Type.WATCH_SCREENSHOT || command == Type.WATCH_GATHER_LOGS)
+                    "Allow the system event category for this plugin in the Pebble app; job results are delivered as system events."
+                else "Allow the event category this command needs for this plugin in the Pebble app."
             "FIRMWARE_CHECK_STALE" -> "Run Check Firmware first; no successful check is known from the last 24 hours."
             "FIRMWARE_UPDATE_UNAVAILABLE" -> "The last firmware check found no update."
             "WATCH_BUSY" -> "The watch is busy with another input sequence or update. Retry later."

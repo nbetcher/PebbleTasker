@@ -72,6 +72,7 @@ class JobsTest {
         val failed = JobAction.run(context, failing, "watch.screenshot", null, 2_000, JobFiles.Kind.SCREENSHOT, true, null) as BridgeResult.Err
         assertEquals(ErrCodes.JOB_FAILED, failed.code)
         assertTrue(failed.message.contains("watch refused"))
+        assertEquals("a failed job keeps a code, not free text, in the wire-code slot", "JOB_FAILED", failed.bridgeCode)
 
         val refused = Port(tap) { BridgeResult.Err(ErrCodes.CATEGORY_DISABLED, "system off", "CATEGORY_DISABLED") }
         val r = JobAction.run(context, refused, "watch.screenshot", null, 2_000, JobFiles.Kind.SCREENSHOT, true, null) as BridgeResult.Err
@@ -98,6 +99,14 @@ class JobsTest {
             "watch.screenshot", null, 2_000, JobFiles.Kind.SCREENSHOT, false, null) as BridgeResult.Ok
         assertEquals("content://host/j4", noSave.value["uri"])
         assertNull(noSave.value["file"])
+    }
+
+    @Test fun `Tasker wait covers the job timeout, including one set by a variable`() {
+        val max = com.nickbether.pebbletasker.tasker.action.common.JobTimeouts.MAX_S
+        assertEquals(60 + 45, com.nickbether.pebbletasker.tasker.action.common.JobTimeouts.taskerSeconds(null, 60))
+        assertEquals(600 + 45, com.nickbether.pebbletasker.tasker.action.common.JobTimeouts.taskerSeconds("600", 60))
+        assertEquals(max + 45, com.nickbether.pebbletasker.tasker.action.common.JobTimeouts.taskerSeconds("%wait", 60))
+        assertEquals(60 + 45, com.nickbether.pebbletasker.tasker.action.common.JobTimeouts.taskerSeconds("abc", 60))
     }
 
     @Test fun `folder names are confined below the shared directory`() {

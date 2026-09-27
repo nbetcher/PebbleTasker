@@ -49,5 +49,16 @@ class CommandSender(private val appContext: Context) {
         const val HEALTH_SNAPSHOT = "health.snapshot"
         const val FW_CHECK = "fw.check"
         const val DEV_TOGGLE_CONNECTION = "dev.toggleConnection"
+        const val WATCH_LIST_PREFS = "watch.listPrefs"
+        const val WATCH_GET_PREF = "watch.getPref"
+        const val WATCH_STOP_APP = "watch.stopApp"
+        const val WATCH_SYNC_TIME = "watch.syncTime"
+        const val WATCH_CHECK_FIRMWARE = "watch.checkFirmware"
+        const val WATCH_REBOOT = "watch.reboot"
+        const val WATCH_PRESS_BUTTON = "watch.pressButton"
+        const val WATCH_SWIPE = "watch.swipe"
+        const val WATCH_INSTALL_FIRMWARE = "watch.installFirmware"
+        const val WATCH_GATHER_LOGS = "watch.gatherLogs"
+        const val WATCH_FACTORY_RESET = "watch.factoryReset"
     }
 }

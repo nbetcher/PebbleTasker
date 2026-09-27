@@ -80,6 +80,7 @@
         <activity android:name=".ui.DiagnosticsActivity" android:exported="false" />
         <activity android:name=".ui.ConsentGuidanceActivity" android:exported="false" />
         <activity android:name=".ui.GettingStartedActivity" android:exported="false" />
+        <activity android:name=".ui.WatchDiagnosticsActivity" android:exported="false" />
 
         <!-- ════════════════════════════════════════════════════════════════════════════
              EVENT plugins (15) — FINAL DESIGN §2.1. Tasker event config activities.
@@ -236,6 +237,39 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:label="Pebble Dev Connection"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.system.PrefChangedActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Preference Changed"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.system.FirmwareAvailableActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Firmware Update Available"
+            android:theme="@style/Theme.NeonGrid">
+            <intent-filter>
+                <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".tasker.event.system.JobDoneActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Pebble Job Finished"
             android:theme="@style/Theme.NeonGrid">
             <intent-filter>
                 <action android:name="net.dinglisch.android.tasker.ACTION_EDIT_EVENT" />
@@ -417,6 +451,62 @@
         </activity>
         <activity android:name=".tasker.action.devtoggle.DevToggleActivity"
             android:exported="true" android:label="Pebble: Toggle Developer Connection"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+
+        <activity android:name=".tasker.action.prefs.ListPrefsActivity"
+            android:exported="true" android:label="Pebble: List Watch Preferences"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.prefs.GetPrefActivity"
+            android:exported="true" android:label="Pebble: Get Watch Preference"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.watchctl.StopAppActivity"
+            android:exported="true" android:label="Pebble: Stop Watch App"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.watchctl.SyncTimeActivity"
+            android:exported="true" android:label="Pebble: Sync Watch Time"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.fwcheck.InstallFirmwareActivity"
+            android:exported="true" android:label="Pebble: Install Firmware Update"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.watchctl.RebootActivity"
+            android:exported="true" android:label="Pebble: Reboot Watch"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.watchctl.PressButtonActivity"
+            android:exported="true" android:label="Pebble: Press Watch Button"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.watchctl.SwipeActivity"
+            android:exported="true" android:label="Pebble: Swipe Watch Screen"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.gatherlogs.GatherLogsActivity"
+            android:exported="true" android:label="Pebble: Gather Watch Logs"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.watchctl.FactoryResetActivity"
+            android:exported="true" android:label="Pebble: Factory Reset Watch"
+            android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
+            <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
+        </activity>
+        <activity android:name=".tasker.action.diagnostics.RunDiagnosticsActivity"
+            android:exported="true" android:label="Pebble: Run Watch Diagnostics"
             android:icon="@mipmap/ic_launcher" android:theme="@style/Theme.NeonGrid">
             <intent-filter><action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" /></intent-filter>
         </activity>

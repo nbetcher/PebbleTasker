@@ -27,7 +27,7 @@ object ErrCodes {
     const val BRIDGE_UNREACHABLE = 20
     const val TIMEOUT = 21
 
-    /** Optional: only if the bridge later adds a RATE_LIMITED ErrorCode. */
+    /** Command or per-watch cooldown; the message carries the remaining seconds. */
     const val RATE_LIMITED = 22
 
     /**
@@ -36,6 +36,16 @@ object ErrCodes {
      * telling the user to finish setup. See [com.nickbether.pebbletasker.setup.SetupState].
      */
     const val NOT_SET_UP = 23
+
+    // --- watch control / firmware (appended; never renumber) ---
+    const val PREF_UNSUPPORTED = 24
+    const val FIRMWARE_UPDATE_UNAVAILABLE = 25
+    const val FIRMWARE_CHECK_STALE = 26
+    const val WATCH_BUSY = 27
+    /** Plugin-local: a screenshot/log job reported failure, or its file could not be read or saved. */
+    const val JOB_FAILED = 28
+    /** Plugin-local: Run Watch Diagnostics had a failed check or could not start. */
+    const val DIAGNOSTICS_FAILED = 29
 
     /** Fallback for any unrecognized future bridge code. */
     const val UNKNOWN = 99
@@ -54,6 +64,10 @@ object ErrCodes {
         "BRIDGE_UNREACHABLE" to BRIDGE_UNREACHABLE,
         "TIMEOUT" to TIMEOUT,
         "RATE_LIMITED" to RATE_LIMITED,
+        "PREF_UNSUPPORTED" to PREF_UNSUPPORTED,
+        "FIRMWARE_UPDATE_UNAVAILABLE" to FIRMWARE_UPDATE_UNAVAILABLE,
+        "FIRMWARE_CHECK_STALE" to FIRMWARE_CHECK_STALE,
+        "WATCH_BUSY" to WATCH_BUSY,
     )
 
     /** Bridge string code -> stable int. Unknown strings map to [UNKNOWN]. */
@@ -61,5 +75,6 @@ object ErrCodes {
 
     /** True for error codes that auto-resolve by retry/polling (vs. needing user action). */
     fun isTransient(code: Int): Boolean =
-        code == CONSENT_PENDING || code == BRIDGE_UNREACHABLE || code == TIMEOUT || code == RATE_LIMITED
+        code == CONSENT_PENDING || code == BRIDGE_UNREACHABLE || code == TIMEOUT || code == RATE_LIMITED ||
+            code == WATCH_BUSY
 }

@@ -41,6 +41,9 @@ class MainActivity : AppCompatActivity() {
         binding.btnDiagnostics.setOnClickListener {
             startActivity(Intent(this, DiagnosticsActivity::class.java))
         }
+        binding.btnWatchDiagnostics.setOnClickListener {
+            startActivity(Intent(this, WatchDiagnosticsActivity::class.java))
+        }
         binding.btnGettingStarted.setOnClickListener {
             startActivity(GettingStartedActivity.intentFor(this))
         }

@@ -1,28 +1,28 @@
 package com.nickbether.pebbletasker.tasker.action.setpref
 
-import android.content.Context
+import com.google.android.material.textfield.TextInputEditText
 import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfig
-import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInputField
 import com.joaomgcd.taskerpluginlibrary.input.TaskerInputRoot
 import com.joaomgcd.taskerpluginlibrary.output.TaskerOutputObject
 import com.joaomgcd.taskerpluginlibrary.output.TaskerOutputVariable
-import com.nickbether.pebbletasker.R
-import com.nickbether.pebbletasker.bridge.BridgeResult
 import com.nickbether.pebbletasker.bridge.CommandSender
 import com.nickbether.pebbletasker.tasker.ErrCodes
-import com.nickbether.pebbletasker.tasker.action.common.ActionHelper
-import com.nickbether.pebbletasker.tasker.action.common.ActionOutputs
-import com.nickbether.pebbletasker.tasker.action.common.ActionSend
-import com.nickbether.pebbletasker.tasker.action.common.GenericFieldsActionActivity
-import com.nickbether.pebbletasker.tasker.base.PebbleActionRunner
+import com.nickbether.pebbletasker.tasker.action.common.ActionResultOutput
+import com.nickbether.pebbletasker.tasker.action.common.Args
+import com.nickbether.pebbletasker.tasker.action.common.FormActionActivity
+import com.nickbether.pebbletasker.tasker.action.common.WatchCommandHelper
+import com.nickbether.pebbletasker.tasker.action.common.WatchCommandRunner
+import com.nickbether.pebbletasker.tasker.action.prefs.layoutOf
+import com.nickbether.pebbletasker.tasker.action.watchctl.RESULT_VARS
+import com.nickbether.pebbletasker.tasker.prefs.PrefPicker
 import com.nickbether.pebbletasker.tasker.vars.PbVars
 
 /**
- * A6 — Set Watch Preference (FINAL DESIGN §2.3, sensitive tier).
- * Sends `watch.setPref` with pref_key + pref_value. The bridge resolves the key via WatchPref.from()
- * and decodes the value with that pref's own codec (booleans accept true/false/on/off/1/0). DND
- * toggles use pref_key="dndManuallyEnabled".
+ * A6 — Set Watch Preference (sensitive tier). Sends `watch.setPref` with pref_key + pref_value.
+ * Preferences are phone-global, so no watch selector is sent. With exactly one connected watch, the
+ * Pebble app refuses keys that watch does not support and waits up to 3 s for its answer
+ * (`watch_status`). Option values from the picker are passed back unchanged.
  */
 
 @TaskerInputRoot
@@ -38,67 +38,42 @@ class SetPrefInput @JvmOverloads constructor(
 @TaskerInputRoot
 @TaskerOutputObject()
 class SetPrefOutput @JvmOverloads constructor(
-    @field:TaskerInputField("pb_json")
-    @get:TaskerOutputVariable(PbVars.JSON, labelResIdName = "lbl_out_json")
-    val pbJson: String? = null,
-    @field:TaskerInputField("pb_ok")
-    @get:TaskerOutputVariable(PbVars.OK, labelResIdName = "lbl_out_ok")
-    val pbOk: String? = null,
-    @field:TaskerInputField("pb_err")
-    @get:TaskerOutputVariable(PbVars.ERR, labelResIdName = "lbl_out_err")
-    val pbErr: String? = null,
-    @field:TaskerInputField("pb_errmsg")
-    @get:TaskerOutputVariable(PbVars.ERRMSG, labelResIdName = "lbl_out_errmsg")
-    val pbErrmsg: String? = null,
-)
+    @get:TaskerOutputVariable(PbVars.WATCH_STATUS) @field:TaskerInputField("pb_watch_status") var watchStatus: String? = null,
+) : ActionResultOutput()
 
-class SetPrefRunner : PebbleActionRunner<SetPrefInput, SetPrefOutput>() {
-    override fun execute(context: Context, input: TaskerInput<SetPrefInput>): BridgeResult<Map<String, String>> {
-        val key = input.regular.prefKey?.trim().orEmpty()
-        if (key.isEmpty()) return BridgeResult.err(ErrCodes.INVALID_ARGS, "pref_key is required")
-        return ActionSend.send(
-            context,
-            CommandSender.Type.WATCH_SET_PREF,
-            watch = input.regular.serial,
-            args = mapOf("pref_key" to key, "pref_value" to input.regular.prefValue.orEmpty()),
-        )
-    }
-
-    override fun buildOutput(input: TaskerInput<SetPrefInput>, result: CommandResult): SetPrefOutput =
-        SetPrefOutput(
-            pbJson = ActionOutputs.jsonBlob(result),
-            pbOk = ActionOutputs.okStr(result),
-            pbErr = ActionOutputs.errStr(result),
-            pbErrmsg = ActionOutputs.errMsgStr(result),
-        )
-
+class SetPrefRunner : WatchCommandRunner<SetPrefInput, SetPrefOutput>() {
+    override val command = CommandSender.Type.WATCH_SET_PREF
+    override fun watchOf(input: SetPrefInput) = input.serial
+    override fun args(input: SetPrefInput) =
+        mapOf("pref_key" to Args.required("pref_key", input.prefKey), "pref_value" to input.prefValue.orEmpty())
+    override fun newOutput() = SetPrefOutput()
+    override fun fill(output: SetPrefOutput, data: Map<String, String>) { output.watchStatus = data["watch_status"] }
     override fun isHardFailure(code: Int): Boolean =
         code != ErrCodes.INVALID_ARGS && super.isHardFailure(code)
 }
 
 class SetPrefHelper(config: TaskerPluginConfig<SetPrefInput>) :
-    ActionHelper<SetPrefInput, SetPrefOutput, SetPrefRunner>(config) {
+    WatchCommandHelper<SetPrefInput, SetPrefOutput, SetPrefRunner>(config) {
     override val inputClass = SetPrefInput::class.java
     override val outputClass = SetPrefOutput::class.java
     override val runnerClass = SetPrefRunner::class.java
     override val defaultBlurb: String = "Pebble: Set Watch Preference"
     override fun blurbFor(input: SetPrefInput): String =
-        "Set pref: ${input.prefKey?.takeIf { it.isNotBlank() } ?: "(unset)"}"
+        "Set pref: ${input.prefKey?.takeIf { it.isNotBlank() } ?: "(unset)"}" +
+            (input.prefValue?.takeIf { it.isNotBlank() }?.let { " = $it" } ?: "")
 }
 
-class SetPrefActivity :
-    GenericFieldsActionActivity<SetPrefInput, SetPrefOutput, SetPrefRunner, SetPrefHelper>() {
-    override val isSensitive = false // FLAG_SECURE candidate; intentionally off (flip to true to enable)
-    override val titleRes = R.string.act_set_pref_title
-    override val descRes = R.string.act_set_pref_desc
-    override val globalCommand = true
-    override val fields = listOf(
-        FieldSpec(R.string.lbl_serial, isSerial = true),
-        FieldSpec(R.string.lbl_pref_key),
-        FieldSpec(R.string.lbl_pref_value),
-    )
+class SetPrefActivity : FormActionActivity<SetPrefInput, SetPrefOutput, SetPrefRunner, SetPrefHelper>() {
+    override val formTitle = "Set Watch Preference"
+    override val formDescription = "Writes a watch setting. Settings are shared by all watches paired with the phone. " +
+        "With exactly one watch connected, a key it does not support is refused, and %pbl_watch_status reports the watch's answer."
+    override val formOutputs = "Outputs: %pbl_watch_status, $RESULT_VARS"
+    override fun buildFields() = listOf(FormActionActivity.Field("pref_key", "Preference"), FormActionActivity.Field("pref_value", "Value"))
+    override fun onFieldsBuilt(fields: Map<String, TextInputEditText>) {
+        PrefPicker(this, fields.getValue("pref_key").layoutOf(), fields.getValue("pref_value").layoutOf(), { null }).attach()
+    }
     override fun getNewHelper(config: TaskerPluginConfig<SetPrefInput>) = SetPrefHelper(config)
-    override fun makeInput(values: List<String?>) =
-        SetPrefInput(serial = values.getOrNull(0), prefKey = values.getOrNull(1), prefValue = values.getOrNull(2))
-    override fun valuesOf(input: SetPrefInput) = listOf(input.serial, input.prefKey, input.prefValue)
+    // A selector saved by an older version is dropped: the command is global.
+    override fun buildInput(values: Map<String, String>) = SetPrefInput(null, values.opt("pref_key"), values["pref_value"].orEmpty())
+    override fun extractValues(input: SetPrefInput) = mapOf("pref_key" to input.prefKey.orEmpty(), "pref_value" to input.prefValue.orEmpty())
 }

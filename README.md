@@ -23,6 +23,10 @@ Profiles use **events** for individual changes and **states** for current condit
 - Notifications, preferences, quick launch and developer-connection actions.
 - Typed AppMessage dictionaries and per-watch subscriptions for watchapp integrations.
 - Explicit consent, per-category access, command tiers and notification-content privacy.
+- Watch control: button presses and swipes, stop app, time sync, reboot, firmware check and install, screenshots, log dumps and factory reset, each gated by its command tier.
+- Watch preferences: list, read and write settings with a picker that shows which keys the watch supports, plus a Preference Changed event.
+- Firmware Update Available and Job Finished events.
+- Watch Diagnostics: on-watch checks run through the installed Pebble app, from the launcher or as a Tasker action.
 - Ordered condition evaluation, bounded event replay and recovery after transient binding failures.
 - Subscription restoration when Tasker initializes restored profiles.
 
@@ -40,6 +44,14 @@ Availability depends on the companion's advertised capabilities. Unsupported con
 An ignored request remains pending without repeated alerts. A denied request stays denied until you reconsider it in the companion. Actions report access failures through Tasker's error result. Conditions cannot return native action errors; configure a **Pebble Bridge/Watch Error** event to handle those failures.
 
 For a current condition, use a state profile. For individual transitions, use an event profile. Tasker controls execution of the resulting tasks; very rapid changes are not a promise of exactly-once task execution.
+
+## Watch control and diagnostics
+
+Each action editor shows the command tier it needs next to this plugin's grant. Button presses, swipes, reboot and firmware install need the **dangerous** tier; log dumps and factory reset need **extremely dangerous**, which the Pebble app grants after a one-time warning. Both also need the Pebble app's "Allow dangerous commands" switch. Actions report the bridge's wire code in `%pbl_err_code` (for example `WATCH_BUSY` or `FIRMWARE_CHECK_STALE`) next to the numeric `%pbl_err`.
+
+Screenshots and log dumps finish after the command returns. The actions wait for the result, then copy the file to `Pictures/<folder>` or `Download/<folder>` and return its path in `%pbl_file`. They need the **system** event category.
+
+**Watch Diagnostics** (launcher) runs eleven checks against the connected watch and shows PASS, FAIL or DEFERRED live; Stop returns the watch to its watchface and restores Quiet Time. Share the report from the same screen. The **Run Watch Diagnostics** Tasker action runs the same checks without UI. When any check fails it ends with a Tasker error (`%err` 29, `%errmsg` naming the failed checks), so enable "Continue Task After Error" on that step to handle it.
 
 ## AppMessage profiles and upgrades
 

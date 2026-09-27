@@ -70,6 +70,12 @@ object EventRouting {
         EventRouter.register(FirmwareActivity::class.java, TYPE_FIRMWARE)
         EventRouter.register(HealthActivity::class.java, TYPE_HEALTH)
         EventRouter.register(DevConnActivity::class.java, TYPE_DEV)
+        EventRouter.register(com.nickbether.pebbletasker.tasker.event.system.PrefChangedActivity::class.java,
+            com.nickbether.pebbletasker.tasker.event.system.SystemEventTypes.PREF)
+        EventRouter.register(com.nickbether.pebbletasker.tasker.event.system.FirmwareAvailableActivity::class.java,
+            com.nickbether.pebbletasker.tasker.event.system.SystemEventTypes.FW_AVAILABLE)
+        EventRouter.register(com.nickbether.pebbletasker.tasker.event.system.JobDoneActivity::class.java,
+            com.nickbether.pebbletasker.tasker.event.system.SystemEventTypes.JOB_DONE)
         // E15 fires on a real bridge error OR a client-synthesized gap (EventCache.TYPE_GAP).
         EventRouter.register(
             BridgeErrorActivity::class.java,

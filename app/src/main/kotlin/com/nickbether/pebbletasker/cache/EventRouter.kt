@@ -42,6 +42,7 @@ object EventRouter {
      */
     fun routeAll(context: Context, routedEvents: List<CachedEvent>) {
         if (routedEvents.isEmpty()) return
+        LiveEvents.publish(routedEvents)
         if (routedEvents.any { it.type == "watch.connected" })
             com.nickbether.pebbletasker.tasker.event.appmsg.AppMessageSubscriptions.requestRestore(context.applicationContext)
         for (e in routedEvents) {

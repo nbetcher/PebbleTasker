@@ -26,6 +26,7 @@ object ActionOutputs {
         if (!result.ok) {
             o.put("err", result.errCode)
             o.put("errmsg", result.errMsg)
+            result.wireCode?.let { o.put("err_code", it) }
         }
         for ((k, v) in result.data) o.put(k, v)
         return o.toString()
@@ -41,6 +42,10 @@ object ActionOutputs {
     /** %pbl_errmsg scalar: empty when ok, else the message. */
     fun errMsgStr(result: PebbleActionRunner.CommandResult): String =
         if (result.ok) "" else result.errMsg
+
+    /** %pbl_err_code scalar: the bridge's wire code on failure, else empty. */
+    fun wireCodeStr(result: PebbleActionRunner.CommandResult): String =
+        if (result.ok) "" else result.wireCode.orEmpty()
 
     /** Read a data key, returning null if absent/blank (so the output stays unset). */
     fun data(result: PebbleActionRunner.CommandResult, key: String): String? =

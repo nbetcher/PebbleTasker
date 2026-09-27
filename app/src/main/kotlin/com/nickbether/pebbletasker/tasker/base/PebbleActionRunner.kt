@@ -32,6 +32,8 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
         val errCode: Int,
         val errMsg: String,
         val data: Map<String, String>,
+        /** The bridge's wire error code (e.g. COMMAND_NOT_AUTHORIZED, WATCH_BUSY), when known. */
+        val wireCode: String? = null,
     )
 
     /**
@@ -45,6 +47,17 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
      * result.data fields into named %pbl_* outputs and set %pbl_ok/%pbl_err/%pbl_errmsg/%pbl_json.
      */
     abstract fun buildOutput(input: TaskerInput<TInput>, result: CommandResult): TOutput
+
+    /** The command this runner sends, used to explain tier refusals. */
+    protected open val commandType: String? get() = FeatureSupport.commandOf(this::class.java)
+
+    /** Message shown for a failed command: the host message, a recovery hint and the wire code. */
+    protected fun describe(context: Context, err: BridgeResult.Err): String {
+        val session = com.nickbether.pebbletasker.bridge.BridgeClient.get(context).currentSession
+        val text = CommandTiers.explain(err, commandType, session).ifEmpty { "error" }
+        val wire = err.bridgeCode
+        return if (wire.isNullOrBlank() || text.startsWith(wire)) text else "$wire: $text"
+    }
 
     @Suppress("UNCHECKED_CAST")
     final override fun run(context: Context, input: TaskerInput<TInput>): TaskerPluginResult<TOutput> {
@@ -71,7 +84,7 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
             is BridgeResult.Err -> {
                 if (isHardFailure(bridgeResult.code)) {
                     // Infra failure: %err / %errmsg via the error path (no output delivered).
-                    TaskerPluginResultError(bridgeResult.code, bridgeResult.message.ifEmpty { "error" }) as TaskerPluginResult<TOutput>
+                    TaskerPluginResultError(bridgeResult.code, describe(context, bridgeResult)) as TaskerPluginResult<TOutput>
                 } else {
                     // Bridge-reported error: deliver it AS output so the task can branch on %pbl_ok.
                     val out = buildOutput(
@@ -79,8 +92,9 @@ abstract class PebbleActionRunner<TInput : Any, TOutput : Any> :
                         CommandResult(
                             ok = false,
                             errCode = bridgeResult.code,
-                            errMsg = bridgeResult.message,
+                            errMsg = describe(context, bridgeResult),
                             data = emptyMap(),
+                            wireCode = bridgeResult.bridgeCode,
                         ),
                     )
                     TaskerPluginResultSucess(out)

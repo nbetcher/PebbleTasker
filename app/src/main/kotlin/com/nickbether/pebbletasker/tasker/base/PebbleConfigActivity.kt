@@ -136,6 +136,8 @@ abstract class PebbleConfigActivity<
         // Warn (and link to setup) whenever the plugin is configured while NOT bridged to the Pebble
         // app — so nobody configures a state/event/action against a connection that doesn't exist.
         val warningBanner = scaffold.findViewById<TextView>(R.id.pbBridgeWarning)
+        val tierInfo = scaffold.findViewById<TextView>(R.id.pbTierInfo)
+        val requiredTier = CommandTiers.of(FeatureSupport.commandOf(taskerHelper.runnerClass))
         warningBanner.setOnClickListener { startActivity(ConsentGuidanceActivity.intentFor(this)) }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -143,6 +145,13 @@ abstract class PebbleConfigActivity<
                     val warn = BridgeWarning.messageFor(status) ?: FeatureSupport.reason(taskerHelper.runnerClass, BridgeClient.get(this@PebbleConfigActivity).currentSession?.capabilities)
                     warningBanner.text = warn
                     warningBanner.visibility = if (warn == null) View.GONE else View.VISIBLE
+                    if (requiredTier != null) {
+                        val session = BridgeClient.get(this@PebbleConfigActivity).currentSession
+                        tierInfo.text = CommandTiers.describe(requiredTier, session)
+                        tierInfo.setTextColor(androidx.core.content.ContextCompat.getColor(this@PebbleConfigActivity,
+                            if (CommandTiers.insufficient(requiredTier, session)) R.color.pb_warn_text else R.color.ng_text_secondary))
+                        tierInfo.visibility = View.VISIBLE
+                    }
                 }
             }
         }

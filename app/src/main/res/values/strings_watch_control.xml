@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Watch control, preference and firmware events. Display-only. -->
+<resources>
+    <string name="pb_evt_pref_title">Pebble Preference Changed</string>
+    <string name="pb_evt_pref_desc">Fires when a watch setting changes, including changes made on the watch. Settings are shared by all watches, so this event carries no watch. Pick a preference and, optionally, the value it must change to.</string>
+    <string name="pb_evt_fw_available_title">Pebble Firmware Update Available</string>
+    <string name="pb_evt_fw_available_desc">Fires once per watch and offered firmware version, when the Pebble app finds an update.</string>
+    <string name="pb_evt_job_done_title">Pebble Job Finished</string>
+    <string name="pb_evt_job_done_desc">Fires when a screenshot or log dump requested by this plugin finishes. The file at %pbl_uri is readable only by this plugin and is deleted after an hour; use the Take Screenshot or Gather Watch Logs actions to save a copy.</string>
+
+    <!-- Watch Diagnostics (launcher) -->
+    <string name="wdiag_title">Watch Diagnostics</string>
+    <string name="wdiag_intro">Checks the watch features Tasker can drive, through the installed Pebble app: time sync, screenshots, buttons, touch, apps, preferences, firmware, logs and (optionally) reboot. Nothing is reinstalled.</string>
+    <string name="wdiag_warning">The checks press buttons on the watch, briefly toggle Quiet Time, and launch and close an app. Reboot runs only if you switch it on. Factory reset is never run. Needs the dangerous tier and "Allow dangerous commands" in the Pebble app; the log check also needs the extremely dangerous tier.</string>
+    <string name="wdiag_serial_hint">Watch serial (blank = the only connected watch)</string>
+    <string name="wdiag_app_hint">App to launch (optional; blank = from the locker)</string>
+    <string name="wdiag_reboot">Include the reboot check</string>
+    <string name="wdiag_start">Run checks</string>
+    <string name="wdiag_stop">Stop</string>
+    <string name="wdiag_results">Results</string>
+    <string name="wdiag_share">Share report</string>
+    <string name="wdiag_copy">Copy report</string>
+    <string name="wdiag_confirm_title">Run watch diagnostics?</string>
+    <string name="wdiag_confirm_ok">Run</string>
+    <string name="wdiag_busy">Another diagnostics run is in progress.</string>
+    <string name="wdiag_never_run">No report yet.</string>
+    <string name="main_btn_watch_diagnostics">Run Watch Diagnostics</string>
+</resources>

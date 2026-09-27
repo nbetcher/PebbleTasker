@@ -114,6 +114,55 @@ object PbVars {
     const val DELIVERED = "pbl_delivered"
     const val FILE = "pbl_file"
     const val RTT_MS = "pbl_rtt_ms"
+    const val ERR_CODE = "pbl_err_code"           // the bridge's wire error code (e.g. WATCH_BUSY)
+
+    // --- watch preferences ---
+    const val PREF_KEY = "pbl_pref_key"
+    const val PREF_LABEL = "pbl_pref_label"
+    const val PREF_DESCRIPTION = "pbl_pref_description"
+    const val PREF_TYPE = "pbl_pref_type"
+    const val PREF_VALUE = "pbl_pref_value"
+    const val PREF_DEFAULT = "pbl_pref_default"
+    const val PREF_SUPPORT = "pbl_pref_support"
+    const val PREF_OPTIONS = "pbl_pref_options"   // raw JSON
+    const val PREF_MIN = "pbl_pref_min"
+    const val PREF_MAX = "pbl_pref_max"
+    const val PREF_UNIT = "pbl_pref_unit"
+    const val PREF_PREVIOUS = "pbl_pref_previous"
+    const val PREFS = "pbl_prefs"                 // raw JSON array
+    const val PREF_KEYS = "pbl_pref_keys"         // array
+    const val PREF_LABELS = "pbl_pref_labels"     // array
+    const val COUNT = "pbl_count"
+    const val WATCH_STATUS = "pbl_watch_status"
+
+    // --- watch control ---
+    const val VERIFIED = "pbl_verified"
+    const val SKEW_S = "pbl_skew_s"
+    const val ACCEPTED = "pbl_accepted"
+    const val REBOOTING = "pbl_rebooting"
+    const val STARTED = "pbl_started"
+    const val FACTORY_RESET = "pbl_factory_reset"
+    const val FW_CURRENT = "pbl_fw_current"
+    const val CAN_DOWNGRADE = "pbl_can_downgrade"
+    const val NOTES = "pbl_notes"
+
+    // --- jobs (screenshots, log dumps) ---
+    const val JOB_ID = "pbl_job_id"
+    const val JOB_COMMAND = "pbl_job_command"
+    const val JOB_STATUS = "pbl_job_status"
+    const val JOB_ERROR = "pbl_job_error"
+    const val URI = "pbl_uri"
+    const val MIME = "pbl_mime"
+    const val WIDTH = "pbl_width"
+    const val HEIGHT = "pbl_height"
+
+    // --- watch diagnostics ---
+    const val DIAG_PASS = "pbl_diag_pass"
+    const val DIAG_FAIL = "pbl_diag_fail"
+    const val DIAG_DEFERRED = "pbl_diag_deferred"
+    const val DIAG_SUMMARY = "pbl_diag_summary"
+    const val DIAG_REPORT = "pbl_diag_report"
+    const val DIAG_CHECKS = "pbl_diag_checks"     // array: "<id>|<OUTCOME>|<detail>"
 
     /**
      * Every output name, "%"-prefixed, for seeding downstream variable pickers via a config/helper's

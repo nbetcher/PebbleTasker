@@ -146,6 +146,14 @@
             android:layout_marginTop="10dp"
             android:text="@string/main_btn_diagnostics" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_watch_diagnostics"
+            style="@style/Widget.NeonGrid.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/main_btn_watch_diagnostics" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

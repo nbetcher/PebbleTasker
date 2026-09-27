@@ -67,7 +67,7 @@ abstract class GenericEventConfigActivity<
     /** Extract the saved field values (keyed by FieldSpec.key) from a restored input object. */
     protected abstract fun extractValues(input: TInput): Map<String, String>
 
-    private val edits = LinkedHashMap<String, TextInputEditText>()
+    protected val edits = LinkedHashMap<String, TextInputEditText>()
 
     override fun inflateBinding(inflater: LayoutInflater): ActivityConfigEventGenericBinding =
         ActivityConfigEventGenericBinding.inflate(inflater)

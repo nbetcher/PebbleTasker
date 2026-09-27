@@ -39,6 +39,21 @@
         tools:text="Not connected to the Pebble app — tap to set up."
         tools:visibility="visible" />
 
+    <!-- Command tier this action needs, compared with this plugin's grant. Hidden for events/states. -->
+    <TextView
+        android:id="@+id/pbTierInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@color/ng_text_secondary"
+        tools:text="Requires the dangerous command tier (this plugin has sensitive)."
+        tools:visibility="visible" />
+
     <FrameLayout
         android:id="@+id/pbConfigContent"
         android:layout_width="match_parent"

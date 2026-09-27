@@ -1,6 +1,6 @@
 # PebbleTasker
 
-**Make your watch part of your Tasker automations.** Version **0.9.0** connects Tasker to the automation bridge in the companion app.
+**Make your watch part of your Tasker automations.** Version **0.10.0** connects Tasker to the automation bridge in the companion app.
 
 ## Support development
 

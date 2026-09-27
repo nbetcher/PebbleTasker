@@ -21,8 +21,8 @@ android {
         applicationId = "com.nickbether.pebbletasker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.9.0"
+        versionCode = 10
+        versionName = "0.10.0"
 
         // Use the Kotlin source root (matches our package tree under src/main/kotlin).
         vectorDrawables.useSupportLibrary = true
